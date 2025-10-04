@@ -102,6 +102,23 @@ impl GameEngine {
                 .insert(*first_system_id);
         }
 
+        // Conquer the first planet in the first solar system
+        if let Some(first_system_id) = solar_system_ids.first() {
+            if let Some(first_system) = self.game_state.solar_systems.get(first_system_id) {
+                if let Some(first_planet_id) = first_system.planets.first() {
+                    if let Some(planet) = self.game_state.planets.get_mut(first_planet_id) {
+                        // Conquer the first planet
+                        planet.state = PlanetState::Conquered;
+                        log::info!(
+                            "Conquered starting planet {} in system {}",
+                            planet.id,
+                            first_system_id
+                        );
+                    }
+                }
+            }
+        }
+
         // Initialize empire resources
         self.initialize_empire_resources();
 
@@ -257,6 +274,9 @@ impl GameEngine {
                             self.game_state.solar_systems.get(&planet.solar_system_id)
                         {
                             self.explore_solar_system(system.id);
+
+                            // Discover new solar systems from conquered planets
+                            self.discover_nearby_systems();
                         }
                     }
 
@@ -539,30 +559,79 @@ impl GameEngine {
         self.game_state.planets.len()
     }
 
+    /// Discover nearby solar systems from conquered planets
+    fn discover_nearby_systems(&mut self) {
+        if let Some(galaxy) = self
+            .game_state
+            .galaxies
+            .get(&self.game_state.current_galaxy)
+        {
+            // Find undiscovered solar systems
+            let undiscovered: Vec<u64> = galaxy
+                .solar_systems
+                .iter()
+                .filter(|system_id| !self.game_state.discovered_solar_systems.contains(system_id))
+                .cloned()
+                .collect();
+
+            // Discover one random solar system
+            if !undiscovered.is_empty() {
+                use rand::seq::SliceRandom;
+                if let Some(&system_id) = undiscovered.choose(&mut rand::thread_rng()) {
+                    self.discover_solar_system(system_id);
+                    log::info!(
+                        "Discovered new solar system {} from planet conquest",
+                        system_id
+                    );
+                }
+            }
+        }
+    }
+
     /// Update exploration - gradually discover new solar systems
     fn update_exploration(&mut self) {
-        // Every 1000 ticks, discover a new solar system if there are unexplored ones
+        // Every 1000 ticks, discover new solar systems based on conquered planets
         if self.game_state.current_tick % 1000 == 0 {
             if let Some(galaxy) = self
                 .game_state
                 .galaxies
                 .get(&self.game_state.current_galaxy)
             {
-                // Find undiscovered solar systems
-                let undiscovered: Vec<u64> = galaxy
-                    .solar_systems
-                    .iter()
-                    .filter(|system_id| {
-                        !self.game_state.discovered_solar_systems.contains(system_id)
-                    })
-                    .cloned()
+                // Get all conquered planets
+                let conquered_planets: Vec<&Planet> = self
+                    .game_state
+                    .planets
+                    .values()
+                    .filter(|planet| planet.state == PlanetState::Conquered)
                     .collect();
 
-                // Discover one random solar system
-                if !undiscovered.is_empty() {
-                    use rand::seq::SliceRandom;
-                    if let Some(&system_id) = undiscovered.choose(&mut rand::thread_rng()) {
-                        self.discover_solar_system(system_id);
+                if !conquered_planets.is_empty() {
+                    // Find undiscovered solar systems
+                    let undiscovered: Vec<u64> = galaxy
+                        .solar_systems
+                        .iter()
+                        .filter(|system_id| {
+                            !self.game_state.discovered_solar_systems.contains(system_id)
+                        })
+                        .cloned()
+                        .collect();
+
+                    // Discover one random solar system for each conquered planet
+                    if !undiscovered.is_empty() {
+                        use rand::seq::SliceRandom;
+                        let mut rng = rand::thread_rng();
+
+                        // Discover one system per conquered planet (up to a maximum)
+                        let max_discoveries = conquered_planets.len().min(undiscovered.len());
+                        for _ in 0..max_discoveries {
+                            if let Some(&system_id) = undiscovered.choose(&mut rng) {
+                                self.discover_solar_system(system_id);
+                                log::info!(
+                                    "Discovered new solar system {} from conquered planets",
+                                    system_id
+                                );
+                            }
+                        }
                     }
                 }
             }
