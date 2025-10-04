@@ -1,6 +1,5 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
-use lazy_static::lazy_static;
 use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
 

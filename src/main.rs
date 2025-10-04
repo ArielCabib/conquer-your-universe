@@ -33,7 +33,6 @@ fn App() -> Html {
     let is_paused = use_state(|| false);
     let current_view = use_state(|| ViewMode::Galaxy);
     let selected_solar_system = use_state(|| None::<u64>);
-    let selected_planet = use_state(|| None::<Planet>);
     let refresh_trigger = use_state(|| 0);
 
     // Game update loop with dynamic speed
