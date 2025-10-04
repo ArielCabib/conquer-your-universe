@@ -1,18 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conquer Your Universe</title>
     <style>
+        :root {
+            color-scheme: light;
+            --bg-gradient-start: #e8ecff;
+            --bg-gradient-end: #c7d2fe;
+            --text-color: #0f172a;
+            --text-strong: #111827;
+            --text-muted: rgba(15, 23, 42, 0.65);
+            --surface-strong: rgba(255, 255, 255, 0.85);
+            --surface-medium: rgba(255, 255, 255, 0.6);
+            --surface-soft: rgba(15, 23, 42, 0.05);
+            --surface-inverse: rgba(15, 23, 42, 0.08);
+            --border-color: rgba(15, 23, 42, 0.12);
+            --shadow-color: rgba(15, 23, 42, 0.2);
+            --scrollbar-track: rgba(15, 23, 42, 0.08);
+            --scrollbar-thumb: rgba(15, 23, 42, 0.2);
+            --scrollbar-thumb-hover: rgba(15, 23, 42, 0.35);
+            --button-bg: rgba(30, 64, 175, 0.12);
+            --button-bg-hover: rgba(30, 64, 175, 0.22);
+            --button-text: #0f172a;
+            --button-active-bg: #2563eb;
+            --button-active-shadow: rgba(37, 99, 235, 0.35);
+            --glass-highlight: rgba(255, 255, 255, 0.92);
+            --glass-muted: rgba(15, 23, 42, 0.06);
+            --muted-panel-bg: rgba(15, 23, 42, 0.03);
+            --no-selection-text: rgba(15, 23, 42, 0.65);
+            --no-selection-heading: rgba(15, 23, 42, 0.85);
+            --accent-success: #2e7d32;
+            --accent-success-hover: #256f2a;
+            --accent-success-shadow: rgba(46, 125, 50, 0.45);
+            --success-soft: rgba(46, 125, 50, 0.2);
+            --success-soft-weak: rgba(46, 125, 50, 0.1);
+            --success-gradient-end: #8BC34A;
+            --accent-warning: #d97706;
+            --warning-soft: rgba(217, 119, 6, 0.25);
+            --warning-gradient-mid: #f59e0b;
+            --accent-danger: #dc2626;
+            --danger-soft: rgba(220, 38, 38, 0.25);
+            --accent-info: #2563eb;
+            --info-soft: rgba(37, 99, 235, 0.25);
+            --accent-secondary: #7c3aed;
+            --secondary-soft: rgba(124, 58, 237, 0.2);
+            --hidden-surface: rgba(15, 23, 42, 0.6);
+            --hidden-border: rgba(148, 163, 184, 0.35);
+            --neutral-soft: rgba(15, 23, 42, 0.15);
+            --neutral-strong: rgba(15, 23, 42, 0.4);
+            --button-on-accent: #f8fafc;
+            --modifier-positive: #2e7d32;
+            --modifier-negative: #d97706;
+            --modifier-neutral: rgba(15, 23, 42, 0.65);
+        }
+
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --bg-gradient-start: #050b18;
+            --bg-gradient-end: #0f172a;
+            --text-color: #e2e8f0;
+            --text-strong: #f8fafc;
+            --text-muted: rgba(203, 213, 225, 0.7);
+            --surface-strong: rgba(255, 255, 255, 0.08);
+            --surface-medium: rgba(255, 255, 255, 0.05);
+            --surface-soft: rgba(255, 255, 255, 0.04);
+            --surface-inverse: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(148, 163, 184, 0.25);
+            --shadow-color: rgba(15, 23, 42, 0.45);
+            --scrollbar-track: rgba(255, 255, 255, 0.06);
+            --scrollbar-thumb: rgba(148, 163, 184, 0.3);
+            --scrollbar-thumb-hover: rgba(226, 232, 240, 0.55);
+            --button-bg: rgba(148, 163, 184, 0.18);
+            --button-bg-hover: rgba(148, 163, 184, 0.28);
+            --button-text: #e2e8f0;
+            --button-active-bg: #38bdf8;
+            --button-active-shadow: rgba(56, 189, 248, 0.45);
+            --glass-highlight: rgba(148, 163, 184, 0.18);
+            --glass-muted: rgba(15, 23, 42, 0.45);
+            --muted-panel-bg: rgba(148, 163, 184, 0.08);
+            --no-selection-text: rgba(203, 213, 225, 0.7);
+            --no-selection-heading: rgba(226, 232, 240, 0.9);
+            --accent-success: #34d399;
+            --accent-success-hover: #22c55e;
+            --accent-success-shadow: rgba(52, 211, 153, 0.45);
+            --success-soft: rgba(52, 211, 153, 0.22);
+            --success-soft-weak: rgba(52, 211, 153, 0.14);
+            --success-gradient-end: #4ade80;
+            --accent-warning: #fbbf24;
+            --warning-soft: rgba(251, 191, 36, 0.28);
+            --warning-gradient-mid: #facc15;
+            --accent-danger: #f87171;
+            --danger-soft: rgba(248, 113, 113, 0.28);
+            --accent-info: #60a5fa;
+            --info-soft: rgba(96, 165, 250, 0.28);
+            --accent-secondary: #c084fc;
+            --secondary-soft: rgba(192, 132, 252, 0.28);
+            --hidden-surface: rgba(15, 23, 42, 0.75);
+            --hidden-border: rgba(71, 85, 105, 0.65);
+            --neutral-soft: rgba(148, 163, 184, 0.18);
+            --neutral-strong: rgba(148, 163, 184, 0.4);
+            --button-on-accent: #062026;
+            --modifier-positive: #4ade80;
+            --modifier-negative: #fbbf24;
+            --modifier-neutral: rgba(203, 213, 225, 0.7);
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-color);
             min-height: 100vh;
+            transition: background 0.4s ease, color 0.3s ease;
         }
 
         .game-container {
@@ -28,7 +130,8 @@
         h1 {
             font-size: 1.8em;
             margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: var(--text-strong);
+            text-shadow: 2px 2px 4px var(--shadow-color);
         }
 
         .controls {
@@ -45,21 +148,21 @@
             align-items: center;
         }
 
-        .save-btn,
-        .load-btn {
+        button.save-btn,
+        button.load-btn {
             padding: 8px 16px;
-            background: rgba(76, 175, 80, 0.8);
-            color: white;
+            background: var(--accent-success);
+            color: var(--button-on-accent);
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .save-btn:hover,
-        .load-btn:hover {
-            background: rgba(76, 175, 80, 1);
+        button.save-btn:hover,
+        button.load-btn:hover {
+            background: var(--accent-success-hover);
         }
 
         .load-input {
@@ -75,21 +178,22 @@
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: var(--button-bg);
+            color: var(--button-text);
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 16px;
         }
 
         button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--button-bg-hover);
             transform: translateY(-2px);
         }
 
         button.active {
-            background: #4CAF50;
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            background: var(--button-active-bg);
+            color: var(--button-on-accent);
+            box-shadow: 0 0 10px var(--button-active-shadow);
         }
 
         main {
@@ -106,7 +210,7 @@
         }
 
         .header-panel {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 10px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
@@ -116,7 +220,7 @@
         }
 
         .center-panel {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             border-radius: 10px;
             padding: 20px;
             overflow-y: auto;
@@ -130,17 +234,17 @@
         }
 
         .center-panel::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--scrollbar-track);
             border-radius: 4px;
         }
 
         .center-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
 
         .center-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--scrollbar-thumb-hover);
         }
 
         /* Planet View */
@@ -157,8 +261,8 @@
 
         .back-button {
             padding: 8px 16px;
-            background: rgba(76, 175, 80, 0.8);
-            color: white;
+            background: var(--accent-success);
+            color: var(--button-on-accent);
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -167,16 +271,16 @@
         }
 
         .back-button:hover {
-            background: rgba(76, 175, 80, 1);
+            background: var(--accent-success-hover);
         }
 
         /* Planet View Sections */
         .planet-details-section {
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
         }
 
         .planet-management-section {
@@ -192,21 +296,21 @@
         }
 
         .planet-details-section::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--scrollbar-track);
             border-radius: 4px;
         }
 
         .planet-details-section::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
 
         .planet-details-section::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--scrollbar-thumb-hover);
         }
 
         .footer-panel {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 10px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
@@ -275,12 +379,12 @@
         .no-planet-selected {
             text-align: center;
             padding: 20px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-muted);
         }
 
         .no-planet-selected h3 {
             margin: 0 0 10px 0;
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--text-strong);
             font-size: 16px;
         }
 
@@ -290,14 +394,14 @@
         }
 
         .game-info {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 20px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
         }
 
         .game-content {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 20px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
@@ -306,7 +410,7 @@
         .game-stats h2,
         .empire-resources h3 {
             margin-top: 0;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         .game-stats p,
@@ -323,16 +427,16 @@
         li {
             margin: 10px 0;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 5px;
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         /* Galaxy Grid Styles */
         .galaxy-grid {
             overflow: auto;
-            background: rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--surface-inverse);
+            border: 1px solid var(--border-color);
             padding: 20px;
         }
 
@@ -352,12 +456,12 @@
         .no-systems {
             text-align: center;
             padding: 40px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-muted);
         }
 
         .no-systems h3 {
             margin: 0 0 10px 0;
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--text-strong);
         }
 
         .no-systems p {
@@ -368,9 +472,9 @@
         .solar-system-cell {
             min-height: 120px;
             min-width: 200px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -382,40 +486,42 @@
         }
 
         .solar-system-cell.explored {
-            background: rgba(76, 175, 80, 0.2);
-            border: 2px solid #4CAF50;
+            background: var(--success-soft);
+            border: 2px solid var(--accent-success);
         }
 
         .solar-system-cell.discovered {
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid rgba(76, 175, 80, 0.5);
+            background: var(--success-soft-weak);
+            border: 1px solid var(--accent-success-shadow);
             opacity: 0.7;
         }
 
         .solar-system-cell.hidden {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(128, 128, 128, 0.3);
+            background: var(--hidden-surface);
+            border: 1px solid var(--hidden-border);
         }
 
         .system-header h4 {
             margin: 0 0 8px 0;
             font-size: 14px;
-            color: #4CAF50;
+            color: var(--accent-success);
             font-weight: bold;
         }
 
         .solar-system-cell.discovered .system-header h4 {
-            color: rgba(76, 175, 80, 0.7);
+            color: var(--accent-success);
+            opacity: 0.7;
         }
 
         .solar-system-cell.hidden .system-header h4 {
-            color: rgba(128, 128, 128, 0.5);
+            color: var(--text-muted);
+            opacity: 0.6;
         }
 
         .planet-count {
             margin: 0 0 8px 0;
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-muted);
         }
 
         .system-info {
@@ -434,34 +540,34 @@
         }
 
         .system-status.explored {
-            background: rgba(76, 175, 80, 0.3);
-            color: #4CAF50;
+            background: var(--success-soft);
+            color: var(--accent-success);
         }
 
         .system-status.discovered {
-            background: rgba(255, 193, 7, 0.3);
-            color: #FFC107;
+            background: var(--warning-soft);
+            color: var(--accent-warning);
         }
 
         .system-status.hidden {
-            background: rgba(128, 128, 128, 0.3);
-            color: #888;
+            background: var(--neutral-soft);
+            color: var(--text-muted);
         }
 
 
         .empty-cell {
-            color: rgba(255, 255, 255, 0.1);
+            color: var(--neutral-soft);
             font-size: 20px;
         }
 
         .system-error {
-            color: #f44336;
+            color: var(--accent-danger);
             font-size: 10px;
         }
 
         .missing {
-            background: #666;
-            color: #999;
+            background: var(--neutral-strong);
+            color: var(--text-muted);
         }
 
         /* View Controls */
@@ -470,23 +576,8 @@
             gap: 10px;
             margin-bottom: 20px;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 8px;
-        }
-
-        .back-button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .back-button:hover {
-            background: #45a049;
         }
 
         /* Solar System Grid Styles */
@@ -495,12 +586,12 @@
         }
 
         .system-header h2 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin: 0 0 10px 0;
         }
 
         .system-info {
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-muted);
             margin: 0 0 20px 0;
         }
 
@@ -534,7 +625,7 @@
 
         .planet-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px var(--shadow-color);
         }
 
         .planet-header {
@@ -547,13 +638,13 @@
         .planet-header h4 {
             margin: 0;
             font-size: 14px;
-            color: white;
+            color: var(--text-color);
         }
 
         .planet-class {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            background: var(--surface-medium);
             padding: 2px 6px;
             border-radius: 3px;
         }
@@ -566,8 +657,8 @@
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 3px;
-            background: rgba(76, 175, 80, 0.3);
-            color: #4CAF50;
+            background: var(--success-soft);
+            color: var(--accent-success);
         }
 
         .planet-resources {
@@ -583,16 +674,16 @@
         }
 
         .resource-name {
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-muted);
         }
 
         .resource-amount {
-            color: white;
+            color: var(--text-color);
             font-weight: bold;
         }
 
         .empty-planet-cell {
-            color: rgba(255, 255, 255, 0.1);
+            color: var(--neutral-soft);
             font-size: 20px;
             display: flex;
             align-items: center;
@@ -601,7 +692,7 @@
         }
 
         .planet-error {
-            color: #f44336;
+            color: var(--accent-danger);
             font-size: 12px;
             text-align: center;
             padding: 20px;
@@ -618,13 +709,13 @@
             gap: 15px;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 8px;
         }
 
         .planet-header h2 {
             margin: 0;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         .planet-class-badge,
@@ -636,13 +727,13 @@
         }
 
         .planet-class-badge {
-            background: rgba(76, 175, 80, 0.3);
-            color: #4CAF50;
+            background: var(--success-soft);
+            color: var(--accent-success);
         }
 
         .planet-state-badge {
-            background: rgba(255, 193, 7, 0.3);
-            color: #FFC107;
+            background: var(--warning-soft);
+            color: var(--accent-warning);
         }
 
         .planet-info-grid {
@@ -652,15 +743,15 @@
         }
 
         .info-section {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             padding: 20px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
         }
 
         .info-section h3 {
             margin: 0 0 15px 0;
-            color: #4CAF50;
+            color: var(--accent-success);
             font-size: 16px;
         }
 
@@ -681,7 +772,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 4px;
             font-size: 12px;
         }
@@ -690,39 +781,39 @@
         .modifier-type,
         .factory-type,
         .project-type {
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-muted);
         }
 
         .resource-amount,
         .modifier-value,
         .factory-level,
         .project-progress {
-            color: white;
+            color: var(--text-color);
             font-weight: bold;
         }
 
         .modifier-value.positive {
-            color: #66BB6A;
+            color: var(--modifier-positive);
         }
 
         .modifier-value.negative {
-            color: #FFB74D;
+            color: var(--modifier-negative);
         }
 
         .modifier-value.neutral {
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--modifier-neutral);
         }
 
         .error {
-            color: #f44336;
+            color: var(--accent-danger);
             text-align: center;
             padding: 40px;
             font-size: 18px;
         }
 
         .debug-info {
-            background: rgba(255, 193, 7, 0.2);
-            border: 1px solid #FFC107;
+            background: var(--warning-soft);
+            border: 1px solid var(--accent-warning);
             border-radius: 4px;
             padding: 10px;
             margin-top: 10px;
@@ -730,7 +821,7 @@
 
         .debug-info p {
             margin: 0;
-            color: #FFC107;
+            color: var(--accent-warning);
             font-size: 12px;
         }
 
@@ -750,8 +841,8 @@
 
         .solar-system {
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #4CAF50;
+            background: var(--surface-medium);
+            border: 2px solid var(--accent-success);
             border-radius: 10px;
             padding: 10px;
             min-width: 200px;
@@ -759,7 +850,7 @@
 
         .system-header h4 {
             margin: 0 0 10px 0;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         .conquest-progress {
@@ -771,14 +862,14 @@
         .progress-bar {
             flex: 1;
             height: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--surface-medium);
             border-radius: 4px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: #4CAF50;
+            background: var(--accent-success);
             transition: width 0.3s ease;
         }
 
@@ -858,7 +949,7 @@
 
         .planet.conquered {
             opacity: 1;
-            box-shadow: 0 0 10px #4CAF50;
+            box-shadow: 0 0 10px var(--accent-success);
         }
 
         .planet.terraforming {
@@ -868,7 +959,7 @@
 
         /* Planet Panel Styles */
         .planet-panel {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--surface-medium);
             border: 2px solid rgba(255, 255, 255, 0.5);
             border-radius: 10px;
             padding: 20px;
@@ -884,8 +975,8 @@
         }
 
         .close-btn {
-            background: #f44336;
-            color: white;
+            background: var(--accent-danger);
+            color: var(--button-on-accent);
             border: none;
             border-radius: 50%;
             width: 30px;
@@ -899,7 +990,7 @@
         }
 
         .detail-section h4 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 10px;
         }
 
@@ -915,16 +1006,16 @@
             display: flex;
             justify-content: space-between;
             padding: 5px 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 5px;
         }
 
         .modifier-item.positive {
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         .modifier-item.negative {
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--accent-danger);
         }
 
         .planet-actions {
@@ -936,8 +1027,8 @@
         }
 
         .action-btn {
-            background: #4CAF50;
-            color: white;
+            background: var(--accent-success);
+            color: var(--text-color);
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
@@ -946,12 +1037,12 @@
         }
 
         .action-btn:hover {
-            background: #45a049;
+            background: var(--accent-success-hover);
         }
 
         /* Resource Dashboard Styles */
         .resource-dashboard h3 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 15px;
         }
 
@@ -962,7 +1053,7 @@
         }
 
         .resource-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 8px;
             padding: 15px;
             text-align: center;
@@ -970,7 +1061,7 @@
 
         .resource-header h4 {
             margin: 0 0 10px 0;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         .resource-amount {
@@ -981,12 +1072,12 @@
 
         .resource-generation {
             font-size: 12px;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         /* Game Stats Styles */
         .game-stats h3 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 15px;
         }
 
@@ -1001,7 +1092,7 @@
             flex-direction: column;
             align-items: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 8px;
         }
 
@@ -1014,12 +1105,12 @@
         .stat-value {
             font-size: 16px;
             font-weight: bold;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         /* Conquest Cost Styles */
         .conquest-cost {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
             margin-top: 10px;
@@ -1027,7 +1118,7 @@
         }
 
         .conquest-cost h4 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 10px;
         }
 
@@ -1043,15 +1134,15 @@
             justify-content: space-between;
             padding: 8px;
             border-radius: 5px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
         }
 
         .cost-item.affordable {
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         .cost-item.insufficient {
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--accent-danger);
         }
 
         .resource-name {
@@ -1071,14 +1162,14 @@
 
         .conquest-status.ready {
             background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            border: 1px solid #4CAF50;
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
         }
 
         .conquest-status.insufficient {
             background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-            border: 1px solid #f44336;
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
         }
 
         /* Instructions Styles */
@@ -1087,7 +1178,7 @@
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         .instructions p {
@@ -1096,7 +1187,7 @@
         }
 
         .instructions strong {
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         /* Planet Status Hints */
@@ -1118,14 +1209,14 @@
 
         .status-hint.conquered {
             background: rgba(76, 175, 80, 0.2);
-            border-left: 4px solid #4CAF50;
-            color: #4CAF50;
+            border-left: 4px solid var(--accent-success);
+            color: var(--accent-success);
         }
 
         .status-hint.explored {
             background: rgba(33, 150, 243, 0.2);
-            border-left: 4px solid #2196F3;
-            color: #2196F3;
+            border-left: 4px solid var(--accent-info);
+            color: var(--accent-info);
         }
 
         .status-hint.terraforming {
@@ -1136,7 +1227,7 @@
 
         /* Factory Management Styles */
         .factory-management {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
             margin-top: 10px;
@@ -1144,7 +1235,7 @@
         }
 
         .factory-management h4 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 15px;
         }
 
@@ -1177,10 +1268,10 @@
         }
 
         .factory-item {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             padding: 10px;
             border-radius: 5px;
-            border-left: 3px solid #4CAF50;
+            border-left: 3px solid var(--accent-success);
         }
 
         .factory-info {
@@ -1192,7 +1283,7 @@
 
         .factory-type {
             font-weight: bold;
-            color: #4CAF50;
+            color: var(--accent-success);
         }
 
         .factory-status {
@@ -1217,18 +1308,18 @@
         }
 
         .factory-option {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             padding: 12px;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .factory-option.affordable {
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         .factory-option.insufficient {
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--accent-danger);
             opacity: 0.7;
         }
 
@@ -1246,8 +1337,8 @@
         }
 
         .build-btn {
-            background: #4CAF50;
-            color: white;
+            background: var(--accent-success);
+            color: var(--text-color);
             border: none;
             padding: 6px 12px;
             border-radius: 4px;
@@ -1257,7 +1348,7 @@
         }
 
         .build-btn:hover:not(:disabled) {
-            background: #45a049;
+            background: var(--accent-success-hover);
         }
 
         .build-btn:disabled {
@@ -1281,21 +1372,21 @@
             justify-content: space-between;
             padding: 4px 8px;
             border-radius: 3px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             font-size: 11px;
         }
 
         .factory-cost .cost-item.affordable {
-            border-left: 2px solid #4CAF50;
+            border-left: 2px solid var(--accent-success);
         }
 
         .factory-cost .cost-item.insufficient {
-            border-left: 2px solid #f44336;
+            border-left: 2px solid var(--accent-danger);
         }
 
         /* Transport System Styles */
         .transport-system {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
             margin-top: 10px;
@@ -1303,7 +1394,7 @@
         }
 
         .transport-system h4 {
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 15px;
         }
 
@@ -1336,9 +1427,9 @@
         .transport-row input {
             flex: 1;
             padding: 6px 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             color: #e0e0e0;
             font-size: 12px;
         }
@@ -1346,7 +1437,7 @@
         .transport-row select:focus,
         .transport-row input:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: var(--accent-success);
         }
 
         .available-resources {
@@ -1371,16 +1462,16 @@
             justify-content: space-between;
             padding: 4px 8px;
             border-radius: 3px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             font-size: 11px;
         }
 
         .transport-cost .cost-item.affordable {
-            border-left: 2px solid #4CAF50;
+            border-left: 2px solid var(--accent-success);
         }
 
         .transport-cost .cost-item.insufficient {
-            border-left: 2px solid #f44336;
+            border-left: 2px solid var(--accent-danger);
         }
 
         .transport-actions {
@@ -1388,8 +1479,8 @@
         }
 
         .transport-btn {
-            background: #4CAF50;
-            color: white;
+            background: var(--accent-success);
+            color: var(--text-color);
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
@@ -1399,7 +1490,7 @@
         }
 
         .transport-btn:hover:not(:disabled) {
-            background: #45a049;
+            background: var(--accent-success-hover);
         }
 
         .transport-btn:disabled {
@@ -1409,7 +1500,7 @@
 
         /* Prestige System Styles */
         .prestige-system {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
             margin-top: 10px;
@@ -1463,14 +1554,14 @@
         .progress-bar {
             flex: 1;
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 4px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            background: linear-gradient(90deg, var(--accent-success), var(--success-gradient-end));
             transition: width 0.3s ease;
         }
 
@@ -1498,12 +1589,12 @@
         }
 
         .requirement-status.met {
-            color: #4CAF50;
+            color: var(--accent-success);
             font-size: 11px;
         }
 
         .requirement-status.not-met {
-            color: #f44336;
+            color: var(--accent-danger);
             font-size: 11px;
         }
 
@@ -1550,7 +1641,7 @@
         }
 
         .prestige-btn.available:hover {
-            background: #FFC107;
+            background: var(--accent-warning);
             transform: translateY(-2px);
         }
 
@@ -1565,18 +1656,18 @@
             padding: 10px;
             background: rgba(255, 193, 7, 0.1);
             border-radius: 5px;
-            border-left: 3px solid #FFC107;
+            border-left: 3px solid var(--accent-warning);
         }
 
         .prestige-hint p {
-            color: #FFC107;
+            color: var(--accent-warning);
             font-size: 11px;
             margin: 0;
         }
 
         /* Terraforming Project Styles */
         .terraforming-project {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
             margin-top: 10px;
@@ -1621,18 +1712,18 @@
 
         .project-item,
         .modifier-option {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             padding: 12px;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .modifier-option.affordable {
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--accent-success);
         }
 
         .modifier-option.insufficient {
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--accent-danger);
             opacity: 0.7;
         }
 
@@ -1651,7 +1742,7 @@
         }
 
         .project-progress {
-            color: #4CAF50;
+            color: var(--accent-success);
             font-size: 12px;
         }
 
@@ -1686,21 +1777,21 @@
             justify-content: space-between;
             padding: 4px 8px;
             border-radius: 3px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-soft);
             font-size: 11px;
         }
 
         .modifier-cost .cost-item.affordable {
-            border-left: 2px solid #4CAF50;
+            border-left: 2px solid var(--accent-success);
         }
 
         .modifier-cost .cost-item.insufficient {
-            border-left: 2px solid #f44336;
+            border-left: 2px solid var(--accent-danger);
         }
 
         .terraform-btn {
             background: #9C27B0;
-            color: white;
+            color: var(--text-color);
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
@@ -1720,7 +1811,7 @@
 
         /* Resource Dashboard Styles */
         .resource-dashboard {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--surface-medium);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
@@ -1729,7 +1820,7 @@
         .resource-dashboard h3 {
             margin: 0 0 15px 0;
             font-size: 1.2em;
-            color: #fff;
+            color: var(--text-color);
         }
 
         .resource-grid {
@@ -1739,15 +1830,15 @@
         }
 
         .resource-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--surface-soft);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 10px;
             transition: all 0.3s ease;
         }
 
         .resource-card.at-capacity {
-            border: 2px solid #f44336;
+            border: 2px solid var(--accent-danger);
             background: rgba(244, 67, 54, 0.1);
         }
 
@@ -1761,12 +1852,12 @@
         .resource-header h4 {
             margin: 0;
             font-size: 0.9em;
-            color: #fff;
+            color: var(--text-color);
         }
 
         .capacity-warning {
-            background: #f44336;
-            color: white;
+            background: var(--accent-danger);
+            color: var(--text-color);
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 0.7em;
@@ -1776,14 +1867,14 @@
         .resource-amount {
             font-size: 1.1em;
             font-weight: bold;
-            color: #4CAF50;
+            color: var(--accent-success);
             margin-bottom: 8px;
         }
 
         .resource-capacity-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--surface-medium);
             border-radius: 4px;
             overflow: hidden;
             margin: 5px 0;
@@ -1791,13 +1882,13 @@
 
         .capacity-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #FFC107, #f44336);
+            background: linear-gradient(90deg, var(--accent-success), var(--accent-warning), var(--accent-danger));
             transition: width 0.3s ease;
         }
 
         .resource-generation {
             font-size: 0.8em;
-            color: #4CAF50;
+            color: var(--accent-success);
             font-weight: bold;
         }
 
@@ -1818,6 +1909,24 @@
             }
         }
     </style>
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+            const applyTheme = (isDark) => {
+                root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            };
+
+            applyTheme(prefersDark.matches);
+
+            if (typeof prefersDark.addEventListener === 'function') {
+                prefersDark.addEventListener('change', (event) => applyTheme(event.matches));
+            } else if (typeof prefersDark.addListener === 'function') {
+                prefersDark.addListener((event) => applyTheme(event.matches));
+            }
+        })();
+    </script>
 </head>
 
 <body>
