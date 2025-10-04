@@ -55,6 +55,39 @@
             --modifier-positive: #2e7d32;
             --modifier-negative: #d97706;
             --modifier-neutral: rgba(15, 23, 42, 0.65);
+            --shadow-elevated: rgba(15, 23, 42, 0.18);
+            --heading-shadow: rgba(15, 23, 42, 0.35);
+            --danger-soft-hover: rgba(248, 113, 113, 0.35);
+            --danger-soft-strong: rgba(244, 67, 54, 0.2);
+            --danger-soft-weak: rgba(244, 67, 54, 0.1);
+            --warning-soft-strong: rgba(255, 193, 7, 0.2);
+            --warning-soft-weak: rgba(255, 193, 7, 0.1);
+            --info-soft-weak: rgba(33, 150, 243, 0.2);
+            --terraforming-soft: rgba(156, 39, 176, 0.2);
+            --warning-glow: rgba(217, 119, 6, 0.4);
+            --border-overlay: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(255, 255, 255, 0.5);
+            --button-disabled-bg: rgba(15, 23, 42, 0.2);
+            --button-on-danger: #ffffff;
+            --button-on-prestige: #111827;
+            --text-soft: rgba(15, 23, 42, 0.7);
+            --text-faint: rgba(15, 23, 42, 0.5);
+            --text-disabled: rgba(15, 23, 42, 0.35);
+            --accent-warning-bright: #ffc107;
+            --accent-prestige: #ffd700;
+            --accent-terraforming: #9c27b0;
+            --accent-terraforming-hover: #7b1fa2;
+            --terraforming-glow: #ffd700;
+            --planet-color-barren: #8b4513;
+            --planet-color-terran: #228b22;
+            --planet-color-gas-giant: #ffd700;
+            --planet-color-ocean: #0066cc;
+            --planet-color-desert: #f4a460;
+            --planet-color-ice: #b0e0e6;
+            --planet-color-volcanic: #ff4500;
+            --planet-color-toxic: #9acd32;
+            --planet-color-crystalline: #dda0dd;
+            --planet-color-metallic: #c0c0c0;
         }
 
         [data-theme="dark"] {
@@ -106,6 +139,39 @@
             --modifier-positive: #4ade80;
             --modifier-negative: #fbbf24;
             --modifier-neutral: rgba(203, 213, 225, 0.7);
+            --shadow-elevated: rgba(15, 23, 42, 0.55);
+            --heading-shadow: rgba(6, 12, 24, 0.75);
+            --danger-soft-hover: rgba(248, 113, 113, 0.4);
+            --danger-soft-strong: rgba(248, 113, 113, 0.32);
+            --danger-soft-weak: rgba(248, 113, 113, 0.18);
+            --warning-soft-strong: rgba(251, 191, 36, 0.28);
+            --warning-soft-weak: rgba(251, 191, 36, 0.18);
+            --info-soft-weak: rgba(96, 165, 250, 0.22);
+            --terraforming-soft: rgba(192, 132, 252, 0.24);
+            --warning-glow: rgba(251, 191, 36, 0.45);
+            --border-overlay: rgba(148, 163, 184, 0.2);
+            --border-glow: rgba(148, 163, 184, 0.4);
+            --button-disabled-bg: rgba(71, 85, 105, 0.45);
+            --button-on-danger: #ffffff;
+            --button-on-prestige: #0f172a;
+            --text-soft: rgba(226, 232, 240, 0.82);
+            --text-faint: rgba(148, 163, 184, 0.6);
+            --text-disabled: rgba(100, 116, 139, 0.5);
+            --accent-warning-bright: #facc15;
+            --accent-prestige: #facc15;
+            --accent-terraforming: #c084fc;
+            --accent-terraforming-hover: #a855f7;
+            --terraforming-glow: #c084fc;
+            --planet-color-barren: #8b4513;
+            --planet-color-terran: #22c55e;
+            --planet-color-gas-giant: #facc15;
+            --planet-color-ocean: #2563eb;
+            --planet-color-desert: #f59e0b;
+            --planet-color-ice: #38bdf8;
+            --planet-color-volcanic: #f87171;
+            --planet-color-toxic: #84cc16;
+            --planet-color-crystalline: #c084fc;
+            --planet-color-metallic: #94a3b8;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -123,46 +189,113 @@
         }
 
         header {
-            text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+            background: var(--surface-medium);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 18px 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 18px 40px var(--shadow-elevated);
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         h1 {
-            font-size: 1.8em;
+            font-size: 2rem;
             margin: 0;
             color: var(--text-strong);
-            text-shadow: 2px 2px 4px var(--shadow-color);
+            text-shadow: 0 8px 24px var(--heading-shadow);
         }
 
-        .controls {
-            margin-top: 20px;
+        .header-subtitle {
+            margin: 0;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
             display: flex;
-            justify-content: center;
-            gap: 20px;
+            align-items: flex-end;
+            gap: 18px;
             flex-wrap: wrap;
+            justify-content: flex-end;
+            flex: 1;
+        }
+
+        .control-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 160px;
+        }
+
+        .control-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
         .save-load-controls {
             display: flex;
             gap: 10px;
             align-items: center;
+            background: var(--surface-soft);
+            padding: 6px 10px;
+            border-radius: 14px;
         }
 
         button.save-btn,
-        button.load-btn {
+        .load-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 8px 16px;
             background: var(--accent-success);
             color: var(--button-on-accent);
             border: none;
-            border-radius: 4px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s ease, color 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
         }
 
         button.save-btn:hover,
-        button.load-btn:hover {
+        .load-btn:hover {
             background: var(--accent-success-hover);
+            transform: translateY(-1px);
+        }
+
+        button.reset-btn {
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: var(--danger-soft);
+            color: var(--accent-danger);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+        }
+
+        button.reset-btn:hover {
+            background: var(--danger-soft-hover);
+            color: var(--button-on-danger);
+            transform: translateY(-1px);
         }
 
         .load-input {
@@ -171,7 +304,10 @@
 
         .speed-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            padding: 4px;
+            border-radius: 999px;
+            background: var(--surface-soft);
         }
 
         button {
@@ -183,6 +319,30 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 16px;
+        }
+
+        .control-btn {
+            padding: 8px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--button-bg) 0%, var(--surface-soft) 100%);
+        }
+
+        .speed-btn {
+            border-radius: 999px;
+            min-width: 58px;
+            justify-content: center;
+        }
+
+        .pause-btn.active {
+            background: var(--accent-warning);
+            color: var(--button-on-accent);
+            box-shadow: 0 0 14px var(--warning-glow);
+        }
+
+        .session-controls {
+            display: flex;
         }
 
         button:hover {
@@ -896,43 +1056,43 @@
         }
 
         .planet.barren {
-            background: #8B4513;
+            background: var(--planet-color-barren);
         }
 
         .planet.terran {
-            background: #228B22;
+            background: var(--planet-color-terran);
         }
 
         .planet.gas-giant {
-            background: #FFD700;
+            background: var(--planet-color-gas-giant);
         }
 
         .planet.ocean {
-            background: #0066CC;
+            background: var(--planet-color-ocean);
         }
 
         .planet.desert {
-            background: #F4A460;
+            background: var(--planet-color-desert);
         }
 
         .planet.ice {
-            background: #B0E0E6;
+            background: var(--planet-color-ice);
         }
 
         .planet.volcanic {
-            background: #FF4500;
+            background: var(--planet-color-volcanic);
         }
 
         .planet.toxic {
-            background: #9ACD32;
+            background: var(--planet-color-toxic);
         }
 
         .planet.crystalline {
-            background: #DDA0DD;
+            background: var(--planet-color-crystalline);
         }
 
         .planet.metallic {
-            background: #C0C0C0;
+            background: var(--planet-color-metallic);
         }
 
         .planet.unexplored {
@@ -950,13 +1110,13 @@
 
         .planet.terraforming {
             opacity: 0.9;
-            box-shadow: 0 0 10px #FFD700;
+            box-shadow: 0 0 10px var(--terraforming-glow);
         }
 
         /* Planet Panel Styles */
         .planet-panel {
             background: var(--surface-medium);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--border-glow);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
@@ -1094,7 +1254,7 @@
 
         .stat-label {
             font-size: 12px;
-            color: #ccc;
+            color: var(--text-muted);
             margin-bottom: 5px;
         }
 
@@ -1146,7 +1306,7 @@
         }
 
         .cost-amount {
-            color: #ccc;
+            color: var(--text-muted);
         }
 
         .conquest-status {
@@ -1157,20 +1317,20 @@
         }
 
         .conquest-status.ready {
-            background: rgba(76, 175, 80, 0.2);
+            background: var(--success-soft);
             color: var(--accent-success);
             border: 1px solid var(--accent-success);
         }
 
         .conquest-status.insufficient {
-            background: rgba(244, 67, 54, 0.2);
+            background: var(--danger-soft-strong);
             color: var(--accent-danger);
             border: 1px solid var(--accent-danger);
         }
 
         /* Instructions Styles */
         .instructions {
-            background: rgba(76, 175, 80, 0.1);
+            background: var(--success-soft-weak);
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
@@ -1179,7 +1339,7 @@
 
         .instructions p {
             margin: 5px 0;
-            color: #e0e0e0;
+            color: var(--text-soft);
         }
 
         .instructions strong {
@@ -1198,27 +1358,27 @@
         }
 
         .status-hint.unexplored {
-            background: rgba(255, 193, 7, 0.2);
-            border-left: 4px solid #ffc107;
-            color: #ffc107;
+            background: var(--warning-soft-strong);
+            border-left: 4px solid var(--accent-warning-bright);
+            color: var(--accent-warning-bright);
         }
 
         .status-hint.conquered {
-            background: rgba(76, 175, 80, 0.2);
+            background: var(--success-soft);
             border-left: 4px solid var(--accent-success);
             color: var(--accent-success);
         }
 
         .status-hint.explored {
-            background: rgba(33, 150, 243, 0.2);
+            background: var(--info-soft-weak);
             border-left: 4px solid var(--accent-info);
             color: var(--accent-info);
         }
 
         .status-hint.terraforming {
-            background: rgba(156, 39, 176, 0.2);
-            border-left: 4px solid #9C27B0;
-            color: #9C27B0;
+            background: var(--terraforming-soft);
+            border-left: 4px solid var(--accent-terraforming);
+            color: var(--accent-terraforming);
         }
 
         /* Factory Management Styles */
@@ -1236,13 +1396,13 @@
         }
 
         .factory-management h5 {
-            color: #e0e0e0;
+            color: var(--text-soft);
             margin: 10px 0 8px 0;
             font-size: 14px;
         }
 
         .factory-management h6 {
-            color: #ccc;
+            color: var(--text-muted);
             margin: 5px 0;
             font-size: 12px;
         }
@@ -1252,7 +1412,7 @@
         }
 
         .no-factories {
-            color: #888;
+            color: var(--text-faint);
             font-style: italic;
             margin: 10px 0;
         }
@@ -1283,17 +1443,17 @@
         }
 
         .factory-status {
-            color: #ccc;
+            color: var(--text-muted);
             font-size: 12px;
         }
 
         .factory-efficiency {
-            color: #888;
+            color: var(--text-faint);
             font-size: 11px;
         }
 
         .build-factories {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border-overlay);
             padding-top: 15px;
         }
 
@@ -1307,7 +1467,7 @@
             background: var(--surface-soft);
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-overlay);
         }
 
         .factory-option.affordable {
@@ -1328,7 +1488,7 @@
 
         .factory-header h6 {
             margin: 0;
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 14px;
         }
 
@@ -1348,7 +1508,8 @@
         }
 
         .build-btn:disabled {
-            background: #666;
+            background: var(--button-disabled-bg);
+            color: var(--text-disabled);
             cursor: not-allowed;
         }
 
@@ -1395,7 +1556,7 @@
         }
 
         .transport-system h5 {
-            color: #e0e0e0;
+            color: var(--text-soft);
             margin: 10px 0 8px 0;
             font-size: 14px;
         }
@@ -1415,7 +1576,7 @@
 
         .transport-row label {
             min-width: 80px;
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 12px;
         }
 
@@ -1426,7 +1587,7 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: var(--surface-medium);
-            color: #e0e0e0;
+            color: var(--text-color);
             font-size: 12px;
         }
 
@@ -1437,7 +1598,7 @@
         }
 
         .available-resources {
-            color: #888;
+            color: var(--text-faint);
             font-size: 11px;
             margin-left: 8px;
         }
@@ -1490,7 +1651,8 @@
         }
 
         .transport-btn:disabled {
-            background: #666;
+            background: var(--button-disabled-bg);
+            color: var(--text-disabled);
             cursor: not-allowed;
         }
 
@@ -1504,12 +1666,12 @@
         }
 
         .prestige-system h4 {
-            color: #FFD700;
+            color: var(--accent-prestige);
             margin-bottom: 15px;
         }
 
         .prestige-system h5 {
-            color: #e0e0e0;
+            color: var(--text-soft);
             margin: 10px 0 8px 0;
             font-size: 14px;
         }
@@ -1530,12 +1692,12 @@
 
         .prestige-points .label,
         .galaxy-progress .label {
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 12px;
         }
 
         .prestige-points .value {
-            color: #FFD700;
+            color: var(--accent-prestige);
             font-weight: bold;
             font-size: 14px;
         }
@@ -1562,7 +1724,7 @@
         }
 
         .progress-text {
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 11px;
             min-width: 40px;
         }
@@ -1576,11 +1738,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--border-overlay);
         }
 
         .requirement-label {
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 12px;
         }
 
@@ -1616,7 +1778,7 @@
         }
 
         .benefit-text {
-            color: #e0e0e0;
+            color: var(--text-soft);
             font-size: 11px;
         }
 
@@ -1625,8 +1787,8 @@
         }
 
         .prestige-btn {
-            background: #FFD700;
-            color: #000;
+            background: var(--accent-prestige);
+            color: var(--button-on-prestige);
             border: none;
             padding: 12px 24px;
             border-radius: 6px;
@@ -1642,15 +1804,15 @@
         }
 
         .prestige-btn.unavailable {
-            background: #666;
-            color: #999;
+            background: var(--button-disabled-bg);
+            color: var(--text-disabled);
             cursor: not-allowed;
         }
 
         .prestige-hint {
             margin-top: 10px;
             padding: 10px;
-            background: rgba(255, 193, 7, 0.1);
+            background: var(--warning-soft-weak);
             border-radius: 5px;
             border-left: 3px solid var(--accent-warning);
         }
@@ -1671,18 +1833,18 @@
         }
 
         .terraforming-project h4 {
-            color: #9C27B0;
+            color: var(--accent-terraforming);
             margin-bottom: 15px;
         }
 
         .terraforming-project h5 {
-            color: #e0e0e0;
+            color: var(--text-soft);
             margin: 10px 0 8px 0;
             font-size: 14px;
         }
 
         .terraforming-project h6 {
-            color: #ccc;
+            color: var(--text-muted);
             margin: 5px 0;
             font-size: 12px;
         }
@@ -1694,7 +1856,7 @@
 
         .no-projects,
         .no-modifiers {
-            color: #888;
+            color: var(--text-faint);
             font-style: italic;
             margin: 10px 0;
         }
@@ -1711,7 +1873,7 @@
             background: var(--surface-soft);
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-overlay);
         }
 
         .modifier-option.affordable {
@@ -1734,7 +1896,7 @@
         .project-name,
         .modifier-name {
             font-weight: bold;
-            color: #9C27B0;
+            color: var(--accent-terraforming);
         }
 
         .project-progress {
@@ -1753,7 +1915,7 @@
         }
 
         .project-target {
-            color: #888;
+            color: var(--text-faint);
             font-size: 11px;
         }
 
@@ -1786,7 +1948,7 @@
         }
 
         .terraform-btn {
-            background: #9C27B0;
+            background: var(--accent-terraforming);
             color: var(--text-color);
             border: none;
             padding: 8px 16px;
@@ -1797,11 +1959,12 @@
         }
 
         .terraform-btn:hover:not(:disabled) {
-            background: #7B1FA2;
+            background: var(--accent-terraforming-hover);
         }
 
         .terraform-btn:disabled {
-            background: #666;
+            background: var(--button-disabled-bg);
+            color: var(--text-disabled);
             cursor: not-allowed;
         }
 
@@ -1835,7 +1998,7 @@
 
         .resource-card.at-capacity {
             border: 2px solid var(--accent-danger);
-            background: rgba(244, 67, 54, 0.1);
+            background: var(--danger-soft-weak);
         }
 
         .resource-header {

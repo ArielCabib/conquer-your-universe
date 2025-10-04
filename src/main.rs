@@ -73,25 +73,41 @@ fn App() -> Html {
                 <button onclick={move |_| {
                     game_engine_1x.borrow_mut().set_game_speed(GameSpeed::Normal);
                     game_speed_1x.set(GameSpeed::Normal);
-                }} class={if *game_speed == GameSpeed::Normal { "active" } else { "" }}>
+                }} class={classes!(
+                    "control-btn",
+                    "speed-btn",
+                    (*game_speed == GameSpeed::Normal).then_some("active")
+                )}>
                     { "1x" }
                 </button>
                 <button onclick={move |_| {
                     game_engine_10x.borrow_mut().set_game_speed(GameSpeed::Fast);
                     game_speed_10x.set(GameSpeed::Fast);
-                }} class={if *game_speed == GameSpeed::Fast { "active" } else { "" }}>
+                }} class={classes!(
+                    "control-btn",
+                    "speed-btn",
+                    (*game_speed == GameSpeed::Fast).then_some("active")
+                )}>
                     { "10x" }
                 </button>
                 <button onclick={move |_| {
                     game_engine_100x.borrow_mut().set_game_speed(GameSpeed::VeryFast);
                     game_speed_100x.set(GameSpeed::VeryFast);
-                }} class={if *game_speed == GameSpeed::VeryFast { "active" } else { "" }}>
+                }} class={classes!(
+                    "control-btn",
+                    "speed-btn",
+                    (*game_speed == GameSpeed::VeryFast).then_some("active")
+                )}>
                     { "100x" }
                 </button>
                 <button onclick={move |_| {
                     game_engine_1000x.borrow_mut().set_game_speed(GameSpeed::UltraFast);
                     game_speed_1000x.set(GameSpeed::UltraFast);
-                }} class={if *game_speed == GameSpeed::UltraFast { "active" } else { "" }}>
+                }} class={classes!(
+                    "control-btn",
+                    "speed-btn",
+                    (*game_speed == GameSpeed::UltraFast).then_some("active")
+                )}>
                     { "1000x" }
                 </button>
             </div>
@@ -103,10 +119,17 @@ fn App() -> Html {
         let is_paused_clone = is_paused.clone();
 
         html! {
-            <button onclick={move |_| {
+            <button
+                class={classes!(
+                    "control-btn",
+                    "pause-btn",
+                    (*is_paused).then_some("active")
+                )}
+                onclick={move |_| {
                 game_engine.borrow_mut().toggle_pause();
                 is_paused_clone.set(!*is_paused_clone);
-            }}>
+            }}
+            >
                 { if *is_paused { "Resume" } else { "Pause" } }
             </button>
         }
@@ -609,16 +632,30 @@ fn App() -> Html {
 
     html! {
         <div class="game-container">
-            <header>
-                <h1>{ "Conquer Your Universe" }</h1>
-                <div class="controls">
-                    { speed_controls }
-                    { pause_button }
-                    <div class="save-load-controls">
-                        <button onclick={on_save_json} class="save-btn">{ "Save to JSON" }</button>
-                        <input type="file" accept=".json" onchange={on_load_json} class="load-input" id="load-json-input" />
-                        <label for="load-json-input" class="load-btn">{ "Load from JSON" }</label>
-                        <button onclick={on_reset_game} class="reset-btn">{ "Reset Game" }</button>
+            <header class="game-header">
+                <div class="header-title">
+                    <h1>{ "Conquer Your Universe" }</h1>
+                    <p class="header-subtitle">{ "Galactic command console" }</p>
+                </div>
+                <div class="header-actions">
+                    <div class="control-stack">
+                        <span class="control-label">{ "Game Speed" }</span>
+                        { speed_controls }
+                    </div>
+                    <div class="control-stack">
+                        <span class="control-label">{ "Session" }</span>
+                        <div class="session-controls">
+                            { pause_button }
+                        </div>
+                    </div>
+                    <div class="control-stack">
+                        <span class="control-label">{ "Data" }</span>
+                        <div class="save-load-controls">
+                            <button onclick={on_save_json} class="save-btn">{ "Save Game" }</button>
+                            <input type="file" accept=".json" onchange={on_load_json} class="load-input" id="load-json-input" />
+                            <label for="load-json-input" class="load-btn">{ "Load Game" }</label>
+                            <button onclick={on_reset_game} class="reset-btn">{ "Reset" }</button>
+                        </div>
                     </div>
                 </div>
             </header>
