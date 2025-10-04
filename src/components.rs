@@ -487,10 +487,6 @@ pub struct PlanetPanelProps {
 
 #[function_component]
 pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
-    log::info!(
-        "PlanetPanel rendered with planet: {:?}",
-        props.planet.is_some()
-    );
     if let Some(planet) = &props.planet {
         let planet_id = planet.id;
         let on_terraform = props.on_terraform.clone();
@@ -646,7 +642,7 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
                     let storage_limit = props.storage_limits.get(resource_type).copied().unwrap_or(1000);
                     let is_at_capacity = *amount >= storage_limit;
                     let capacity_percentage = (*amount as f64 / storage_limit as f64 * 100.0).min(100.0);
-                    
+
                     html! {
                         <div class={format!("resource-card {}", if is_at_capacity { "at-capacity" } else { "" })}>
                             <div class="resource-header">

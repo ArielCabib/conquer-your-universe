@@ -629,6 +629,92 @@ impl GameEngine {
         success
     }
 
+    /// Reset game state to initial state
+    pub fn reset_game(&mut self) {
+        log::info!("Resetting game state to initial state");
+
+        // Clear localStorage first to prevent loading old data
+        if let Some(window) = web_sys::window() {
+            if let Some(storage) = window.local_storage().ok().flatten() {
+                let _ = storage.delete("conquer_universe_save");
+            }
+        }
+
+        // Clear all game state
+        self.game_state = GameState {
+            current_tick: 0,
+            game_speed: GameSpeed::Normal,
+            is_paused: false,
+            current_galaxy: 0,
+            galaxies: HashMap::new(),
+            solar_systems: HashMap::new(),
+            planets: HashMap::new(),
+            resources_in_transit: Vec::new(),
+            empire_resources: HashMap::new(),
+            prestige_bonuses: Vec::new(),
+            total_prestige_points: 0,
+            explored_solar_systems: HashSet::new(),
+            discovered_solar_systems: HashSet::new(),
+            product_dependencies: HashMap::new(),
+            transport_routes: HashMap::new(),
+        };
+
+        // Manually initialize the game without loading from storage
+        self.initialize_fresh_game();
+
+        log::info!("Game state reset complete");
+    }
+
+    /// Initialize a fresh game without loading from storage
+    fn initialize_fresh_game(&mut self) {
+        log::info!("Initializing fresh game");
+
+        // Generate initial galaxy
+        let galaxy = self
+            .galaxy_system
+            .generate_galaxy("Milky Way".to_string(), 100);
+        let galaxy_id = galaxy.id;
+        self.game_state.galaxies.insert(galaxy_id, galaxy);
+        self.game_state.current_galaxy = galaxy_id;
+
+        // Generate initial solar system
+        let (solar_system, planets) = self
+            .galaxy_system
+            .generate_solar_system_with_planets(galaxy_id, 0);
+        let system_id = solar_system.id;
+        self.game_state
+            .solar_systems
+            .insert(system_id, solar_system);
+        self.game_state
+            .galaxies
+            .get_mut(&galaxy_id)
+            .unwrap()
+            .solar_systems
+            .push(system_id);
+
+        // Store planets
+        for planet in planets {
+            self.game_state.planets.insert(planet.id, planet);
+        }
+
+        // Set initial exploration state
+        self.game_state.discovered_solar_systems.insert(system_id);
+        self.game_state.explored_solar_systems.insert(system_id);
+
+        // Conquer the first planet
+        if let Some(first_planet_id) = self.game_state.planets.keys().next().copied() {
+            if let Some(planet) = self.game_state.planets.get_mut(&first_planet_id) {
+                planet.state = PlanetState::Conquered;
+                log::info!("Conquered initial planet: {}", planet.name);
+            }
+        }
+
+        log::info!(
+            "Fresh game initialized with {} planets",
+            self.game_state.planets.len()
+        );
+    }
+
     /// Get game statistics
     pub fn get_game_statistics(&self) -> GameStatistics {
         let conquered_planets = self

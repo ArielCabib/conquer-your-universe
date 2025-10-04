@@ -583,6 +583,31 @@ fn App() -> Html {
         }
     };
 
+    let on_reset_game = {
+        let game_engine = game_engine.clone();
+        let refresh_trigger = refresh_trigger.clone();
+        let current_view = current_view.clone();
+        let selected_solar_system = selected_solar_system.clone();
+        let selected_planet = selected_planet.clone();
+        move |_| {
+            // Confirm reset
+            if let Some(window) = web_sys::window() {
+                if let Ok(confirmed) = window.confirm_with_message("Are you sure you want to reset the game? This will delete all progress and cannot be undone.") {
+                    if confirmed {
+                        game_engine.borrow_mut().reset_game();
+                        // Reset UI state
+                        current_view.set(ViewMode::Galaxy);
+                        selected_solar_system.set(None);
+                        selected_planet.set(None);
+                        // Trigger UI refresh
+                        refresh_trigger.set(*refresh_trigger + 1);
+                        log::info!("Game reset confirmed");
+                    }
+                }
+            }
+        }
+    };
+
     html! {
         <div class="game-container">
             <header>
@@ -594,6 +619,7 @@ fn App() -> Html {
                         <button onclick={on_save_json} class="save-btn">{ "Save to JSON" }</button>
                         <input type="file" accept=".json" onchange={on_load_json} class="load-input" id="load-json-input" />
                         <label for="load-json-input" class="load-btn">{ "Load from JSON" }</label>
+                        <button onclick={on_reset_game} class="reset-btn">{ "Reset Game" }</button>
                     </div>
                 </div>
             </header>
