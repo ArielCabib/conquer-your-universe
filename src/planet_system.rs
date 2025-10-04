@@ -1,6 +1,6 @@
 use crate::types::*;
-use std::collections::HashMap;
 use rand::Rng;
+use std::collections::HashMap;
 
 /// Planet generation and management system
 pub struct PlanetSystem {
@@ -65,8 +65,12 @@ impl PlanetSystem {
 
     /// Generate planet name
     fn generate_planet_name(&mut self) -> String {
-        let prefixes = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta"];
-        let suffixes = ["Prime", "Secundus", "Tertius", "Quartus", "Quintus", "Major", "Minor", "Nova"];
+        let prefixes = [
+            "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta",
+        ];
+        let suffixes = [
+            "Prime", "Secundus", "Tertius", "Quartus", "Quintus", "Major", "Minor", "Nova",
+        ];
         let numbers = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
         let prefix = prefixes[self.rng.gen_range(0..prefixes.len())];
@@ -80,7 +84,10 @@ impl PlanetSystem {
     }
 
     /// Generate base resources for a planet based on its class
-    fn generate_planet_resources(&mut self, planet_class: &PlanetClass) -> HashMap<ResourceType, u64> {
+    fn generate_planet_resources(
+        &mut self,
+        planet_class: &PlanetClass,
+    ) -> HashMap<ResourceType, u64> {
         let mut resources = HashMap::new();
 
         match planet_class {
@@ -90,70 +97,70 @@ impl PlanetSystem {
                 resources.insert(ResourceType::Population, 0);
                 resources.insert(ResourceType::Technology, self.rng.gen_range(5..30));
                 resources.insert(ResourceType::Food, 0);
-            },
+            }
             PlanetClass::Terran => {
                 resources.insert(ResourceType::Population, self.rng.gen_range(100..500));
                 resources.insert(ResourceType::Food, self.rng.gen_range(80..300));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150));
                 resources.insert(ResourceType::Energy, self.rng.gen_range(20..100));
                 resources.insert(ResourceType::Technology, self.rng.gen_range(10..80));
-            },
+            }
             PlanetClass::GasGiant => {
                 resources.insert(ResourceType::Energy, self.rng.gen_range(200..800));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(10..50));
                 resources.insert(ResourceType::Population, 0);
                 resources.insert(ResourceType::Technology, self.rng.gen_range(5..20));
                 resources.insert(ResourceType::Food, 0);
-            },
+            }
             PlanetClass::Ocean => {
                 resources.insert(ResourceType::Food, self.rng.gen_range(150..600));
                 resources.insert(ResourceType::Population, self.rng.gen_range(50..300));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(20..100));
                 resources.insert(ResourceType::Energy, self.rng.gen_range(30..120));
                 resources.insert(ResourceType::Technology, self.rng.gen_range(5..40));
-            },
+            }
             PlanetClass::Desert => {
                 resources.insert(ResourceType::Energy, self.rng.gen_range(100..400));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(40..200));
                 resources.insert(ResourceType::Population, self.rng.gen_range(10..80));
                 resources.insert(ResourceType::Technology, self.rng.gen_range(15..60));
                 resources.insert(ResourceType::Food, self.rng.gen_range(5..30));
-            },
+            }
             PlanetClass::Ice => {
                 resources.insert(ResourceType::Technology, self.rng.gen_range(50..200));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150));
                 resources.insert(ResourceType::Population, self.rng.gen_range(5..50));
                 resources.insert(ResourceType::Energy, self.rng.gen_range(10..60));
                 resources.insert(ResourceType::Food, self.rng.gen_range(5..40));
-            },
+            }
             PlanetClass::Volcanic => {
                 resources.insert(ResourceType::Energy, self.rng.gen_range(150..600));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(80..300));
                 resources.insert(ResourceType::Population, 0);
                 resources.insert(ResourceType::Technology, self.rng.gen_range(10..50));
                 resources.insert(ResourceType::Food, 0);
-            },
+            }
             PlanetClass::Toxic => {
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(100..400));
                 resources.insert(ResourceType::Technology, self.rng.gen_range(20..100));
                 resources.insert(ResourceType::Population, 0);
                 resources.insert(ResourceType::Energy, self.rng.gen_range(30..150));
                 resources.insert(ResourceType::Food, 0);
-            },
+            }
             PlanetClass::Crystalline => {
                 resources.insert(ResourceType::Technology, self.rng.gen_range(100..500));
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(200..800));
                 resources.insert(ResourceType::Population, self.rng.gen_range(10..100));
                 resources.insert(ResourceType::Energy, self.rng.gen_range(50..200));
                 resources.insert(ResourceType::Food, self.rng.gen_range(5..50));
-            },
+            }
             PlanetClass::Metallic => {
                 resources.insert(ResourceType::Minerals, self.rng.gen_range(300..1000));
                 resources.insert(ResourceType::Technology, self.rng.gen_range(50..250));
                 resources.insert(ResourceType::Energy, self.rng.gen_range(40..180));
                 resources.insert(ResourceType::Population, self.rng.gen_range(20..150));
                 resources.insert(ResourceType::Food, self.rng.gen_range(10..80));
-            },
+            }
         }
 
         resources
@@ -175,7 +182,7 @@ impl PlanetSystem {
                     value: 50.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Terran => {
                 // Terran planets have balanced modifiers
                 if self.rng.gen_bool(0.3) {
@@ -185,7 +192,7 @@ impl PlanetSystem {
                         is_percentage: true,
                     });
                 }
-            },
+            }
             PlanetClass::GasGiant => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::PopulationPenalty,
@@ -197,7 +204,7 @@ impl PlanetSystem {
                     value: 100.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Ocean => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::FoodMultiplier,
@@ -211,7 +218,7 @@ impl PlanetSystem {
                         is_percentage: true,
                     });
                 }
-            },
+            }
             PlanetClass::Desert => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::ResourcePenalty,
@@ -223,7 +230,7 @@ impl PlanetSystem {
                     value: 50.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Ice => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::TechnologyMultiplier,
@@ -235,7 +242,7 @@ impl PlanetSystem {
                     value: -40.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Volcanic => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::PopulationPenalty,
@@ -252,7 +259,7 @@ impl PlanetSystem {
                     value: 80.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Toxic => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::PopulationPenalty,
@@ -269,7 +276,7 @@ impl PlanetSystem {
                     value: 60.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Crystalline => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::TechnologyMultiplier,
@@ -281,7 +288,7 @@ impl PlanetSystem {
                     value: 150.0,
                     is_percentage: true,
                 });
-            },
+            }
             PlanetClass::Metallic => {
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::MineralMultiplier,
@@ -293,7 +300,7 @@ impl PlanetSystem {
                     value: 80.0,
                     is_percentage: true,
                 });
-            },
+            }
         }
 
         // Add random additional modifiers
@@ -365,7 +372,11 @@ impl PlanetSystem {
     }
 
     /// Update terraforming projects on a planet
-    pub fn update_terraforming_projects(&mut self, planet: &mut Planet, game_speed: GameSpeed) -> bool {
+    pub fn update_terraforming_projects(
+        &mut self,
+        planet: &mut Planet,
+        game_speed: GameSpeed,
+    ) -> bool {
         let mut any_completed = false;
         let speed_multiplier = game_speed as u64;
 
@@ -380,16 +391,20 @@ impl PlanetSystem {
         }
 
         // Remove completed projects and apply their effects
-        let completed_projects: Vec<ModifierType> = planet.terraforming_projects.iter()
+        let completed_projects: Vec<ModifierType> = planet
+            .terraforming_projects
+            .iter()
             .filter(|project| project.progress >= 1.0)
             .map(|project| project.target_modifier)
             .collect();
-        
+
         for modifier in completed_projects {
             self.apply_terraforming_effect(planet, &modifier);
         }
-        
-        planet.terraforming_projects.retain(|project| project.progress < 1.0);
+
+        planet
+            .terraforming_projects
+            .retain(|project| project.progress < 1.0);
 
         // If no more terraforming projects, return planet to conquered state
         if planet.terraforming_projects.is_empty() && planet.state == PlanetState::Terraforming {
@@ -402,7 +417,9 @@ impl PlanetSystem {
     /// Apply the effect of a completed terraforming project
     fn apply_terraforming_effect(&mut self, planet: &mut Planet, target_modifier: &ModifierType) {
         // Remove negative modifiers of the same type
-        planet.modifiers.retain(|modifier| modifier.modifier_type != *target_modifier);
+        planet
+            .modifiers
+            .retain(|modifier| modifier.modifier_type != *target_modifier);
 
         // Add positive modifier
         let new_modifier = Modifier {

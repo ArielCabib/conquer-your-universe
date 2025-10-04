@@ -147,8 +147,8 @@
         .planet-view {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+            gap: 20px;
+            padding-bottom: 20px;
         }
 
         .view-controls {
@@ -173,8 +173,6 @@
         /* Planet View Sections */
         .planet-details-section {
             margin-bottom: 20px;
-            max-height: 400px;
-            overflow-y: auto;
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 8px;
             padding: 15px;
@@ -701,6 +699,18 @@
         .project-progress {
             color: white;
             font-weight: bold;
+        }
+
+        .modifier-value.positive {
+            color: #66BB6A;
+        }
+
+        .modifier-value.negative {
+            color: #FFB74D;
+        }
+
+        .modifier-value.neutral {
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .error {
@@ -1645,8 +1655,7 @@
             font-size: 12px;
         }
 
-        .modifier-value {
-            color: #f44336;
+        .modifier-option .modifier-value {
             font-size: 12px;
         }
 

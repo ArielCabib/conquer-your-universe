@@ -4,6 +4,26 @@ use lazy_static::lazy_static;
 use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
 
+fn format_modifier_value(modifier: &Modifier) -> String {
+    let value = modifier.value;
+    let suffix = if modifier.is_percentage { "%" } else { "" };
+    if value.fract().abs() < 1e-6 {
+        format!("{:+.0}{}", value, suffix)
+    } else {
+        format!("{:+.1}{}", value, suffix)
+    }
+}
+
+fn modifier_polarity_class(value: f64) -> &'static str {
+    if value > 0.0 {
+        "positive"
+    } else if value < 0.0 {
+        "negative"
+    } else {
+        "neutral"
+    }
+}
+
 /// Galaxy map component showing solar systems and planets
 #[derive(Properties, PartialEq, Clone)]
 pub struct GalaxyMapProps {
@@ -310,10 +330,12 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                     <h3>{ "Modifiers" }</h3>
                     <div class="modifiers-grid">
                         { for planet.modifiers.iter().map(|modifier| {
+                            let formatted_value = format_modifier_value(modifier);
+                            let polarity_class = modifier_polarity_class(modifier.value);
                             html! {
                                 <div class="modifier-card">
                                     <span class="modifier-type">{ format!("{:?}", modifier.modifier_type) }</span>
-                                    <span class="modifier-value">{ format!("{:.1}%", modifier.value * 100.0) }</span>
+                                    <span class={classes!("modifier-value", polarity_class)}>{ formatted_value }</span>
                                 </div>
                             }
                         })}
@@ -466,9 +488,11 @@ pub fn PlanetView(props: &PlanetViewProps) -> Html {
                 </div>
                 <div class="planet-modifiers">
                     { for planet.modifiers.iter().map(|modifier| {
+                        let formatted_value = format_modifier_value(modifier);
+                        let polarity_class = modifier_polarity_class(modifier.value);
                         html! {
-                            <span class={format!("modifier {}", if modifier.value > 0.0 { "positive" } else { "negative" })}>
-                                { format!("{:?}: {:.1}%", modifier.modifier_type, modifier.value) }
+                            <span class={classes!("modifier", polarity_class)}>
+                                { format!("{:?}: {}", modifier.modifier_type, formatted_value) }
                             </span>
                         }
                     }) }
@@ -550,10 +574,12 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                             <h4>{ "Modifiers" }</h4>
                             <div class="modifier-list">
                                 { for planet.modifiers.iter().map(|modifier| {
+                                    let formatted_value = format_modifier_value(modifier);
+                                    let polarity_class = modifier_polarity_class(modifier.value);
                                     html! {
-                                        <div class={format!("modifier-item {}", if modifier.value > 0.0 { "positive" } else { "negative" })}>
+                                        <div class={classes!("modifier-item", polarity_class)}>
                                             <span class="modifier-name">{ format!("{:?}", modifier.modifier_type) }</span>
-                                            <span class="modifier-value">{ format!("{:.1}%", modifier.value) }</span>
+                                            <span class={classes!("modifier-value", polarity_class)}>{ formatted_value }</span>
                                         </div>
                                     }
                                 }) }
@@ -1257,16 +1283,22 @@ pub fn TerraformingProject(props: &TerraformingProjectProps) -> Html {
                             html! {
                                 <div class="modifier-list">
                                     { for negative_modifiers.iter().map(|modifier| {
-                                        let terraforming_cost = calculate_terraforming_cost(modifier.modifier_type);
+                                        let mut terraforming_cost: Vec<_> = calculate_terraforming_cost(modifier.modifier_type)
+                                            .into_iter()
+                                            .collect();
+                                        terraforming_cost.sort_by_key(|(resource_type, _)| resource_display_order(*resource_type));
+
                                         let can_afford = terraforming_cost.iter().all(|(resource_type, cost)| {
                                             props.empire_resources.get(resource_type).copied().unwrap_or(0) >= *cost
                                         });
+                                        let formatted_value = format_modifier_value(modifier);
+                                        let polarity_class = modifier_polarity_class(modifier.value);
 
                                         html! {
                                             <div class={format!("modifier-option {}", if can_afford { "affordable" } else { "insufficient" })}>
                                                 <div class="modifier-header">
                                                     <span class="modifier-name">{ format!("{:?}", modifier.modifier_type) }</span>
-                                                    <span class="modifier-value">{ format!("{:.1}{}", modifier.value, if modifier.is_percentage { "%" } else { "" }) }</span>
+                                                    <span class={classes!("modifier-value", polarity_class)}>{ formatted_value }</span>
                                                 </div>
                                                 <div class="modifier-cost">
                                                     <h6>{ "Terraforming Cost:" }</h6>
@@ -1340,6 +1372,24 @@ fn calculate_terraforming_cost(modifier_type: ModifierType) -> HashMap<ResourceT
     }
 
     cost
+}
+
+fn resource_display_order(resource_type: ResourceType) -> usize {
+    match resource_type {
+        ResourceType::Energy => 0,
+        ResourceType::Minerals => 1,
+        ResourceType::Population => 2,
+        ResourceType::Technology => 3,
+        ResourceType::Food => 4,
+        ResourceType::Alloys => 5,
+        ResourceType::Electronics => 6,
+        ResourceType::Medicine => 7,
+        ResourceType::Starships => 8,
+        ResourceType::AdvancedWeapons => 9,
+        ResourceType::AISystems => 10,
+        ResourceType::DysonSpheres => 11,
+        ResourceType::GalacticNetworks => 12,
+    }
 }
 
 /// Conquest cost display component

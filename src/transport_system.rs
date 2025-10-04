@@ -49,14 +49,14 @@ impl TransportSystem {
     ) -> u64 {
         let distance = self.calculate_distance(from_planet.position, to_planet.position);
         let base_cost = distance * 0.1; // Base cost per distance unit
-        
+
         // Resource-specific multipliers
         let resource_multiplier = match resource_type {
-            ResourceType::Energy => 0.5, // Energy is easier to transport
+            ResourceType::Energy => 0.5,     // Energy is easier to transport
             ResourceType::Population => 2.0, // Population is harder to transport
-            ResourceType::Food => 1.5, // Food requires special handling
+            ResourceType::Food => 1.5,       // Food requires special handling
             ResourceType::Technology => 1.2, // Technology requires careful transport
-            ResourceType::Minerals => 1.0, // Standard transport
+            ResourceType::Minerals => 1.0,   // Standard transport
             _ => 1.0,
         };
 
@@ -110,7 +110,7 @@ impl TransportSystem {
         for resource in resources_in_transit.iter_mut() {
             if resource.arrival_time > 0 {
                 resource.arrival_time = resource.arrival_time.saturating_sub(speed_multiplier);
-                
+
                 if resource.arrival_time == 0 {
                     arrived_resources.push(resource.clone());
                 }
@@ -119,7 +119,7 @@ impl TransportSystem {
 
         // Remove arrived resources from transit
         resources_in_transit.retain(|resource| resource.arrival_time > 0);
-        
+
         arrived_resources
     }
 
@@ -153,18 +153,18 @@ impl TransportSystem {
         for planet_id in conquered_planets {
             if let Some(planet) = planets.get(planet_id) {
                 let mut planet_allocation = HashMap::new();
-                
+
                 // Allocate resources based on planet's production capabilities
                 for (resource_type, empire_amount) in empire_resources {
                     let planet_need = self.calculate_planet_resource_need(planet, *resource_type);
                     let allocation = ((*empire_amount as f64) * planet_need) as u64;
-                let allocation = allocation.min(*empire_amount);
-                    
+                    let allocation = allocation.min(*empire_amount);
+
                     if allocation > 0 {
                         planet_allocation.insert(*resource_type, allocation);
                     }
                 }
-                
+
                 distribution.insert(*planet_id, planet_allocation);
             }
         }
@@ -179,35 +179,47 @@ impl TransportSystem {
             ResourceType::Energy => {
                 // Energy need based on planet activity
                 let base_need = 0.1;
-                let modifier_bonus = planet.modifiers.iter()
+                let modifier_bonus = planet
+                    .modifiers
+                    .iter()
                     .filter(|m| m.modifier_type == ModifierType::EnergyMultiplier)
                     .map(|m| m.value / 100.0)
                     .sum::<f64>();
                 base_need + modifier_bonus
-            },
+            }
             ResourceType::Minerals => {
                 // Mineral need based on manufacturing
                 let factory_count = planet.factories.len() as f64;
                 0.05 + (factory_count * 0.02)
-            },
+            }
             ResourceType::Population => {
                 // Population need based on planet capacity
-                let current_pop = planet.resources.get(&ResourceType::Population).copied().unwrap_or(0) as f64;
+                let current_pop = planet
+                    .resources
+                    .get(&ResourceType::Population)
+                    .copied()
+                    .unwrap_or(0) as f64;
                 let max_capacity = 1000.0; // Base capacity
                 (max_capacity - current_pop) / max_capacity
-            },
+            }
             ResourceType::Technology => {
                 // Technology need based on research facilities
-                let research_factories = planet.factories.iter()
+                let research_factories = planet
+                    .factories
+                    .iter()
                     .filter(|f| f.factory_type == FactoryType::Research)
                     .count() as f64;
                 0.02 + (research_factories * 0.05)
-            },
+            }
             ResourceType::Food => {
                 // Food need based on population
-                let population = planet.resources.get(&ResourceType::Population).copied().unwrap_or(0) as f64;
+                let population = planet
+                    .resources
+                    .get(&ResourceType::Population)
+                    .copied()
+                    .unwrap_or(0) as f64;
                 population * 0.1
-            },
+            }
             _ => 0.0,
         }
     }
@@ -228,7 +240,7 @@ impl TransportSystem {
             } else {
                 0.0
             };
-            
+
             route.efficiency = (1.0_f64 + efficiency_bonus).max(0.1_f64);
         }
     }
@@ -239,7 +251,8 @@ impl TransportSystem {
         planet_id: u64,
         routes: &HashMap<u64, TransportRoute>,
     ) -> u64 {
-        routes.values()
+        routes
+            .values()
             .filter(|route| route.from_planet == planet_id || route.to_planet == planet_id)
             .map(|route| route.capacity)
             .sum()
@@ -254,7 +267,8 @@ impl TransportSystem {
         let total_routes = routes.len();
         let total_capacity: u64 = routes.values().map(|route| route.capacity).sum();
         let resources_in_transit_count = resources_in_transit.len();
-        let total_resources_in_transit: u64 = resources_in_transit.iter()
+        let total_resources_in_transit: u64 = resources_in_transit
+            .iter()
             .map(|resource| resource.amount)
             .sum();
 
@@ -263,9 +277,8 @@ impl TransportSystem {
             total_capacity,
             resources_in_transit_count,
             total_resources_in_transit,
-            average_route_efficiency: routes.values()
-                .map(|route| route.efficiency)
-                .sum::<f64>() / total_routes.max(1) as f64,
+            average_route_efficiency: routes.values().map(|route| route.efficiency).sum::<f64>()
+                / total_routes.max(1) as f64,
         }
     }
 }

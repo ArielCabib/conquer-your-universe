@@ -13,7 +13,7 @@ impl SupplyChainSystem {
             product_dependencies: HashMap::new(),
             factory_types: HashMap::new(),
         };
-        
+
         system.initialize_product_dependencies();
         system.initialize_factory_types();
         system
@@ -22,167 +22,282 @@ impl SupplyChainSystem {
     /// Initialize the product dependency DAG
     fn initialize_product_dependencies(&mut self) {
         // Basic resources (no dependencies)
-        self.product_dependencies.insert(ResourceType::Energy, ProductDependency {
-            product: ResourceType::Energy,
-            dependencies: Vec::new(),
-            production_time: 0,
-            energy_cost: 0,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Energy,
+            ProductDependency {
+                product: ResourceType::Energy,
+                dependencies: Vec::new(),
+                production_time: 0,
+                energy_cost: 0,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Minerals, ProductDependency {
-            product: ResourceType::Minerals,
-            dependencies: Vec::new(),
-            production_time: 0,
-            energy_cost: 0,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Minerals,
+            ProductDependency {
+                product: ResourceType::Minerals,
+                dependencies: Vec::new(),
+                production_time: 0,
+                energy_cost: 0,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Population, ProductDependency {
-            product: ResourceType::Population,
-            dependencies: Vec::new(),
-            production_time: 0,
-            energy_cost: 0,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Population,
+            ProductDependency {
+                product: ResourceType::Population,
+                dependencies: Vec::new(),
+                production_time: 0,
+                energy_cost: 0,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Technology, ProductDependency {
-            product: ResourceType::Technology,
-            dependencies: Vec::new(),
-            production_time: 0,
-            energy_cost: 0,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Technology,
+            ProductDependency {
+                product: ResourceType::Technology,
+                dependencies: Vec::new(),
+                production_time: 0,
+                energy_cost: 0,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Food, ProductDependency {
-            product: ResourceType::Food,
-            dependencies: Vec::new(),
-            production_time: 0,
-            energy_cost: 0,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Food,
+            ProductDependency {
+                product: ResourceType::Food,
+                dependencies: Vec::new(),
+                production_time: 0,
+                energy_cost: 0,
+            },
+        );
 
         // Intermediate products
-        self.product_dependencies.insert(ResourceType::Alloys, ProductDependency {
-            product: ResourceType::Alloys,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Minerals, amount: 100 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 50 },
-            ],
-            production_time: 10,
-            energy_cost: 25,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Alloys,
+            ProductDependency {
+                product: ResourceType::Alloys,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Minerals,
+                        amount: 100,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 50,
+                    },
+                ],
+                production_time: 10,
+                energy_cost: 25,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Electronics, ProductDependency {
-            product: ResourceType::Electronics,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Minerals, amount: 50 },
-                ResourceAmount { resource_type: ResourceType::Technology, amount: 30 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 40 },
-            ],
-            production_time: 15,
-            energy_cost: 30,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Electronics,
+            ProductDependency {
+                product: ResourceType::Electronics,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Minerals,
+                        amount: 50,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Technology,
+                        amount: 30,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 40,
+                    },
+                ],
+                production_time: 15,
+                energy_cost: 30,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::Medicine, ProductDependency {
-            product: ResourceType::Medicine,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Food, amount: 20 },
-                ResourceAmount { resource_type: ResourceType::Technology, amount: 25 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 15 },
-            ],
-            production_time: 12,
-            energy_cost: 20,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Medicine,
+            ProductDependency {
+                product: ResourceType::Medicine,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Food,
+                        amount: 20,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Technology,
+                        amount: 25,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 15,
+                    },
+                ],
+                production_time: 12,
+                energy_cost: 20,
+            },
+        );
 
         // Advanced products
-        self.product_dependencies.insert(ResourceType::Starships, ProductDependency {
-            product: ResourceType::Starships,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Alloys, amount: 200 },
-                ResourceAmount { resource_type: ResourceType::Electronics, amount: 100 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 300 },
-            ],
-            production_time: 50,
-            energy_cost: 100,
-        });
+        self.product_dependencies.insert(
+            ResourceType::Starships,
+            ProductDependency {
+                product: ResourceType::Starships,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Alloys,
+                        amount: 200,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Electronics,
+                        amount: 100,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 300,
+                    },
+                ],
+                production_time: 50,
+                energy_cost: 100,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::AdvancedWeapons, ProductDependency {
-            product: ResourceType::AdvancedWeapons,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Alloys, amount: 150 },
-                ResourceAmount { resource_type: ResourceType::Electronics, amount: 80 },
-                ResourceAmount { resource_type: ResourceType::Technology, amount: 100 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 200 },
-            ],
-            production_time: 40,
-            energy_cost: 80,
-        });
+        self.product_dependencies.insert(
+            ResourceType::AdvancedWeapons,
+            ProductDependency {
+                product: ResourceType::AdvancedWeapons,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Alloys,
+                        amount: 150,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Electronics,
+                        amount: 80,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Technology,
+                        amount: 100,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 200,
+                    },
+                ],
+                production_time: 40,
+                energy_cost: 80,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::AISystems, ProductDependency {
-            product: ResourceType::AISystems,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Electronics, amount: 200 },
-                ResourceAmount { resource_type: ResourceType::Technology, amount: 300 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 500 },
-            ],
-            production_time: 80,
-            energy_cost: 150,
-        });
+        self.product_dependencies.insert(
+            ResourceType::AISystems,
+            ProductDependency {
+                product: ResourceType::AISystems,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Electronics,
+                        amount: 200,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Technology,
+                        amount: 300,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 500,
+                    },
+                ],
+                production_time: 80,
+                energy_cost: 150,
+            },
+        );
 
         // End-game products
-        self.product_dependencies.insert(ResourceType::DysonSpheres, ProductDependency {
-            product: ResourceType::DysonSpheres,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::Alloys, amount: 10000 },
-                ResourceAmount { resource_type: ResourceType::Electronics, amount: 5000 },
-                ResourceAmount { resource_type: ResourceType::AISystems, amount: 1000 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 50000 },
-            ],
-            production_time: 1000,
-            energy_cost: 2000,
-        });
+        self.product_dependencies.insert(
+            ResourceType::DysonSpheres,
+            ProductDependency {
+                product: ResourceType::DysonSpheres,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::Alloys,
+                        amount: 10000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Electronics,
+                        amount: 5000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::AISystems,
+                        amount: 1000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 50000,
+                    },
+                ],
+                production_time: 1000,
+                energy_cost: 2000,
+            },
+        );
 
-        self.product_dependencies.insert(ResourceType::GalacticNetworks, ProductDependency {
-            product: ResourceType::GalacticNetworks,
-            dependencies: vec![
-                ResourceAmount { resource_type: ResourceType::AISystems, amount: 2000 },
-                ResourceAmount { resource_type: ResourceType::Electronics, amount: 10000 },
-                ResourceAmount { resource_type: ResourceType::Technology, amount: 5000 },
-                ResourceAmount { resource_type: ResourceType::Energy, amount: 100000 },
-            ],
-            production_time: 2000,
-            energy_cost: 5000,
-        });
+        self.product_dependencies.insert(
+            ResourceType::GalacticNetworks,
+            ProductDependency {
+                product: ResourceType::GalacticNetworks,
+                dependencies: vec![
+                    ResourceAmount {
+                        resource_type: ResourceType::AISystems,
+                        amount: 2000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Electronics,
+                        amount: 10000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Technology,
+                        amount: 5000,
+                    },
+                    ResourceAmount {
+                        resource_type: ResourceType::Energy,
+                        amount: 100000,
+                    },
+                ],
+                production_time: 2000,
+                energy_cost: 5000,
+            },
+        );
     }
 
     /// Initialize factory types and their capabilities
     fn initialize_factory_types(&mut self) {
-        self.factory_types.insert(FactoryType::BasicManufacturing, vec![
-            ResourceType::Alloys,
-            ResourceType::Electronics,
-        ]);
+        self.factory_types.insert(
+            FactoryType::BasicManufacturing,
+            vec![ResourceType::Alloys, ResourceType::Electronics],
+        );
 
-        self.factory_types.insert(FactoryType::AdvancedManufacturing, vec![
-            ResourceType::Alloys,
-            ResourceType::Electronics,
-            ResourceType::Medicine,
-        ]);
+        self.factory_types.insert(
+            FactoryType::AdvancedManufacturing,
+            vec![
+                ResourceType::Alloys,
+                ResourceType::Electronics,
+                ResourceType::Medicine,
+            ],
+        );
 
-        self.factory_types.insert(FactoryType::Electronics, vec![
-            ResourceType::Electronics,
-        ]);
+        self.factory_types
+            .insert(FactoryType::Electronics, vec![ResourceType::Electronics]);
 
-        self.factory_types.insert(FactoryType::Pharmaceuticals, vec![
-            ResourceType::Medicine,
-        ]);
+        self.factory_types
+            .insert(FactoryType::Pharmaceuticals, vec![ResourceType::Medicine]);
 
-        self.factory_types.insert(FactoryType::Shipyard, vec![
-            ResourceType::Starships,
-        ]);
+        self.factory_types
+            .insert(FactoryType::Shipyard, vec![ResourceType::Starships]);
 
-        self.factory_types.insert(FactoryType::Weapons, vec![
-            ResourceType::AdvancedWeapons,
-        ]);
+        self.factory_types
+            .insert(FactoryType::Weapons, vec![ResourceType::AdvancedWeapons]);
 
-        self.factory_types.insert(FactoryType::Research, vec![
-            ResourceType::AISystems,
-        ]);
+        self.factory_types
+            .insert(FactoryType::Research, vec![ResourceType::AISystems]);
     }
 
     /// Get all dependencies for a product (recursive)
@@ -220,9 +335,12 @@ impl SupplyChainSystem {
         available_resources: &HashMap<ResourceType, u64>,
     ) -> bool {
         let dependencies = self.get_all_dependencies(product);
-        
+
         for dep in dependencies {
-            let available = available_resources.get(&dep.resource_type).copied().unwrap_or(0);
+            let available = available_resources
+                .get(&dep.resource_type)
+                .copied()
+                .unwrap_or(0);
             if available < dep.amount {
                 return false;
             }
@@ -234,11 +352,11 @@ impl SupplyChainSystem {
     pub fn calculate_production_cost(&self, product: &ResourceType) -> HashMap<ResourceType, u64> {
         let mut total_cost = HashMap::new();
         let dependencies = self.get_all_dependencies(product);
-        
+
         for dep in dependencies {
             *total_cost.entry(dep.resource_type).or_insert(0) += dep.amount;
         }
-        
+
         total_cost
     }
 
@@ -291,21 +409,21 @@ impl SupplyChainSystem {
         factory_type: &FactoryType,
     ) -> f64 {
         let mut efficiency = 1.0;
-        
+
         for modifier in &planet.modifiers {
             match modifier.modifier_type {
                 ModifierType::ManufacturingBonus => {
                     efficiency *= 1.0 + modifier.value / 100.0;
-                },
+                }
                 ModifierType::ResearchBonus => {
                     if *factory_type == FactoryType::Research {
                         efficiency *= 1.0 + modifier.value / 100.0;
                     }
-                },
+                }
                 _ => {}
             }
         }
-        
+
         efficiency
     }
 
@@ -318,7 +436,7 @@ impl SupplyChainSystem {
     ) -> Vec<ResourceAmount> {
         let mut produced_resources = Vec::new();
         let speed_multiplier = game_speed as u64;
-        
+
         if !factory.is_active {
             return produced_resources;
         }
@@ -326,10 +444,11 @@ impl SupplyChainSystem {
         for order in &mut factory.production_queue {
             if order.progress < 1.0 {
                 let production_rate = 1.0 / self.get_production_time(&order.product) as f64;
-                let efficiency = self.calculate_production_efficiency(planet, &factory.factory_type);
-                
+                let efficiency =
+                    self.calculate_production_efficiency(planet, &factory.factory_type);
+
                 order.progress += production_rate * efficiency * speed_multiplier as f64;
-                
+
                 if order.progress >= 1.0 {
                     order.progress = 1.0;
                     produced_resources.push(ResourceAmount {
@@ -341,8 +460,10 @@ impl SupplyChainSystem {
         }
 
         // Remove completed orders
-        factory.production_queue.retain(|order| order.progress < 1.0);
-        
+        factory
+            .production_queue
+            .retain(|order| order.progress < 1.0);
+
         produced_resources
     }
 
@@ -367,10 +488,12 @@ impl SupplyChainSystem {
         };
 
         factory.production_queue.push(order);
-        
+
         // Sort by priority (higher priority first)
-        factory.production_queue.sort_by(|a, b| b.priority.cmp(&a.priority));
-        
+        factory
+            .production_queue
+            .sort_by(|a, b| b.priority.cmp(&a.priority));
+
         true
     }
 
@@ -378,13 +501,13 @@ impl SupplyChainSystem {
     pub fn get_production_order(&self) -> Vec<ResourceType> {
         let mut in_degree = HashMap::new();
         let mut graph = HashMap::new();
-        
+
         // Initialize in-degree and graph
         for (product, _dep) in &self.product_dependencies {
             in_degree.insert(*product, 0);
             graph.insert(*product, Vec::new());
         }
-        
+
         // Build graph and calculate in-degrees
         for (product, dep) in &self.product_dependencies {
             for dependency in &dep.dependencies {
@@ -394,21 +517,21 @@ impl SupplyChainSystem {
                 *in_degree.get_mut(product).unwrap() += 1;
             }
         }
-        
+
         // Topological sort
         let mut queue = VecDeque::new();
         let mut result = Vec::new();
-        
+
         // Add nodes with no dependencies
         for (product, degree) in &in_degree {
             if *degree == 0 {
                 queue.push_back(*product);
             }
         }
-        
+
         while let Some(current) = queue.pop_front() {
             result.push(current);
-            
+
             if let Some(children) = graph.get(&current) {
                 for &child in children {
                     if let Some(degree) = in_degree.get_mut(&child) {
@@ -420,7 +543,7 @@ impl SupplyChainSystem {
                 }
             }
         }
-        
+
         result
     }
 }
