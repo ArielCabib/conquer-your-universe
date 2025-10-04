@@ -86,8 +86,12 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
         use_effect_with((props, size), move |(props, size)| {
             let canvas = match canvas_ref.cast::<HtmlCanvasElement>() {
                 Some(c) => c,
-                None => return,
+                None => {
+                    log::error!("Failed to get canvas element");
+                    return;
+                }
             };
+
             canvas.set_width(size.0 as u32);
             canvas.set_height(size.1 as u32);
 
@@ -240,15 +244,24 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
             let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() else {
                 return noop;
             };
+
+            let on_planet_click = props.on_planet_click.clone();
+            let galaxies = props.galaxies.clone();
+            let solar_systems = props.solar_systems.clone();
+            let explored_solar_systems = props.explored_solar_systems.clone();
+            let current_galaxy = props.current_galaxy;
+
             let closure = Closure::wrap(Box::new(move |event: MouseEvent| {
                 let x = event.offset_x() as f64;
                 let y = event.offset_y() as f64;
 
-                if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
+                log::info!("Canvas clicked at: ({}, {})", x, y);
+
+                if let Some(galaxy) = galaxies.get(&current_galaxy) {
                     for system_id in &galaxy.solar_systems {
-                        if let Some(system) = props.solar_systems.get(system_id) {
+                        if let Some(system) = solar_systems.get(system_id) {
                             // Only allow clicking on explored systems
-                            if !props.explored_solar_systems.contains(system_id) {
+                            if !explored_solar_systems.contains(system_id) {
                                 continue;
                             }
 
@@ -256,15 +269,21 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
                             let sy = system.position.1;
                             let w = 260.0;
                             let h = 80.0;
+
                             if x >= sx && x <= sx + w && y >= sy && y <= sy + h {
+                                log::info!("Click is within system {} bounds", system_id);
+
                                 // Planet row
                                 let mut px = sx + 20.0;
                                 let py = sy + 40.0;
                                 for planet_id in &system.planets {
                                     let dx = x - px;
                                     let dy = y - py;
-                                    if (dx * dx + dy * dy).sqrt() <= 9.0 {
-                                        props.on_planet_click.emit(*planet_id);
+                                    let distance = (dx * dx + dy * dy).sqrt();
+
+                                    if distance <= 9.0 {
+                                        log::info!("Clicked on planet {}", planet_id);
+                                        on_planet_click.emit(*planet_id);
                                         return;
                                     }
                                     px += 22.0;
@@ -278,9 +297,11 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
             canvas
                 .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
                 .ok();
-            // Keep it alive for the page lifetime
-            closure.forget();
-            noop
+
+            // Return cleanup function
+            move || {
+                // Event listener will be cleaned up automatically when closure is dropped
+            }
         });
     }
 
