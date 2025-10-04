@@ -597,13 +597,9 @@
 
         .planets-grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
-            max-width: 600px;
-        }
-
-        .planets-grid-row {
-            display: contents;
+            width: 100%;
         }
 
         .planet-cell {

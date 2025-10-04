@@ -210,11 +210,7 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
 pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
     let system = &props.solar_system;
 
-    // Create a grid for planets (max 3x3 for now)
-    let grid_size = 3;
-    let mut grid_cells = vec![vec![None; grid_size]; grid_size];
-
-    // Place planets in the grid - only log once per unique system
+    // Only log once per unique system to avoid noise
     static mut LAST_LOGGED_SYSTEM: u64 = 0;
     unsafe {
         if LAST_LOGGED_SYSTEM != system.id {
@@ -227,13 +223,6 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
             LAST_LOGGED_SYSTEM = system.id;
         }
     }
-    for (i, planet_id) in system.planets.iter().enumerate() {
-        if i < grid_size * grid_size {
-            let x = i % grid_size;
-            let y = i / grid_size;
-            grid_cells[y][x] = Some(*planet_id);
-        }
-    }
 
     html! {
         <div class="solar-system-grid">
@@ -242,54 +231,44 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
                 <p class="system-info">{ format!("{} planets in this system", system.planets.len()) }</p>
             </div>
             <div class="planets-grid-container">
-                { for (0..grid_size).map(|y| {
-                    html! {
-                        <div class="planets-grid-row" key={y}>
-                            { for (0..grid_size).map(|x| {
-                                let cell_content = grid_cells[y][x];
-                                html! {
-                                    <div class="planet-cell" key={x}>
-                                        { if let Some(planet_id) = cell_content {
-                                            if let Some(planet) = props.planets.get(&planet_id) {
-                                                let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
-                                                let planet_state = format!("{:?}", planet.state).to_lowercase();
-                                                let on_planet_click = props.on_planet_click.clone();
-                                                let planet_id = planet_id;
+                { for system.planets.iter().map(|planet_id_ref| {
+                    let planet_id = *planet_id_ref;
+                    let on_planet_click = props.on_planet_click.clone();
 
+                    html! {
+                        <div class="planet-cell" key={planet_id}>
+                            { if let Some(planet) = props.planets.get(&planet_id) {
+                                let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
+                                let planet_state = format!("{:?}", planet.state).to_lowercase();
+
+                                html! {
+                                    <div
+                                        class={format!("planet-card {} {}", planet_class, planet_state)}
+                                        onclick={on_planet_click.reform(move |_| planet_id)}
+                                        title={format!("Click to view {} details", planet.name)}
+                                    >
+                                        <div class="planet-header">
+                                            <h4>{ &planet.name }</h4>
+                                            <span class="planet-class">{ format!("{:?}", planet.class) }</span>
+                                        </div>
+                                        <div class="planet-status">
+                                            <span class="status-badge">{ format!("{:?}", planet.state) }</span>
+                                        </div>
+                                        <div class="planet-resources">
+                                            { for planet.resources.iter().take(3).map(|(resource_type, amount)| {
                                                 html! {
-                                                    <div
-                                                        class={format!("planet-card {} {}", planet_class, planet_state)}
-                                                        onclick={on_planet_click.reform(move |_| planet_id)}
-                                                        title={format!("Click to view {} details", planet.name)}
-                                                    >
-                                                        <div class="planet-header">
-                                                            <h4>{ &planet.name }</h4>
-                                                            <span class="planet-class">{ format!("{:?}", planet.class) }</span>
-                                                        </div>
-                                                        <div class="planet-status">
-                                                            <span class="status-badge">{ format!("{:?}", planet.state) }</span>
-                                                        </div>
-                                                        <div class="planet-resources">
-                                                            { for planet.resources.iter().take(3).map(|(resource_type, amount)| {
-                                                                html! {
-                                                                    <div class="resource-item">
-                                                                        <span class="resource-name">{ format!("{:?}", resource_type) }</span>
-                                                                        <span class="resource-amount">{ *amount }</span>
-                                                                    </div>
-                                                                }
-                                                            })}
-                                                        </div>
+                                                    <div class="resource-item">
+                                                        <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                                        <span class="resource-amount">{ *amount }</span>
                                                     </div>
                                                 }
-                                            } else {
-                                                html! { <div class="planet-error">{ "Planet not found" }</div> }
-                                            }
-                                        } else {
-                                            html! { <div class="empty-planet-cell">{ " " }</div> }
-                                        }}
+                                            })}
+                                        </div>
                                     </div>
                                 }
-                            })}
+                            } else {
+                                html! { <div class="planet-error">{ "Planet not found" }</div> }
+                            }}
                         </div>
                     }
                 })}
