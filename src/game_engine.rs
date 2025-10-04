@@ -63,6 +63,13 @@ impl GameEngine {
 
     /// Initialize the game with starting galaxy
     pub fn initialize_game(&mut self) {
+        // Try to load existing save from localStorage first
+        if self.load_from_storage() {
+            log::info!("Loaded existing game from localStorage");
+            return;
+        }
+
+        log::info!("No existing save found, initializing new game");
         // Generate starting galaxy
         let mut galaxy = self
             .galaxy_system
@@ -165,6 +172,11 @@ impl GameEngine {
         self.update_terraforming();
         self.update_conquest();
         self.update_exploration();
+
+        // Auto-save every second (assuming 60 ticks per second)
+        if self.game_state.current_tick % 60 == 0 {
+            self.auto_save();
+        }
 
         // Increment game tick
         self.game_state.current_tick += speed_multiplier;
@@ -485,6 +497,40 @@ impl GameEngine {
             }
             Err(_) => false,
         }
+    }
+
+    /// Auto-save game state to localStorage
+    pub fn auto_save(&self) {
+        let save_data = self.save_game();
+        if let Some(window) = web_sys::window() {
+            if let Ok(storage) = window.local_storage() {
+                if let Some(storage) = storage {
+                    let _ = storage.set_item("conquer_universe_save", &save_data);
+                    log::info!("Game auto-saved to localStorage");
+                }
+            }
+        }
+    }
+
+    /// Load game state from localStorage
+    pub fn load_from_storage(&mut self) -> bool {
+        if let Some(window) = web_sys::window() {
+            if let Ok(storage) = window.local_storage() {
+                if let Some(storage) = storage {
+                    if let Ok(Some(save_data)) = storage.get_item("conquer_universe_save") {
+                        let success = self.load_game(&save_data);
+                        if success {
+                            log::info!("Game loaded from localStorage");
+                        } else {
+                            log::warn!("Failed to load game from localStorage");
+                        }
+                        return success;
+                    }
+                }
+            }
+        }
+        log::info!("No save data found in localStorage");
+        false
     }
 
     /// Get game statistics
