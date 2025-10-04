@@ -188,6 +188,8 @@ fn App() -> Html {
                 solar_systems={solar_systems}
                 planets={planets}
                 current_galaxy={current_galaxy}
+                discovered_solar_systems={game_engine.borrow().get_discovered_solar_systems().clone()}
+                explored_solar_systems={game_engine.borrow().get_explored_solar_systems().clone()}
                 on_planet_click={Callback::from(on_planet_click)}
             />
         }

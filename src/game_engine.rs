@@ -5,7 +5,7 @@ use crate::resource_system::ResourceSystem;
 use crate::supply_chain::SupplyChainSystem;
 use crate::transport_system::TransportSystem;
 use crate::types::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Main game engine that coordinates all systems
 pub struct GameEngine {
@@ -35,6 +35,8 @@ impl GameEngine {
             prestige_bonuses: Vec::new(),
             total_prestige_points: 0,
             empire_resources: HashMap::new(),
+            explored_solar_systems: HashSet::new(),
+            discovered_solar_systems: HashSet::new(),
         };
 
         let config = GameConfig {
@@ -83,14 +85,26 @@ impl GameEngine {
                     j,
                     self.config.planets_per_system,
                 );
-                let planet = self.galaxy_system.generate_planet(planet_position);
+                let planet = self
+                    .galaxy_system
+                    .generate_planet(planet_position, system_id);
                 self.game_state.planets.insert(planet.id, planet);
             }
         }
 
         // Update galaxy with solar system IDs
-        galaxy.solar_systems = solar_system_ids;
+        galaxy.solar_systems = solar_system_ids.clone();
         self.game_state.galaxies.insert(galaxy.id, galaxy);
+
+        // Initialize exploration state - only reveal the first solar system initially
+        if let Some(first_system_id) = solar_system_ids.first() {
+            self.game_state
+                .explored_solar_systems
+                .insert(*first_system_id);
+            self.game_state
+                .discovered_solar_systems
+                .insert(*first_system_id);
+        }
 
         // Initialize empire resources
         self.initialize_empire_resources();
@@ -129,6 +143,7 @@ impl GameEngine {
         self.update_transport();
         self.update_terraforming();
         self.update_conquest();
+        self.update_exploration();
 
         // Increment game tick
         self.game_state.current_tick += speed_multiplier;
@@ -232,6 +247,13 @@ impl GameEngine {
                     // Change planet state
                     if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
                         planet.state = PlanetState::Conquered;
+
+                        // Explore the solar system when a planet is conquered
+                        if let Some(system) =
+                            self.game_state.solar_systems.get(&planet.solar_system_id)
+                        {
+                            self.explore_solar_system(system.id);
+                        }
                     }
 
                     ConquestResult::Success {
@@ -472,6 +494,69 @@ impl GameEngine {
             prestige_points: self.game_state.total_prestige_points,
             game_speed: self.game_state.game_speed,
             is_paused: self.game_state.is_paused,
+        }
+    }
+
+    /// Discover a new solar system (make it visible but not explored)
+    pub fn discover_solar_system(&mut self, system_id: u64) {
+        self.game_state.discovered_solar_systems.insert(system_id);
+    }
+
+    /// Explore a solar system (make it fully visible and explorable)
+    pub fn explore_solar_system(&mut self, system_id: u64) {
+        self.game_state.explored_solar_systems.insert(system_id);
+        self.game_state.discovered_solar_systems.insert(system_id);
+    }
+
+    /// Check if a solar system is discovered
+    pub fn is_solar_system_discovered(&self, system_id: u64) -> bool {
+        self.game_state
+            .discovered_solar_systems
+            .contains(&system_id)
+    }
+
+    /// Check if a solar system is explored
+    pub fn is_solar_system_explored(&self, system_id: u64) -> bool {
+        self.game_state.explored_solar_systems.contains(&system_id)
+    }
+
+    /// Get discovered solar systems
+    pub fn get_discovered_solar_systems(&self) -> &HashSet<u64> {
+        &self.game_state.discovered_solar_systems
+    }
+
+    /// Get explored solar systems
+    pub fn get_explored_solar_systems(&self) -> &HashSet<u64> {
+        &self.game_state.explored_solar_systems
+    }
+
+    /// Update exploration - gradually discover new solar systems
+    fn update_exploration(&mut self) {
+        // Every 1000 ticks, discover a new solar system if there are unexplored ones
+        if self.game_state.current_tick % 1000 == 0 {
+            if let Some(galaxy) = self
+                .game_state
+                .galaxies
+                .get(&self.game_state.current_galaxy)
+            {
+                // Find undiscovered solar systems
+                let undiscovered: Vec<u64> = galaxy
+                    .solar_systems
+                    .iter()
+                    .filter(|system_id| {
+                        !self.game_state.discovered_solar_systems.contains(system_id)
+                    })
+                    .cloned()
+                    .collect();
+
+                // Discover one random solar system
+                if !undiscovered.is_empty() {
+                    use rand::seq::SliceRandom;
+                    if let Some(&system_id) = undiscovered.choose(&mut rand::thread_rng()) {
+                        self.discover_solar_system(system_id);
+                    }
+                }
+            }
         }
     }
 }

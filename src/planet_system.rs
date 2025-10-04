@@ -21,7 +21,7 @@ impl PlanetSystem {
     }
 
     /// Generate a new planet with random properties
-    pub fn generate_planet(&mut self, position: (f64, f64)) -> Planet {
+    pub fn generate_planet(&mut self, position: (f64, f64), solar_system_id: u64) -> Planet {
         let planet_id = self.planet_counter;
         self.planet_counter += 1;
 
@@ -41,6 +41,7 @@ impl PlanetSystem {
             factories: Vec::new(),
             storage: HashMap::new(),
             position,
+            solar_system_id,
         }
     }
 

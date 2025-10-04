@@ -1,6 +1,6 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MouseEvent};
 use yew::prelude::*;
@@ -68,6 +68,8 @@ pub struct GalaxyCanvasProps {
     pub solar_systems: HashMap<u64, SolarSystem>,
     pub planets: HashMap<u64, Planet>,
     pub current_galaxy: u64,
+    pub discovered_solar_systems: HashSet<u64>,
+    pub explored_solar_systems: HashSet<u64>,
     pub on_planet_click: Callback<u64>,
 }
 
@@ -117,60 +119,111 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
                 ctx.stroke();
             }
 
-            // Draw solar systems and planets
+            // Draw solar systems and planets with fog of war
             if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
                 for system_id in &galaxy.solar_systems {
                     if let Some(system) = props.solar_systems.get(system_id) {
+                        let is_discovered = props.discovered_solar_systems.contains(system_id);
+                        let is_explored = props.explored_solar_systems.contains(system_id);
+
                         // System box
                         let x = system.position.0;
                         let y = system.position.1;
                         let w = 260.0;
                         let h = 80.0;
-                        ctx.set_stroke_style(&JsValue::from_str("#4CAF50"));
-                        ctx.set_line_width(2.0);
-                        ctx.stroke_rect(x, y, w, h);
 
-                        // System title
-                        ctx.set_fill_style(&JsValue::from_str("#4CAF50"));
-                        ctx.set_font("bold 14px Segoe UI, sans-serif");
-                        ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
+                        if is_discovered {
+                            // Draw discovered but not explored systems with dimmed appearance
+                            if is_explored {
+                                // Fully explored system - normal appearance
+                                ctx.set_stroke_style(&JsValue::from_str("#4CAF50"));
+                                ctx.set_line_width(2.0);
+                                ctx.stroke_rect(x, y, w, h);
 
-                        // Planets
-                        let mut px = x + 20.0;
-                        let py = y + 40.0;
-                        for planet_id in &system.planets {
-                            if let Some(planet) = props.planets.get(planet_id) {
-                                // color by class
-                                let color = match planet.class {
-                                    PlanetClass::Barren => "#8B4513",
-                                    PlanetClass::Terran => "#228B22",
-                                    PlanetClass::GasGiant => "#FFD700",
-                                    PlanetClass::Ocean => "#0066CC",
-                                    PlanetClass::Desert => "#F4A460",
-                                    PlanetClass::Ice => "#B0E0E6",
-                                    PlanetClass::Volcanic => "#FF4500",
-                                    PlanetClass::Toxic => "#9ACD32",
-                                    PlanetClass::Crystalline => "#DDA0DD",
-                                    PlanetClass::Metallic => "#C0C0C0",
-                                };
-                                ctx.set_fill_style(&JsValue::from_str(color));
-                                let r = 7.0;
-                                ctx.begin_path();
-                                ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
-                                ctx.fill();
+                                // System title
+                                ctx.set_fill_style(&JsValue::from_str("#4CAF50"));
+                                ctx.set_font("bold 14px Segoe UI, sans-serif");
+                                ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
 
-                                // halo for conquered
-                                if planet.state == PlanetState::Conquered {
-                                    ctx.set_stroke_style(&JsValue::from_str("rgba(76,175,80,0.8)"));
-                                    ctx.set_line_width(2.0);
-                                    ctx.begin_path();
-                                    ctx.arc(px, py, r + 3.0, 0.0, std::f64::consts::PI * 2.0)
-                                        .ok();
-                                    ctx.stroke();
+                                // Planets
+                                let mut px = x + 20.0;
+                                let py = y + 40.0;
+                                for planet_id in &system.planets {
+                                    if let Some(planet) = props.planets.get(planet_id) {
+                                        // color by class
+                                        let color = match planet.class {
+                                            PlanetClass::Barren => "#8B4513",
+                                            PlanetClass::Terran => "#228B22",
+                                            PlanetClass::GasGiant => "#FFD700",
+                                            PlanetClass::Ocean => "#0066CC",
+                                            PlanetClass::Desert => "#F4A460",
+                                            PlanetClass::Ice => "#B0E0E6",
+                                            PlanetClass::Volcanic => "#FF4500",
+                                            PlanetClass::Toxic => "#9ACD32",
+                                            PlanetClass::Crystalline => "#DDA0DD",
+                                            PlanetClass::Metallic => "#C0C0C0",
+                                        };
+                                        ctx.set_fill_style(&JsValue::from_str(color));
+                                        let r = 7.0;
+                                        ctx.begin_path();
+                                        ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
+                                        ctx.fill();
+
+                                        // halo for conquered
+                                        if planet.state == PlanetState::Conquered {
+                                            ctx.set_stroke_style(&JsValue::from_str(
+                                                "rgba(76,175,80,0.8)",
+                                            ));
+                                            ctx.set_line_width(2.0);
+                                            ctx.begin_path();
+                                            ctx.arc(
+                                                px,
+                                                py,
+                                                r + 3.0,
+                                                0.0,
+                                                std::f64::consts::PI * 2.0,
+                                            )
+                                            .ok();
+                                            ctx.stroke();
+                                        }
+
+                                        px += 22.0;
+                                    }
                                 }
+                            } else {
+                                // Discovered but not explored - dimmed appearance
+                                ctx.set_stroke_style(&JsValue::from_str("rgba(76, 175, 80, 0.5)"));
+                                ctx.set_line_width(1.0);
+                                ctx.stroke_rect(x, y, w, h);
 
-                                px += 22.0;
+                                // System title (dimmed)
+                                ctx.set_fill_style(&JsValue::from_str("rgba(76, 175, 80, 0.5)"));
+                                ctx.set_font("bold 14px Segoe UI, sans-serif");
+                                ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
+
+                                // Show question marks for planets (not explored yet)
+                                let mut px = x + 20.0;
+                                let py = y + 40.0;
+                                for _ in &system.planets {
+                                    ctx.set_fill_style(&JsValue::from_str(
+                                        "rgba(128, 128, 128, 0.7)",
+                                    ));
+                                    let r = 7.0;
+                                    ctx.begin_path();
+                                    ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
+                                    ctx.fill();
+                                    px += 22.0;
+                                }
                             }
+                        } else {
+                            // Not discovered - show as fog of war
+                            ctx.set_fill_style(&JsValue::from_str("rgba(0, 0, 0, 0.8)"));
+                            ctx.fill_rect(x, y, w, h);
+
+                            // Show "???" for unknown systems
+                            ctx.set_fill_style(&JsValue::from_str("rgba(128, 128, 128, 0.5)"));
+                            ctx.set_font("bold 14px Segoe UI, sans-serif");
+                            ctx.fill_text("???", x + 10.0, y + 20.0).ok();
                         }
                     }
                 }
@@ -194,6 +247,11 @@ pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
                 if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
                     for system_id in &galaxy.solar_systems {
                         if let Some(system) = props.solar_systems.get(system_id) {
+                            // Only allow clicking on explored systems
+                            if !props.explored_solar_systems.contains(system_id) {
+                                continue;
+                            }
+
                             let sx = system.position.0;
                             let sy = system.position.1;
                             let w = 260.0;

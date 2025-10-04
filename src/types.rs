@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Core resource types in the game
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -103,6 +103,7 @@ pub struct Planet {
     pub factories: Vec<Factory>,
     pub storage: HashMap<ResourceType, u64>,
     pub position: (f64, f64), // x, y coordinates
+    pub solar_system_id: u64,
 }
 
 /// Terraforming project
@@ -247,6 +248,8 @@ pub struct GameState {
     pub prestige_bonuses: Vec<PrestigeBonus>,
     pub total_prestige_points: u64,
     pub empire_resources: HashMap<ResourceType, u64>,
+    pub explored_solar_systems: HashSet<u64>,
+    pub discovered_solar_systems: HashSet<u64>,
 }
 
 /// Conquest result

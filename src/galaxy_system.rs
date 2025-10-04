@@ -59,7 +59,7 @@ impl GalaxySystem {
         for i in 0..planet_count {
             let planet_position =
                 self.generate_planet_position_in_system(position, i, planet_count);
-            let planet = self.planet_system.generate_planet(planet_position);
+            let planet = self.planet_system.generate_planet(planet_position, system_id);
             planets.push(planet.id);
         }
 
@@ -331,7 +331,7 @@ impl GalaxySystem {
     }
 
     /// Generate a new planet (delegates to planet system)
-    pub fn generate_planet(&mut self, position: (f64, f64)) -> Planet {
-        self.planet_system.generate_planet(position)
+    pub fn generate_planet(&mut self, position: (f64, f64), solar_system_id: u64) -> Planet {
+        self.planet_system.generate_planet(position, solar_system_id)
     }
 }
