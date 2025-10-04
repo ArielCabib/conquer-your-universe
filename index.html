@@ -200,7 +200,7 @@
 
         .system-header h4 {
             margin: 0 0 8px 0;
-            font-size: 12px;
+            font-size: 14px;
             color: #4CAF50;
             font-weight: bold;
         }
@@ -213,103 +213,42 @@
             color: rgba(128, 128, 128, 0.5);
         }
 
-        .planets-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            justify-content: center;
-            align-items: center;
+        .planet-count {
+            margin: 0 0 8px 0;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .planet {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            cursor: pointer;
+        .system-info {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            gap: 4px;
+        }
+
+        .system-status {
+            margin: 0;
             font-size: 10px;
             font-weight: bold;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
         }
 
-        .planet:hover {
-            transform: scale(1.2);
-            z-index: 10;
+        .system-status.explored {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
         }
 
-        .planet-name {
-            font-size: 8px;
-            color: white;
+        .system-status.discovered {
+            background: rgba(255, 193, 7, 0.3);
+            color: #FFC107;
         }
 
-        .planet-unknown {
-            color: rgba(128, 128, 128, 0.7);
+        .system-status.hidden {
+            background: rgba(128, 128, 128, 0.3);
+            color: #888;
         }
 
-        /* Planet class colors */
-        .planet.barren {
-            background: #8B4513;
-        }
-
-        .planet.terran {
-            background: #228B22;
-        }
-
-        .planet.gas-giant {
-            background: #FFD700;
-        }
-
-        .planet.ocean {
-            background: #0066CC;
-        }
-
-        .planet.desert {
-            background: #F4A460;
-        }
-
-        .planet.ice {
-            background: #B0E0E6;
-        }
-
-        .planet.volcanic {
-            background: #FF4500;
-        }
-
-        .planet.toxic {
-            background: #9ACD32;
-        }
-
-        .planet.crystalline {
-            background: #DDA0DD;
-        }
-
-        .planet.metallic {
-            background: #C0C0C0;
-        }
-
-        /* Planet state styles */
-        .planet.unexplored {
-            opacity: 0.5;
-        }
-
-        .planet.explored {
-            opacity: 0.8;
-        }
-
-        .planet.conquered {
-            opacity: 1;
-            box-shadow: 0 0 8px #4CAF50;
-            border: 2px solid #4CAF50;
-        }
-
-        .planet.terraforming {
-            opacity: 0.9;
-            box-shadow: 0 0 8px #FFD700;
-            border: 2px solid #FFD700;
-        }
 
         .empty-cell {
             color: rgba(255, 255, 255, 0.1);

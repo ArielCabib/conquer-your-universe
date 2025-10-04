@@ -153,32 +153,13 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
                                                             <h4>{ &system.name }</h4>
                                                             <p class="planet-count">{ format!("{} planets", system.planets.len()) }</p>
                                                         </div>
-                                                        <div class="planets-container">
-                                                            { for system.planets.iter().take(6).map(|planet_id| {
-                                                                if let Some(planet) = props.planets.get(planet_id) {
-                                                                    let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
-                                                                    let planet_state = format!("{:?}", planet.state).to_lowercase();
-
-                                                                    html! {
-                                                                        <div
-                                                                            class={format!("planet {} {}", planet_class, planet_state)}
-                                                                            title={format!("{} - {:?}", planet.name, planet.class)}
-                                                                        >
-                                                                            { if is_explored {
-                                                                                html! { <span class="planet-name">{ &planet.name }</span> }
-                                                                            } else {
-                                                                                html! { <span class="planet-unknown">{ "?" }</span> }
-                                                                            }}
-                                                                        </div>
-                                                                    }
-                                                                } else {
-                                                                    html! { <div class="planet missing">{ "?" }</div> }
-                                                                }
-                                                            })}
-                                                            { if system.planets.len() > 6 {
-                                                                html! { <div class="more-planets">{ format!("+{}", system.planets.len() - 6) }</div> }
+                                                        <div class="system-info">
+                                                            { if is_explored {
+                                                                html! { <p class="system-status explored">{ "Explored" }</p> }
+                                                            } else if is_discovered {
+                                                                html! { <p class="system-status discovered">{ "Discovered" }</p> }
                                                             } else {
-                                                                html! {}
+                                                                html! { <p class="system-status hidden">{ "Unknown" }</p> }
                                                             }}
                                                         </div>
                                                     </div>
@@ -210,7 +191,12 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
     let mut grid_cells = vec![vec![None; grid_size]; grid_size];
 
     // Place planets in the grid
-    log::info!("Solar system {} has {} planets: {:?}", system.id, system.planets.len(), system.planets);
+    log::info!(
+        "Solar system {} has {} planets: {:?}",
+        system.id,
+        system.planets.len(),
+        system.planets
+    );
     for (i, planet_id) in system.planets.iter().enumerate() {
         if i < grid_size * grid_size {
             let x = i % grid_size;
