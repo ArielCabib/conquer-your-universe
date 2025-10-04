@@ -1,5 +1,6 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
+use lazy_static::lazy_static;
 use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
 
@@ -678,13 +679,15 @@ pub struct FactoryManagementProps {
     pub on_add_factory: Callback<(u64, FactoryType)>,
 }
 
+// Static factory costs to prevent re-calculation
+lazy_static::lazy_static! {
+    static ref FACTORY_COSTS: HashMap<FactoryType, HashMap<ResourceType, u64>> = get_factory_costs();
+}
+
 #[function_component]
 pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
     if let Some(planet) = &props.planet {
         if planet.state == PlanetState::Conquered {
-            // Calculate factory costs
-            let factory_costs = get_factory_costs();
-
             html! {
                 <div class="factory-management">
                     <h4>{ "Factory Management" }</h4>
@@ -717,7 +720,7 @@ pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
                     <div class="build-factories">
                         <h5>{ "Build New Factory" }</h5>
                         <div class="factory-options">
-                            { for factory_costs.iter().map(|(factory_type, cost)| {
+                            { for FACTORY_COSTS.iter().map(|(factory_type, cost)| {
                                 let can_afford = cost.iter().all(|(resource_type, required)| {
                                     props.empire_resources.get(resource_type).copied().unwrap_or(0) >= *required
                                 });
