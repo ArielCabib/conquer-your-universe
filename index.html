@@ -326,6 +326,250 @@
             color: #999;
         }
 
+        /* View Controls */
+        .view-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .back-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #45a049;
+        }
+
+        /* Solar System Grid Styles */
+        .solar-system-grid {
+            padding: 20px;
+        }
+
+        .system-header h2 {
+            color: #4CAF50;
+            margin: 0 0 10px 0;
+        }
+
+        .system-info {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 20px 0;
+        }
+
+        .planets-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 600px;
+        }
+
+        .planets-grid-row {
+            display: contents;
+        }
+
+        .planet-cell {
+            min-height: 120px;
+        }
+
+        .planet-card {
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .planet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .planet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .planet-header h4 {
+            margin: 0;
+            font-size: 14px;
+            color: white;
+        }
+
+        .planet-class {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .planet-status {
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .planet-resources {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+        }
+
+        .resource-name {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .resource-amount {
+            color: white;
+            font-weight: bold;
+        }
+
+        .empty-planet-cell {
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .planet-error {
+            color: #f44336;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Planet Detail Grid Styles */
+        .planet-detail-grid {
+            padding: 20px;
+        }
+
+        .planet-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .planet-header h2 {
+            margin: 0;
+            color: #4CAF50;
+        }
+
+        .planet-class-badge,
+        .planet-state-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .planet-class-badge {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .planet-state-badge {
+            background: rgba(255, 193, 7, 0.3);
+            color: #FFC107;
+        }
+
+        .planet-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-section h3 {
+            margin: 0 0 15px 0;
+            color: #4CAF50;
+            font-size: 16px;
+        }
+
+        .resources-grid,
+        .modifiers-grid,
+        .factories-grid,
+        .terraforming-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .resource-card,
+        .modifier-card,
+        .factory-card,
+        .terraforming-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .resource-name,
+        .modifier-type,
+        .factory-type,
+        .project-type {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .resource-amount,
+        .modifier-value,
+        .factory-level,
+        .project-progress {
+            color: white;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #f44336;
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+
         /* Keep info and map separated vertically */
         .galaxy-content {
             display: grid;

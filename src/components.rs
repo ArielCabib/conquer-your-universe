@@ -68,7 +68,24 @@ pub struct GalaxyGridProps {
     pub current_galaxy: u64,
     pub discovered_solar_systems: HashSet<u64>,
     pub explored_solar_systems: HashSet<u64>,
+    pub on_system_click: Callback<u64>,
+}
+
+/// Solar System Grid Props
+#[derive(Properties, PartialEq, Clone)]
+pub struct SolarSystemGridProps {
+    pub solar_system: SolarSystem,
+    pub planets: HashMap<u64, Planet>,
     pub on_planet_click: Callback<u64>,
+}
+
+/// Planet Detail Grid Props
+#[derive(Properties, PartialEq, Clone)]
+pub struct PlanetDetailGridProps {
+    pub planet: Planet,
+    pub empire_resources: HashMap<ResourceType, u64>,
+    pub on_terraform: Callback<(u64, ModifierType)>,
+    pub on_add_factory: Callback<(u64, FactoryType)>,
 }
 
 #[function_component]
@@ -119,27 +136,32 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
                                                 let is_discovered = props.discovered_solar_systems.contains(&system_id);
                                                 let is_explored = props.explored_solar_systems.contains(&system_id);
 
+                                                let on_system_click = props.on_system_click.clone();
+                                                let system_id = system_id;
+
                                                 html! {
-                                                    <div class={format!("solar-system-cell {}",
-                                                        if is_explored { "explored" }
-                                                        else if is_discovered { "discovered" }
-                                                        else { "hidden" }
-                                                    )}>
+                                                    <div
+                                                        class={format!("solar-system-cell {}",
+                                                            if is_explored { "explored" }
+                                                            else if is_discovered { "discovered" }
+                                                            else { "hidden" }
+                                                        )}
+                                                        onclick={on_system_click.reform(move |_| system_id)}
+                                                        title={format!("Click to view {} system", system.name)}
+                                                    >
                                                         <div class="system-header">
                                                             <h4>{ &system.name }</h4>
+                                                            <p class="planet-count">{ format!("{} planets", system.planets.len()) }</p>
                                                         </div>
                                                         <div class="planets-container">
-                                                            { for system.planets.iter().enumerate().map(|(_i, planet_id)| {
+                                                            { for system.planets.iter().take(6).map(|planet_id| {
                                                                 if let Some(planet) = props.planets.get(planet_id) {
                                                                     let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
                                                                     let planet_state = format!("{:?}", planet.state).to_lowercase();
-                                                                    let on_planet_click = props.on_planet_click.clone();
-                                                                    let planet_id = *planet_id;
 
                                                                     html! {
                                                                         <div
                                                                             class={format!("planet {} {}", planet_class, planet_state)}
-                                                                            onclick={on_planet_click.reform(move |_| planet_id)}
                                                                             title={format!("{} - {:?}", planet.name, planet.class)}
                                                                         >
                                                                             { if is_explored {
@@ -153,6 +175,11 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
                                                                     html! { <div class="planet missing">{ "?" }</div> }
                                                                 }
                                                             })}
+                                                            { if system.planets.len() > 6 {
+                                                                html! { <div class="more-planets">{ format!("+{}", system.planets.len() - 6) }</div> }
+                                                            } else {
+                                                                html! {}
+                                                            }}
                                                         </div>
                                                     </div>
                                                 }
@@ -168,6 +195,161 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
                         </div>
                     }
                 })}
+            </div>
+        </div>
+    }
+}
+
+/// Solar System Grid Component
+#[function_component]
+pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
+    let system = &props.solar_system;
+
+    // Create a grid for planets (max 3x3 for now)
+    let grid_size = 3;
+    let mut grid_cells = vec![vec![None; grid_size]; grid_size];
+
+    // Place planets in the grid
+    for (i, planet_id) in system.planets.iter().enumerate() {
+        if i < grid_size * grid_size {
+            let x = i % grid_size;
+            let y = i / grid_size;
+            grid_cells[y][x] = Some(*planet_id);
+        }
+    }
+
+    html! {
+        <div class="solar-system-grid">
+            <div class="system-header">
+                <h2>{ &system.name }</h2>
+                <p class="system-info">{ format!("{} planets in this system", system.planets.len()) }</p>
+            </div>
+            <div class="planets-grid-container">
+                { for (0..grid_size).map(|y| {
+                    html! {
+                        <div class="planets-grid-row" key={y}>
+                            { for (0..grid_size).map(|x| {
+                                let cell_content = grid_cells[y][x];
+                                html! {
+                                    <div class="planet-cell" key={x}>
+                                        { if let Some(planet_id) = cell_content {
+                                            if let Some(planet) = props.planets.get(&planet_id) {
+                                                let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
+                                                let planet_state = format!("{:?}", planet.state).to_lowercase();
+                                                let on_planet_click = props.on_planet_click.clone();
+                                                let planet_id = planet_id;
+
+                                                html! {
+                                                    <div
+                                                        class={format!("planet-card {} {}", planet_class, planet_state)}
+                                                        onclick={on_planet_click.reform(move |_| planet_id)}
+                                                        title={format!("Click to view {} details", planet.name)}
+                                                    >
+                                                        <div class="planet-header">
+                                                            <h4>{ &planet.name }</h4>
+                                                            <span class="planet-class">{ format!("{:?}", planet.class) }</span>
+                                                        </div>
+                                                        <div class="planet-status">
+                                                            <span class="status-badge">{ format!("{:?}", planet.state) }</span>
+                                                        </div>
+                                                        <div class="planet-resources">
+                                                            { for planet.resources.iter().take(3).map(|(resource_type, amount)| {
+                                                                html! {
+                                                                    <div class="resource-item">
+                                                                        <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                                                        <span class="resource-amount">{ *amount }</span>
+                                                                    </div>
+                                                                }
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                }
+                                            } else {
+                                                html! { <div class="planet-error">{ "Planet not found" }</div> }
+                                            }
+                                        } else {
+                                            html! { <div class="empty-planet-cell">{ " " }</div> }
+                                        }}
+                                    </div>
+                                }
+                            })}
+                        </div>
+                    }
+                })}
+            </div>
+        </div>
+    }
+}
+
+/// Planet Detail Grid Component
+#[function_component]
+pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
+    let planet = &props.planet;
+
+    html! {
+        <div class="planet-detail-grid">
+            <div class="planet-header">
+                <h2>{ &planet.name }</h2>
+                <span class="planet-class-badge">{ format!("{:?}", planet.class) }</span>
+                <span class="planet-state-badge">{ format!("{:?}", planet.state) }</span>
+            </div>
+
+            <div class="planet-info-grid">
+                <div class="info-section">
+                    <h3>{ "Resources" }</h3>
+                    <div class="resources-grid">
+                        { for planet.resources.iter().map(|(resource_type, amount)| {
+                            html! {
+                                <div class="resource-card">
+                                    <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                    <span class="resource-amount">{ *amount }</span>
+                                </div>
+                            }
+                        })}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>{ "Modifiers" }</h3>
+                    <div class="modifiers-grid">
+                        { for planet.modifiers.iter().map(|modifier| {
+                            html! {
+                                <div class="modifier-card">
+                                    <span class="modifier-type">{ format!("{:?}", modifier.modifier_type) }</span>
+                                    <span class="modifier-value">{ format!("{:.1}%", modifier.value * 100.0) }</span>
+                                </div>
+                            }
+                        })}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>{ "Factories" }</h3>
+                    <div class="factories-grid">
+                        { for planet.factories.iter().map(|factory| {
+                            html! {
+                                <div class="factory-card">
+                                    <span class="factory-type">{ format!("{:?}", factory.factory_type) }</span>
+                                    <span class="factory-level">{ format!("Level {}", factory.efficiency) }</span>
+                                </div>
+                            }
+                        })}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>{ "Terraforming Projects" }</h3>
+                    <div class="terraforming-grid">
+                        { for planet.terraforming_projects.iter().map(|project| {
+                            html! {
+                                <div class="terraforming-card">
+                                    <span class="project-type">{ format!("{:?}", project.target_modifier) }</span>
+                                    <span class="project-progress">{ format!("{:.1}%", project.progress * 100.0) }</span>
+                                </div>
+                            }
+                        })}
+                    </div>
+                </div>
             </div>
         </div>
     }

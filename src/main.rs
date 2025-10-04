@@ -29,6 +29,9 @@ fn App() -> Html {
     let game_tick = use_state(|| 0);
     let game_speed = use_state(|| GameSpeed::Normal);
     let is_paused = use_state(|| false);
+    let current_view = use_state(|| ViewMode::Galaxy);
+    let selected_solar_system = use_state(|| None::<u64>);
+    let selected_planet = use_state(|| None::<Planet>);
 
     // Game update loop
     let game_engine_clone = game_engine.clone();
@@ -132,66 +135,147 @@ fn App() -> Html {
         }
     };
 
-    let galaxy_map = {
-        let galaxies = game_engine.borrow().game_state.galaxies.clone();
-        let solar_systems = game_engine.borrow().game_state.solar_systems.clone();
-        let planets = game_engine.borrow().game_state.planets.clone();
-        let current_galaxy = game_engine.borrow().game_state.current_galaxy;
-        let planets_clone = planets.clone();
-        let on_planet_click = {
-            let selected_planet = selected_planet.clone();
-            let game_engine = game_engine.clone();
-            move |planet_id: u64| {
-                if let Some(planet) = planets_clone.get(&planet_id) {
-                    selected_planet.set(Some(planet.clone()));
-                }
+    // Navigation callbacks
+    let on_system_click = {
+        let current_view = current_view.clone();
+        let selected_solar_system = selected_solar_system.clone();
+        move |system_id: u64| {
+            selected_solar_system.set(Some(system_id));
+            current_view.set(ViewMode::SolarSystem);
+        }
+    };
 
-                // Attempt conquest if planet is unexplored
-                if let Some(planet) = planets_clone.get(&planet_id) {
-                    if planet.state == PlanetState::Unexplored {
-                        let result = game_engine.borrow_mut().attempt_planet_conquest(planet_id);
-                        match result {
-                            ConquestResult::Success { planet_id, cost } => {
-                                log::info!(
-                                    "Successfully conquered planet {} for cost: {:?}",
-                                    planet_id,
-                                    cost
-                                );
-                            }
-                            ConquestResult::InsufficientResources {
-                                required,
-                                available,
-                            } => {
-                                log::warn!("Insufficient resources to conquer planet. Required: {:?}, Available: {:?}", required, available);
-                            }
-                            ConquestResult::AlreadyConquered => {
-                                log::info!("Planet {} is already conquered", planet_id);
-                            }
-                            ConquestResult::AlreadyExplored => {
-                                log::info!("Planet {} is already explored", planet_id);
-                            }
-                            ConquestResult::CurrentlyTerraforming => {
-                                log::info!("Planet {} is currently being terraformed", planet_id);
-                            }
-                            ConquestResult::PlanetNotFound => {
-                                log::error!("Planet {} not found", planet_id);
-                            }
+    let on_planet_click = {
+        let current_view = current_view.clone();
+        let selected_planet = selected_planet.clone();
+        let planets = game_engine.borrow().game_state.planets.clone();
+        move |planet_id: u64| {
+            if let Some(planet) = planets.get(&planet_id) {
+                selected_planet.set(Some(planet.clone()));
+                current_view.set(ViewMode::Planet);
+            }
+        }
+    };
+
+    let on_back_to_galaxy = {
+        let current_view = current_view.clone();
+        move |_| {
+            current_view.set(ViewMode::Galaxy);
+        }
+    };
+
+    let on_back_to_system = {
+        let current_view = current_view.clone();
+        move |_| {
+            current_view.set(ViewMode::SolarSystem);
+        }
+    };
+
+    // Main content based on current view
+    let main_content = match *current_view {
+        ViewMode::Galaxy => {
+            let galaxies = game_engine.borrow().game_state.galaxies.clone();
+            let solar_systems = game_engine.borrow().game_state.solar_systems.clone();
+            let planets = game_engine.borrow().game_state.planets.clone();
+            let current_galaxy = game_engine.borrow().game_state.current_galaxy;
+
+            html! {
+                <GalaxyGrid
+                    galaxies={galaxies}
+                    solar_systems={solar_systems}
+                    planets={planets}
+                    current_galaxy={current_galaxy}
+                    discovered_solar_systems={game_engine.borrow().get_discovered_solar_systems().clone()}
+                    explored_solar_systems={game_engine.borrow().get_explored_solar_systems().clone()}
+                    on_system_click={Callback::from(on_system_click)}
+                />
+            }
+        }
+        ViewMode::SolarSystem => {
+            if let Some(system_id) = *selected_solar_system {
+                if let Some(system) = game_engine
+                    .borrow()
+                    .game_state
+                    .solar_systems
+                    .get(&system_id)
+                {
+                    let planets = game_engine.borrow().game_state.planets.clone();
+                    html! {
+                        <div class="solar-system-view">
+                            <div class="view-controls">
+                                <button onclick={on_back_to_galaxy} class="back-button">{ "← Back to Galaxy" }</button>
+                            </div>
+                            <SolarSystemGrid
+                                solar_system={system.clone()}
+                                planets={planets}
+                                on_planet_click={Callback::from(on_planet_click)}
+                            />
+                        </div>
+                    }
+                } else {
+                    html! { <div class="error">{ "Solar system not found" }</div> }
+                }
+            } else {
+                html! { <div class="error">{ "No solar system selected" }</div> }
+            }
+        }
+        ViewMode::Planet => {
+            if let Some(planet) = (*selected_planet).clone() {
+                let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
+                let on_terraform = {
+                    let game_engine = game_engine.clone();
+                    move |(planet_id, modifier_type): (u64, ModifierType)| {
+                        // Calculate terraforming cost (simplified for now)
+                        let cost = HashMap::new(); // TODO: Implement proper cost calculation
+                        let duration = 1000; // 1000 ticks
+                        let energy_cost = 100; // 100 energy
+
+                        let result = game_engine.borrow_mut().start_terraforming_project(
+                            planet_id,
+                            modifier_type,
+                            cost,
+                            duration,
+                            energy_cost,
+                        );
+
+                        if result {
+                            log::info!("Started terraforming project for planet {}", planet_id);
+                        } else {
+                            log::warn!("Failed to start terraforming project");
                         }
                     }
-                }
-            }
-        };
+                };
 
-        html! {
-            <GalaxyGrid
-                galaxies={galaxies}
-                solar_systems={solar_systems}
-                planets={planets}
-                current_galaxy={current_galaxy}
-                discovered_solar_systems={game_engine.borrow().get_discovered_solar_systems().clone()}
-                explored_solar_systems={game_engine.borrow().get_explored_solar_systems().clone()}
-                on_planet_click={Callback::from(on_planet_click)}
-            />
+                let on_add_factory = {
+                    let game_engine = game_engine.clone();
+                    move |(planet_id, factory_type): (u64, FactoryType)| {
+                        let result = game_engine
+                            .borrow_mut()
+                            .add_factory(planet_id, factory_type);
+                        if result.is_some() {
+                            log::info!("Added factory to planet {}", planet_id);
+                        } else {
+                            log::warn!("Failed to add factory");
+                        }
+                    }
+                };
+
+                html! {
+                    <div class="planet-view">
+                        <div class="view-controls">
+                            <button onclick={on_back_to_system} class="back-button">{ "← Back to Solar System" }</button>
+                        </div>
+                        <PlanetDetailGrid
+                            planet={planet}
+                            empire_resources={empire_resources}
+                            on_terraform={Callback::from(on_terraform)}
+                            on_add_factory={Callback::from(on_add_factory)}
+                        />
+                    </div>
+                }
+            } else {
+                html! { <div class="error">{ "No planet selected" }</div> }
+            }
         }
     };
 
@@ -357,7 +441,7 @@ fn App() -> Html {
                     </div>
 
                     <div class="center-panel">
-                        { galaxy_map }
+                        { main_content }
                     </div>
 
                     <div class="right-panel">

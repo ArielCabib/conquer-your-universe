@@ -211,6 +211,14 @@ pub enum GameSpeed {
     UltraFast = 1000,
 }
 
+/// View mode for the game interface
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ViewMode {
+    Galaxy,
+    SolarSystem,
+    Planet,
+}
+
 /// Prestige bonus
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrestigeBonus {
