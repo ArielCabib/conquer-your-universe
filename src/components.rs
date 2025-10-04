@@ -105,77 +105,80 @@ pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
 
     let galaxy = galaxy.unwrap();
 
-    // Create a grid of solar systems
-    let grid_size = 10; // 10x10 grid
-    let mut grid_cells = vec![vec![None; grid_size]; grid_size];
+    // Only show discovered/explored solar systems
+    let visible_systems: Vec<_> = galaxy
+        .solar_systems
+        .iter()
+        .filter(|system_id| {
+            props.discovered_solar_systems.contains(system_id)
+                || props.explored_solar_systems.contains(system_id)
+        })
+        .collect();
 
-    // Place solar systems in the grid
-    for system_id in &galaxy.solar_systems {
-        if let Some(system) = props.solar_systems.get(system_id) {
-            let x = system.position.0 as usize;
-            let y = system.position.1 as usize;
-
-            if x < grid_size && y < grid_size {
-                grid_cells[y][x] = Some(*system_id);
-            }
-        }
-    }
+    // Create a flexible grid layout instead of fixed 10x10
+    let systems_per_row = 4; // Show 4 systems per row
+    let total_rows = (visible_systems.len() + systems_per_row - 1) / systems_per_row;
 
     html! {
         <div class="galaxy-grid">
-            <div class="grid-container">
-                { for (0..grid_size).map(|y| {
+            <div class="systems-container">
+                { if visible_systems.is_empty() {
                     html! {
-                        <div class="grid-row" key={y}>
-                            { for (0..grid_size).map(|x| {
-                                let cell_content = grid_cells[y][x];
-                                html! {
-                                    <div class="grid-cell" key={x}>
-                                        { if let Some(system_id) = cell_content {
-                                            if let Some(system) = props.solar_systems.get(&system_id) {
-                                                let is_discovered = props.discovered_solar_systems.contains(&system_id);
-                                                let is_explored = props.explored_solar_systems.contains(&system_id);
-
-                                                let on_system_click = props.on_system_click.clone();
-                                                let system_id = system_id;
-
-                                                html! {
-                                                    <div
-                                                        class={format!("solar-system-cell {}",
-                                                            if is_explored { "explored" }
-                                                            else if is_discovered { "discovered" }
-                                                            else { "hidden" }
-                                                        )}
-                                                        onclick={on_system_click.reform(move |_| system_id)}
-                                                        title={format!("Click to view {} system", system.name)}
-                                                    >
-                                                        <div class="system-header">
-                                                            <h4>{ &system.name }</h4>
-                                                            <p class="planet-count">{ format!("{} planets", system.planets.len()) }</p>
-                                                        </div>
-                                                        <div class="system-info">
-                                                            { if is_explored {
-                                                                html! { <p class="system-status explored">{ "Explored" }</p> }
-                                                            } else if is_discovered {
-                                                                html! { <p class="system-status discovered">{ "Discovered" }</p> }
-                                                            } else {
-                                                                html! { <p class="system-status hidden">{ "Unknown" }</p> }
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                }
-                                            } else {
-                                                html! { <div class="system-error">{ "System not found" }</div> }
-                                            }
-                                        } else {
-                                            html! { <div class="empty-cell">{ " " }</div> }
-                                        }}
-                                    </div>
-                                }
-                            })}
+                        <div class="no-systems">
+                            <h3>{ "No Solar Systems Discovered" }</h3>
+                            <p>{ "Explore the galaxy to discover new solar systems!" }</p>
                         </div>
                     }
-                })}
+                } else {
+                    html! {
+                        { for (0..total_rows).map(|row| {
+                            let start_idx = row * systems_per_row;
+                            let end_idx = (start_idx + systems_per_row).min(visible_systems.len());
+                            let row_systems = &visible_systems[start_idx..end_idx];
+
+                            html! {
+                                <div class="systems-row" key={row}>
+                                    { for row_systems.iter().map(|system_id| {
+                                        if let Some(system) = props.solar_systems.get(system_id) {
+                                            let is_discovered = props.discovered_solar_systems.contains(system_id);
+                                            let is_explored = props.explored_solar_systems.contains(system_id);
+                                            let on_system_click = props.on_system_click.clone();
+                                            let system_id_clone = **system_id;
+
+                                            html! {
+                                                <div
+                                                    class={format!("solar-system-cell {}",
+                                                        if is_explored { "explored" }
+                                                        else if is_discovered { "discovered" }
+                                                        else { "hidden" }
+                                                    )}
+                                                    onclick={on_system_click.reform(move |_| system_id_clone)}
+                                                    title={format!("Click to view {} system", system.name)}
+                                                >
+                                                    <div class="system-header">
+                                                        <h4>{ &system.name }</h4>
+                                                        <p class="planet-count">{ format!("{} planets", system.planets.len()) }</p>
+                                                    </div>
+                                                    <div class="system-info">
+                                                        { if is_explored {
+                                                            html! { <p class="system-status explored">{ "Explored" }</p> }
+                                                        } else if is_discovered {
+                                                            html! { <p class="system-status discovered">{ "Discovered" }</p> }
+                                                        } else {
+                                                            html! { <p class="system-status hidden">{ "Unknown" }</p> }
+                                                        }}
+                                                    </div>
+                                                </div>
+                                            }
+                                        } else {
+                                            html! { <div class="system-error">{ "System not found" }</div> }
+                                        }
+                                    })}
+                                </div>
+                            }
+                        })}
+                    }
+                }}
             </div>
         </div>
     }
@@ -473,7 +476,6 @@ pub fn PlanetView(props: &PlanetViewProps) -> Html {
 #[derive(Properties, PartialEq, Clone)]
 pub struct PlanetPanelProps {
     pub planet: Option<Planet>,
-    pub on_close: Callback<()>,
     pub on_terraform: Callback<(u64, ModifierType)>,
     pub on_add_factory: Callback<(u64, FactoryType)>,
 }
@@ -482,7 +484,6 @@ pub struct PlanetPanelProps {
 pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
     if let Some(planet) = &props.planet {
         let planet_id = planet.id;
-        let on_close = props.on_close.clone();
         let on_terraform = props.on_terraform.clone();
         let on_add_factory = props.on_add_factory.clone();
 
@@ -490,16 +491,10 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
             <div class="planet-panel">
                 <div class="panel-header">
                     <h3>{ &planet.name }</h3>
-                    <button onclick={move |_| on_close.emit(())} class="close-btn">{"×"}</button>
                 </div>
 
                 <div class="planet-status-hint">
                     { match planet.state {
-                        PlanetState::Unexplored => html! {
-                            <div class="status-hint unexplored">
-                                <strong>{ "Unexplored:" }</strong> { "Click on this planet in the galaxy map to conquer it!" }
-                            </div>
-                        },
                         PlanetState::Conquered => html! {
                             <div class="status-hint conquered">
                                 <strong>{ "Conquered:" }</strong> { "You can now build factories and terraform this planet." }
@@ -515,6 +510,7 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                                 <strong>{ "Terraforming:" }</strong> { "This planet is currently being terraformed." }
                             </div>
                         },
+                        PlanetState::Unexplored => html! { <></> },
                     }}
                 </div>
 

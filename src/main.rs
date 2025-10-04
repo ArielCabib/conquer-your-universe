@@ -288,10 +288,6 @@ fn App() -> Html {
     let planet_panel = {
         let planet = (*selected_planet).clone();
         let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
-        let on_close = {
-            let selected_planet = selected_planet.clone();
-            move |_| selected_planet.set(None)
-        };
         let on_terraform = {
             let game_engine = game_engine.clone();
             move |(planet_id, modifier_type)| {
@@ -387,45 +383,53 @@ fn App() -> Html {
             }
         };
 
-        html! {
-            <>
-                <PlanetPanel
-                    planet={planet.clone()}
-                    on_close={Callback::from(on_close)}
-                    on_terraform={Callback::from(on_terraform.clone())}
-                    on_add_factory={Callback::from(on_add_factory.clone())}
-                />
-                <ConquestCost
-                    planet={planet.clone()}
-                    empire_resources={empire_resources.clone()}
-                />
-                <FactoryManagement
-                    planet={planet.clone()}
-                    empire_resources={empire_resources.clone()}
-                    on_add_factory={Callback::from(on_add_factory)}
-                />
-                <TransportSystem
-                    planets={game_engine.borrow().game_state.planets.clone()}
-                    empire_resources={empire_resources.clone()}
-                    on_start_transport={Callback::from(on_start_transport)}
-                />
-                <PrestigeSystem
-                    current_prestige={game_engine.borrow().game_state.total_prestige_points}
-                    galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
-                        &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
-                        &game_engine.borrow().game_state.solar_systems,
-                        &game_engine.borrow().game_state.planets,
-                    )}
-                    can_prestige={game_engine.borrow().check_prestige_eligibility()}
-                    prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
-                    on_perform_prestige={Callback::from(on_perform_prestige)}
-                />
-                <components::TerraformingProject
-                    planet={planet}
-                    empire_resources={empire_resources}
-                    on_start_terraforming={Callback::from(on_terraform)}
-                />
-            </>
+        if let Some(planet) = planet {
+            html! {
+                <>
+                    <PlanetPanel
+                        planet={planet.clone()}
+                        on_terraform={Callback::from(on_terraform.clone())}
+                        on_add_factory={Callback::from(on_add_factory.clone())}
+                    />
+                    <ConquestCost
+                        planet={planet.clone()}
+                        empire_resources={empire_resources.clone()}
+                    />
+                    <FactoryManagement
+                        planet={planet.clone()}
+                        empire_resources={empire_resources.clone()}
+                        on_add_factory={Callback::from(on_add_factory)}
+                    />
+                    <TransportSystem
+                        planets={game_engine.borrow().game_state.planets.clone()}
+                        empire_resources={empire_resources.clone()}
+                        on_start_transport={Callback::from(on_start_transport)}
+                    />
+                    <PrestigeSystem
+                        current_prestige={game_engine.borrow().game_state.total_prestige_points}
+                        galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
+                            &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
+                            &game_engine.borrow().game_state.solar_systems,
+                            &game_engine.borrow().game_state.planets,
+                        )}
+                        can_prestige={game_engine.borrow().check_prestige_eligibility()}
+                        prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
+                        on_perform_prestige={Callback::from(on_perform_prestige)}
+                    />
+                    <components::TerraformingProject
+                        planet={planet}
+                        empire_resources={empire_resources}
+                        on_start_terraforming={Callback::from(on_terraform)}
+                    />
+                </>
+            }
+        } else {
+            html! {
+                <div class="no-planet-selected">
+                    <h3>{ "No Planet Selected" }</h3>
+                    <p>{ "Click on a planet to view its details and manage it." }</p>
+                </div>
+            }
         }
     };
 
@@ -445,7 +449,7 @@ fn App() -> Html {
                         <div>
                             { game_stats }
                         </div>
-                        <div>
+        <div>
                             { empire_resources }
                         </div>
                     </div>
