@@ -36,16 +36,23 @@ fn App() -> Html {
     let selected_planet = use_state(|| None::<Planet>);
     let refresh_trigger = use_state(|| 0);
 
-    // Game update loop
+    // Game update loop with dynamic speed
     let game_engine_clone = game_engine.clone();
     let game_tick_clone = game_tick.clone();
     let is_paused_clone = is_paused.clone();
+    let game_speed_clone = game_speed.clone();
 
     use_effect(move || {
         let interval = gloo_timers::callback::Interval::new(100, move || {
             if !*is_paused_clone {
-                game_engine_clone.borrow_mut().update();
-                game_tick_clone.set(*game_tick_clone + 1);
+                let speed_multiplier = *game_speed_clone as u64;
+
+                // Run multiple updates based on speed multiplier
+                for _ in 0..speed_multiplier {
+                    game_engine_clone.borrow_mut().update();
+                }
+
+                game_tick_clone.set(*game_tick_clone + speed_multiplier);
             }
         });
 
@@ -136,10 +143,12 @@ fn App() -> Html {
                     .map(|planet| planet.id)
                     .collect::<Vec<_>>(),
             );
+        let storage_limits = game_engine.borrow().resource_system.get_storage_limits();
         html! {
             <ResourceDashboard
                 empire_resources={resources}
                 resource_generation={generation}
+                storage_limits={storage_limits}
             />
         }
     };

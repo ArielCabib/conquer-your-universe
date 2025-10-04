@@ -199,13 +199,25 @@ impl GameEngine {
             .resource_system
             .calculate_empire_resource_generation(&self.game_state.planets, &conquered_planets);
 
-        // Add generated resources to empire
+        // Add generated resources to empire with storage limits
         for (resource_type, amount) in empire_generation {
-            *self
+            let current_amount = self
                 .game_state
                 .empire_resources
-                .entry(resource_type)
-                .or_insert(0) += amount;
+                .get(&resource_type)
+                .copied()
+                .unwrap_or(0);
+            let storage_capacity = self.resource_system.get_storage_capacity(&resource_type);
+            let max_to_add = storage_capacity.saturating_sub(current_amount);
+            let actual_amount = amount.min(max_to_add);
+
+            if actual_amount > 0 {
+                *self
+                    .game_state
+                    .empire_resources
+                    .entry(resource_type)
+                    .or_insert(0) += actual_amount;
+            }
         }
     }
 
@@ -220,9 +232,22 @@ impl GameEngine {
                     self.game_state.game_speed,
                 );
 
-                // Add produced resources to planet storage
+                // Add produced resources to planet storage with storage limits
                 for resource in produced_resources {
-                    *planet.storage.entry(resource.resource_type).or_insert(0) += resource.amount;
+                    let current_amount = planet
+                        .storage
+                        .get(&resource.resource_type)
+                        .copied()
+                        .unwrap_or(0);
+                    let storage_capacity = self
+                        .resource_system
+                        .get_storage_capacity(&resource.resource_type);
+                    let max_to_add = storage_capacity.saturating_sub(current_amount);
+                    let actual_amount = resource.amount.min(max_to_add);
+
+                    if actual_amount > 0 {
+                        *planet.storage.entry(resource.resource_type).or_insert(0) += actual_amount;
+                    }
                 }
             }
         }
@@ -235,10 +260,23 @@ impl GameEngine {
             self.game_state.game_speed,
         );
 
-        // Distribute arrived resources
+        // Distribute arrived resources with storage limits
         for resource in arrived_resources {
             if let Some(planet) = self.game_state.planets.get_mut(&resource.to_planet) {
-                *planet.storage.entry(resource.resource_type).or_insert(0) += resource.amount;
+                let current_amount = planet
+                    .storage
+                    .get(&resource.resource_type)
+                    .copied()
+                    .unwrap_or(0);
+                let storage_capacity = self
+                    .resource_system
+                    .get_storage_capacity(&resource.resource_type);
+                let max_to_add = storage_capacity.saturating_sub(current_amount);
+                let actual_amount = resource.amount.min(max_to_add);
+
+                if actual_amount > 0 {
+                    *planet.storage.entry(resource.resource_type).or_insert(0) += actual_amount;
+                }
             }
         }
     }

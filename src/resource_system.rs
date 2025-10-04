@@ -170,6 +170,11 @@ impl ResourceSystem {
             .unwrap_or(1000)
     }
 
+    /// Get all storage limits
+    pub fn get_storage_limits(&self) -> HashMap<ResourceType, u64> {
+        self.resource_storage_limits.clone()
+    }
+
     /// Check if adding resources would exceed storage capacity
     pub fn would_exceed_capacity(
         &self,

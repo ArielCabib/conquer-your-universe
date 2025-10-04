@@ -487,6 +487,10 @@ pub struct PlanetPanelProps {
 
 #[function_component]
 pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
+    log::info!(
+        "PlanetPanel rendered with planet: {:?}",
+        props.planet.is_some()
+    );
     if let Some(planet) = &props.planet {
         let planet_id = planet.id;
         let on_terraform = props.on_terraform.clone();
@@ -610,7 +614,16 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
             </div>
         }
     } else {
-        html! {}
+        html! {
+            <div class="planet-panel">
+                <div class="panel-header">
+                    <h3>{ "No Planet Selected" }</h3>
+                </div>
+                <div class="panel-content">
+                    <p>{ "Please select a planet to view its details." }</p>
+                </div>
+            </div>
+        }
     }
 }
 
@@ -619,6 +632,7 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
 pub struct ResourceDashboardProps {
     pub empire_resources: HashMap<ResourceType, u64>,
     pub resource_generation: HashMap<ResourceType, u64>,
+    pub storage_limits: HashMap<ResourceType, u64>,
 }
 
 #[function_component]
@@ -629,12 +643,26 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
             <div class="resource-grid">
                 { for props.empire_resources.iter().map(|(resource_type, amount)| {
                     let generation = props.resource_generation.get(resource_type).copied().unwrap_or(0);
+                    let storage_limit = props.storage_limits.get(resource_type).copied().unwrap_or(1000);
+                    let is_at_capacity = *amount >= storage_limit;
+                    let capacity_percentage = (*amount as f64 / storage_limit as f64 * 100.0).min(100.0);
+                    
                     html! {
-                        <div class="resource-card">
+                        <div class={format!("resource-card {}", if is_at_capacity { "at-capacity" } else { "" })}>
                             <div class="resource-header">
                                 <h4>{ format!("{:?}", resource_type) }</h4>
+                                { if is_at_capacity {
+                                    html! { <span class="capacity-warning">{ "FULL" }</span> }
+                                } else {
+                                    html! {}
+                                }}
                             </div>
-                            <div class="resource-amount">{ *amount }</div>
+                            <div class="resource-amount">
+                                { format!("{} / {}", *amount, storage_limit) }
+                            </div>
+                            <div class="resource-capacity-bar">
+                                <div class="capacity-fill" style={format!("width: {:.1}%", capacity_percentage)}></div>
+                            </div>
                             <div class="resource-generation">
                                 { format!("+{}/tick", generation) }
                             </div>
