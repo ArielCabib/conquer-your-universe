@@ -1,0 +1,374 @@
+use crate::types::*;
+use crate::resource_system::ResourceSystem;
+use crate::planet_system::PlanetSystem;
+use crate::supply_chain::SupplyChainSystem;
+use crate::transport_system::TransportSystem;
+use crate::galaxy_system::GalaxySystem;
+use crate::prestige_system::PrestigeSystem;
+use std::collections::HashMap;
+
+/// Main game engine that coordinates all systems
+pub struct GameEngine {
+    pub game_state: GameState,
+    pub resource_system: ResourceSystem,
+    pub planet_system: PlanetSystem,
+    pub supply_chain_system: SupplyChainSystem,
+    pub transport_system: TransportSystem,
+    pub galaxy_system: GalaxySystem,
+    pub prestige_system: PrestigeSystem,
+    pub config: GameConfig,
+}
+
+impl GameEngine {
+    pub fn new() -> Self {
+        let game_state = GameState {
+            current_tick: 0,
+            game_speed: GameSpeed::Normal,
+            is_paused: false,
+            current_galaxy: 0,
+            galaxies: HashMap::new(),
+            solar_systems: HashMap::new(),
+            planets: HashMap::new(),
+            transport_routes: HashMap::new(),
+            resources_in_transit: Vec::new(),
+            product_dependencies: HashMap::new(),
+            prestige_bonuses: Vec::new(),
+            total_prestige_points: 0,
+            empire_resources: HashMap::new(),
+        };
+
+        let config = GameConfig {
+            galaxy_size: 50,
+            systems_per_galaxy: 20,
+            planets_per_system: 5,
+            resource_generation_rate: 1.0,
+            conquest_difficulty_scaling: 1.1,
+            terraforming_base_cost: 1000,
+            transport_base_cost: 100,
+        };
+
+        Self {
+            game_state,
+            resource_system: ResourceSystem::new(),
+            planet_system: PlanetSystem::new(),
+            supply_chain_system: SupplyChainSystem::new(),
+            transport_system: TransportSystem::new(),
+            galaxy_system: GalaxySystem::new(),
+            prestige_system: PrestigeSystem::new(),
+            config,
+        }
+    }
+
+    /// Initialize the game with starting galaxy
+    pub fn initialize_game(&mut self) {
+        // Generate starting galaxy
+        let galaxy = self.galaxy_system.generate_galaxy("Milky Way".to_string(), self.config.systems_per_galaxy);
+        self.game_state.current_galaxy = galaxy.id;
+        self.game_state.galaxies.insert(galaxy.id, galaxy);
+
+        // Generate solar systems and planets
+        self.generate_initial_content();
+
+        // Initialize empire resources
+        self.initialize_empire_resources();
+    }
+
+    /// Generate initial galaxy content
+    fn generate_initial_content(&mut self) {
+        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
+            for (i, &_system_id) in galaxy.solar_systems.iter().enumerate() {
+                let system = self.galaxy_system.generate_solar_system(galaxy.id, i as u32);
+                let system_position = system.position;
+                self.game_state.solar_systems.insert(system.id, system);
+
+                // Generate planets for this system
+                for j in 0..self.config.planets_per_system {
+                    let planet_position = self.galaxy_system.generate_planet_position_in_system(
+                        system_position,
+                        j,
+                        self.config.planets_per_system,
+                    );
+                    let planet = self.galaxy_system.generate_planet(planet_position);
+                    self.game_state.planets.insert(planet.id, planet);
+                }
+            }
+        }
+    }
+
+    /// Initialize starting empire resources
+    fn initialize_empire_resources(&mut self) {
+        self.game_state.empire_resources.insert(ResourceType::Energy, 1000);
+        self.game_state.empire_resources.insert(ResourceType::Minerals, 500);
+        self.game_state.empire_resources.insert(ResourceType::Population, 100);
+        self.game_state.empire_resources.insert(ResourceType::Technology, 50);
+        self.game_state.empire_resources.insert(ResourceType::Food, 200);
+    }
+
+    /// Main game update loop
+    pub fn update(&mut self) {
+        if self.game_state.is_paused {
+            return;
+        }
+
+        let speed_multiplier = self.game_state.game_speed as u64;
+
+        // Update all systems
+        self.update_resource_generation();
+        self.update_factories();
+        self.update_transport();
+        self.update_terraforming();
+        self.update_conquest();
+
+        // Increment game tick
+        self.game_state.current_tick += speed_multiplier;
+    }
+
+    /// Update resource generation across all conquered planets
+    fn update_resource_generation(&mut self) {
+        let conquered_planets: Vec<u64> = self.game_state.planets.values()
+            .filter(|planet| planet.state == PlanetState::Conquered)
+            .map(|planet| planet.id)
+            .collect();
+
+        let empire_generation = self.resource_system.calculate_empire_resource_generation(
+            &self.game_state.planets,
+            &conquered_planets,
+        );
+
+        // Add generated resources to empire
+        for (resource_type, amount) in empire_generation {
+            *self.game_state.empire_resources.entry(resource_type).or_insert(0) += amount;
+        }
+    }
+
+    /// Update factory production
+    fn update_factories(&mut self) {
+        for planet in self.game_state.planets.values_mut() {
+            let planet_clone = planet.clone();
+            for factory in &mut planet.factories {
+                let produced_resources = self.supply_chain_system.update_factory_production(
+                    factory,
+                    &planet_clone,
+                    self.game_state.game_speed,
+                );
+
+                // Add produced resources to planet storage
+                for resource in produced_resources {
+                    *planet.storage.entry(resource.resource_type).or_insert(0) += resource.amount;
+                }
+            }
+        }
+    }
+
+    /// Update transport system
+    fn update_transport(&mut self) {
+        let arrived_resources = self.transport_system.update_transit(
+            &mut self.game_state.resources_in_transit,
+            self.game_state.game_speed,
+        );
+
+        // Distribute arrived resources
+        for resource in arrived_resources {
+            if let Some(planet) = self.game_state.planets.get_mut(&resource.to_planet) {
+                *planet.storage.entry(resource.resource_type).or_insert(0) += resource.amount;
+            }
+        }
+    }
+
+    /// Update terraforming projects
+    fn update_terraforming(&mut self) {
+        for planet in self.game_state.planets.values_mut() {
+            self.planet_system.update_terraforming_projects(planet, self.game_state.game_speed);
+        }
+    }
+
+    /// Update conquest mechanics
+    fn update_conquest(&mut self) {
+        // This would handle automatic conquest processes
+        // For now, conquest is manual through player actions
+    }
+
+    /// Set game speed
+    pub fn set_game_speed(&mut self, speed: GameSpeed) {
+        self.game_state.game_speed = speed;
+    }
+
+    /// Pause/unpause game
+    pub fn toggle_pause(&mut self) {
+        self.game_state.is_paused = !self.game_state.is_paused;
+    }
+
+    /// Start terraforming project on a planet
+    pub fn start_terraforming_project(
+        &mut self,
+        planet_id: u64,
+        target_modifier: ModifierType,
+        required_resources: HashMap<ResourceType, u64>,
+        duration: u64,
+        energy_cost: u64,
+    ) -> bool {
+        if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+            self.planet_system.start_terraforming_project(
+                planet,
+                target_modifier,
+                required_resources,
+                duration,
+                energy_cost,
+            )
+        } else {
+            false
+        }
+    }
+
+    /// Add factory to a planet
+    pub fn add_factory(&mut self, planet_id: u64, factory_type: FactoryType) -> Option<u64> {
+        if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+            Some(self.planet_system.add_factory(planet, factory_type))
+        } else {
+            None
+        }
+    }
+
+    /// Start resource transport between planets
+    pub fn start_resource_transport(
+        &mut self,
+        from_planet: u64,
+        to_planet: u64,
+        resource_type: ResourceType,
+        amount: u64,
+    ) -> bool {
+        if let (Some(from), Some(to)) = (
+            self.game_state.planets.get(&from_planet),
+            self.game_state.planets.get(&to_planet),
+        ) {
+            let distance = ((from.position.0 - to.position.0).powi(2) + (from.position.1 - to.position.1).powi(2)).sqrt();
+            let transport = self.transport_system.start_transport(
+                from_planet,
+                to_planet,
+                resource_type,
+                amount,
+                distance,
+                self.game_state.game_speed,
+            );
+            self.game_state.resources_in_transit.push(transport);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Check if galaxy is ready for prestige
+    pub fn check_prestige_eligibility(&self) -> bool {
+        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
+            let progress = self.galaxy_system.get_galaxy_conquest_progress(
+                galaxy,
+                &self.game_state.solar_systems,
+                &self.game_state.planets,
+            );
+            self.prestige_system.can_prestige(
+                self.game_state.total_prestige_points,
+                progress,
+            )
+        } else {
+            false
+        }
+    }
+
+    /// Perform prestige to next galaxy
+    pub fn perform_prestige(&mut self) -> bool {
+        if !self.check_prestige_eligibility() {
+            return false;
+        }
+
+        // Calculate prestige points and bonuses
+        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
+            let prestige_points = self.prestige_system.calculate_galaxy_prestige_points(
+                galaxy,
+                self.game_state.current_tick,
+                0.8, // Efficiency score - would be calculated from actual performance
+            );
+
+            let bonuses = self.prestige_system.create_prestige_bonuses(
+                prestige_points,
+                &galaxy.galaxy_modifiers,
+            );
+
+            // Apply prestige bonuses
+            self.prestige_system.apply_prestige_bonuses(&mut self.game_state, &bonuses);
+
+            // Update prestige points
+            self.game_state.total_prestige_points += prestige_points;
+            self.game_state.prestige_bonuses.extend(bonuses);
+
+            // Generate new galaxy
+            let new_galaxy = self.galaxy_system.generate_galaxy(
+                format!("Galaxy {}", self.game_state.galaxies.len() + 1),
+                self.config.systems_per_galaxy,
+            );
+            self.game_state.current_galaxy = new_galaxy.id;
+            self.game_state.galaxies.insert(new_galaxy.id, new_galaxy);
+
+            // Reset game state for new galaxy
+            self.game_state.current_tick = 0;
+            self.initialize_empire_resources();
+
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Save game state
+    pub fn save_game(&self) -> String {
+        serde_json::to_string(&self.game_state).unwrap_or_default()
+    }
+
+    /// Load game state
+    pub fn load_game(&mut self, save_data: &str) -> bool {
+        match serde_json::from_str::<GameState>(save_data) {
+            Ok(game_state) => {
+                self.game_state = game_state;
+                true
+            },
+            Err(_) => false,
+        }
+    }
+
+    /// Get game statistics
+    pub fn get_game_statistics(&self) -> GameStatistics {
+        let conquered_planets = self.game_state.planets.values()
+            .filter(|planet| planet.state == PlanetState::Conquered)
+            .count();
+
+        let total_planets = self.game_state.planets.len();
+        let total_factories: usize = self.game_state.planets.values()
+            .map(|planet| planet.factories.len())
+            .sum();
+
+        let total_resources: u64 = self.game_state.empire_resources.values().sum();
+
+        GameStatistics {
+            current_tick: self.game_state.current_tick,
+            conquered_planets,
+            total_planets,
+            total_factories,
+            total_resources,
+            prestige_points: self.game_state.total_prestige_points,
+            game_speed: self.game_state.game_speed,
+            is_paused: self.game_state.is_paused,
+        }
+    }
+}
+
+/// Game statistics for display
+#[derive(Debug, Clone)]
+pub struct GameStatistics {
+    pub current_tick: u64,
+    pub conquered_planets: usize,
+    pub total_planets: usize,
+    pub total_factories: usize,
+    pub total_resources: u64,
+    pub prestige_points: u64,
+    pub game_speed: GameSpeed,
+    pub is_paused: bool,
+}
