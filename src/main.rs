@@ -441,16 +441,20 @@ fn App() -> Html {
 
             <main>
                 <div class="game-layout">
-                    <div class="left-panel">
-                        { game_stats }
-                        { empire_resources }
+                    <div class="header-panel">
+                        <div>
+                            { game_stats }
+                        </div>
+                        <div>
+                            { empire_resources }
+                        </div>
                     </div>
 
                     <div class="center-panel">
                         { main_content }
                     </div>
 
-                    <div class="right-panel">
+                    <div class="footer-panel">
                         { planet_panel }
                     </div>
                 </div>
