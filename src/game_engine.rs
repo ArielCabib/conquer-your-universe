@@ -5,7 +5,10 @@ use crate::resource_system::ResourceSystem;
 use crate::supply_chain::SupplyChainSystem;
 use crate::transport_system::TransportSystem;
 use crate::types::*;
+use chrono;
 use std::collections::{HashMap, HashSet};
+use wasm_bindgen::JsCast;
+use wasm_bindgen::JsValue;
 
 /// Main game engine that coordinates all systems
 pub struct GameEngine {
@@ -531,6 +534,61 @@ impl GameEngine {
         }
         log::info!("No save data found in localStorage");
         false
+    }
+
+    /// Save game to JSON file (download)
+    pub fn save_to_json_file(&self) {
+        let save_data = self.save_game();
+        let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
+        let filename = format!("conquer_universe_save_{}.json", timestamp);
+
+        if let Some(window) = web_sys::window() {
+            // Create a blob with the save data
+            let blob_options = web_sys::BlobPropertyBag::new();
+            blob_options.set_type("application/json");
+            let blob = web_sys::Blob::new_with_str_sequence_and_options(
+                &js_sys::Array::from_iter([JsValue::from_str(&save_data)]),
+                &blob_options,
+            )
+            .ok();
+
+            if let Some(blob) = blob {
+                // Create download URL
+                let url = web_sys::Url::create_object_url_with_blob(&blob).ok();
+                if let Some(url) = url {
+                    // Create download link
+                    if let Some(document) = window.document() {
+                        if let Ok(link) = document.create_element("a") {
+                            let _ = link.set_attribute("href", &url);
+                            let _ = link.set_attribute("download", &filename);
+                            let _ = link.set_attribute("style", "display: none");
+
+                            if let Some(body) = document.body() {
+                                let _ = body.append_child(&link);
+                                let html_link = link.dyn_into::<web_sys::HtmlElement>().unwrap();
+                                let _ = html_link.click();
+                                let _ = body.remove_child(&html_link);
+                            }
+
+                            // Clean up URL
+                            let _ = web_sys::Url::revoke_object_url(&url);
+                            log::info!("Game saved to JSON file: {}", filename);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Load game from JSON file (upload)
+    pub fn load_from_json_file(&mut self, file_content: &str) -> bool {
+        let success = self.load_game(file_content);
+        if success {
+            log::info!("Game loaded from JSON file");
+        } else {
+            log::warn!("Failed to load game from JSON file");
+        }
+        success
     }
 
     /// Get game statistics

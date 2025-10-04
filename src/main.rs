@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 // Import all our game modules
@@ -32,6 +34,7 @@ fn App() -> Html {
     let current_view = use_state(|| ViewMode::Galaxy);
     let selected_solar_system = use_state(|| None::<u64>);
     let selected_planet = use_state(|| None::<Planet>);
+    let refresh_trigger = use_state(|| 0);
 
     // Game update loop
     let game_engine_clone = game_engine.clone();
@@ -178,6 +181,8 @@ fn App() -> Html {
     };
 
     // Main content based on current view
+    // Use refresh_trigger to ensure UI updates after JSON load
+    let _refresh_trigger = *refresh_trigger;
     let main_content = match *current_view {
         ViewMode::Galaxy => {
             let galaxies = game_engine.borrow().game_state.galaxies.clone();
@@ -205,16 +210,20 @@ fn App() -> Html {
                     .solar_systems
                     .get(&system_id)
                 {
+                    // Clone the system and planets once to avoid continuous re-renders
+                    let system_clone = system.clone();
                     let planets = game_engine.borrow().game_state.planets.clone();
+                    let on_planet_click_callback = Callback::from(on_planet_click);
+
                     html! {
                         <div class="solar-system-view">
                             <div class="view-controls">
                                 <button onclick={on_back_to_galaxy} class="back-button">{ "← Back to Galaxy" }</button>
                             </div>
                             <SolarSystemGrid
-                                solar_system={system.clone()}
+                                solar_system={system_clone}
                                 planets={planets}
-                                on_planet_click={Callback::from(on_planet_click)}
+                                on_planet_click={on_planet_click_callback}
                             />
                         </div>
                     }
@@ -266,17 +275,99 @@ fn App() -> Html {
                     }
                 };
 
+                let on_start_transport = {
+                    let game_engine = game_engine.clone();
+                    move |(from_planet, to_planet, resource_type, amount)| {
+                        let result = game_engine.borrow_mut().start_resource_transport(
+                            from_planet,
+                            to_planet,
+                            resource_type,
+                            amount,
+                        );
+                        if result {
+                            log::info!(
+                                "Started transport of {} {} from planet {} to planet {}",
+                                amount,
+                                format!("{:?}", resource_type),
+                                from_planet,
+                                to_planet
+                            );
+                        } else {
+                            log::warn!(
+                                "Failed to start transport of {} {} from planet {} to planet {} - insufficient resources or invalid planets",
+                                amount,
+                                format!("{:?}", resource_type),
+                                from_planet,
+                                to_planet
+                            );
+                        }
+                    }
+                };
+
+                let on_perform_prestige = {
+                    let game_engine = game_engine.clone();
+                    move |_| {
+                        let success = game_engine.borrow_mut().perform_prestige();
+                        if success {
+                            log::info!("Successfully prestiged to new galaxy!");
+                        } else {
+                            log::warn!("Failed to prestige - requirements not met");
+                        }
+                    }
+                };
+
                 html! {
                     <div class="planet-view">
                         <div class="view-controls">
                             <button onclick={on_back_to_system} class="back-button">{ "← Back to Solar System" }</button>
                         </div>
-                        <PlanetDetailGrid
-                            planet={planet}
-                            empire_resources={empire_resources}
-                            on_terraform={Callback::from(on_terraform)}
-                            on_add_factory={Callback::from(on_add_factory)}
-                        />
+
+                        <div class="planet-details-section">
+                            <PlanetDetailGrid
+                                planet={planet.clone()}
+                                empire_resources={empire_resources.clone()}
+                                on_terraform={Callback::from(on_terraform.clone())}
+                                on_add_factory={Callback::from(on_add_factory.clone())}
+                            />
+                        </div>
+
+                        <div class="planet-management-section">
+                            <PlanetPanel
+                                planet={Some(planet.clone())}
+                                on_terraform={Callback::from(on_terraform.clone())}
+                                on_add_factory={Callback::from(on_add_factory.clone())}
+                            />
+                            <ConquestCost
+                                planet={planet.clone()}
+                                empire_resources={empire_resources.clone()}
+                            />
+                            <FactoryManagement
+                                planet={planet.clone()}
+                                empire_resources={empire_resources.clone()}
+                                on_add_factory={Callback::from(on_add_factory.clone())}
+                            />
+                            <TransportSystem
+                                planets={game_engine.borrow().game_state.planets.clone()}
+                                empire_resources={empire_resources.clone()}
+                                on_start_transport={Callback::from(on_start_transport)}
+                            />
+                            <PrestigeSystem
+                                current_prestige={game_engine.borrow().game_state.total_prestige_points}
+                                galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
+                                    &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
+                                    &game_engine.borrow().game_state.solar_systems,
+                                    &game_engine.borrow().game_state.planets,
+                                )}
+                                can_prestige={game_engine.borrow().check_prestige_eligibility()}
+                                prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
+                                on_perform_prestige={Callback::from(on_perform_prestige)}
+                            />
+                            <components::TerraformingProject
+                                planet={planet}
+                                empire_resources={empire_resources}
+                                on_start_terraforming={Callback::from(on_terraform.clone())}
+                            />
+                        </div>
                     </div>
                 }
             } else {
@@ -285,7 +376,8 @@ fn App() -> Html {
         }
     };
 
-    let planet_panel = {
+    // Planet panel functionality moved to planet view
+    let _planet_panel = {
         let planet = (*selected_planet).clone();
         let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
         let on_terraform = {
@@ -433,6 +525,55 @@ fn App() -> Html {
         }
     };
 
+    // Save/Load JSON callbacks
+    let on_save_json = {
+        let game_engine = game_engine.clone();
+        move |_| {
+            game_engine.borrow().save_to_json_file();
+        }
+    };
+
+    let on_load_json = {
+        let game_engine = game_engine.clone();
+        let refresh_trigger = refresh_trigger.clone();
+        move |e: web_sys::Event| {
+            if let Some(input) = e.target_dyn_into::<web_sys::HtmlInputElement>() {
+                if let Some(files) = input.files() {
+                    if let Some(file) = files.get(0) {
+                        let reader = web_sys::FileReader::new().unwrap();
+                        let game_engine = game_engine.clone();
+
+                        let refresh_trigger = refresh_trigger.clone();
+                        let onload = Closure::wrap(Box::new(move |e: web_sys::Event| {
+                            if let Some(reader) = e.target_dyn_into::<web_sys::FileReader>() {
+                                if let Ok(result) = reader.result() {
+                                    if let Some(content) = result.as_string() {
+                                        let success =
+                                            game_engine.borrow_mut().load_from_json_file(&content);
+                                        if success {
+                                            log::info!("Game loaded from JSON file");
+                                            // Trigger UI refresh
+                                            refresh_trigger.set(*refresh_trigger + 1);
+                                            // Clear the file input to prevent reloading the same file
+                                            input.set_value("");
+                                        } else {
+                                            log::warn!("Failed to load game from JSON file");
+                                        }
+                                    }
+                                }
+                            }
+                        }) as Box<dyn FnMut(_)>);
+
+                        reader.set_onload(Some(onload.as_ref().unchecked_ref()));
+                        onload.forget();
+
+                        let _ = reader.read_as_text(&file);
+                    }
+                }
+            }
+        }
+    };
+
     html! {
         <div class="game-container">
             <header>
@@ -440,6 +581,11 @@ fn App() -> Html {
                 <div class="controls">
                     { speed_controls }
                     { pause_button }
+                    <div class="save-load-controls">
+                        <button onclick={on_save_json} class="save-btn">{ "Save to JSON" }</button>
+                        <input type="file" accept=".json" onchange={on_load_json} class="load-input" id="load-json-input" />
+                        <label for="load-json-input" class="load-btn">{ "Load from JSON" }</label>
+                    </div>
                 </div>
             </header>
 
@@ -456,10 +602,6 @@ fn App() -> Html {
 
                     <div class="center-panel">
                         { main_content }
-                    </div>
-
-                    <div class="footer-panel">
-                        { planet_panel }
                     </div>
                 </div>
             </main>
