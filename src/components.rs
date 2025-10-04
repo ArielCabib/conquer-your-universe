@@ -1,8 +1,6 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
 use std::collections::{HashMap, HashSet};
-use wasm_bindgen::{closure::Closure, JsCast, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MouseEvent};
 use yew::prelude::*;
 
 /// Galaxy map component showing solar systems and planets
@@ -61,9 +59,9 @@ pub fn GalaxyMap(props: &GalaxyMapProps) -> Html {
     }
 }
 
-/// Canvas-based galaxy renderer
+/// HTML Grid-based galaxy renderer
 #[derive(Properties, PartialEq, Clone)]
-pub struct GalaxyCanvasProps {
+pub struct GalaxyGridProps {
     pub galaxies: HashMap<u64, Galaxy>,
     pub solar_systems: HashMap<u64, SolarSystem>,
     pub planets: HashMap<u64, Planet>,
@@ -74,239 +72,104 @@ pub struct GalaxyCanvasProps {
 }
 
 #[function_component]
-pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
-    let canvas_ref = use_node_ref();
-    let size = use_state(|| (1200.0f64, 900.0f64));
+pub fn GalaxyGrid(props: &GalaxyGridProps) -> Html {
+    // Get the current galaxy
+    let galaxy = props.galaxies.get(&props.current_galaxy);
 
-    // Draw on mount and whenever data changes
-    {
-        let canvas_ref = canvas_ref.clone();
-        let props = props.clone();
-        let size = *size;
-        use_effect_with((props, size), move |(props, size)| {
-            let canvas = match canvas_ref.cast::<HtmlCanvasElement>() {
-                Some(c) => c,
-                None => {
-                    log::error!("Failed to get canvas element");
-                    return;
-                }
-            };
-
-            canvas.set_width(size.0 as u32);
-            canvas.set_height(size.1 as u32);
-
-            let context = canvas
-                .get_context("2d")
-                .ok()
-                .flatten()
-                .and_then(|ctx| ctx.dyn_into::<CanvasRenderingContext2d>().ok());
-            let Some(ctx) = context else {
-                return;
-            };
-
-            // Clear
-            ctx.set_fill_style(&JsValue::from_str("rgba(0,0,0,0.15)"));
-            ctx.fill_rect(0.0, 0.0, size.0, size.1);
-
-            // Draw grid background
-            ctx.set_stroke_style(&JsValue::from_str("rgba(255,255,255,0.08)"));
-            for x in (0..=((size.0 as i32) / 50)).map(|i| i as f64 * 50.0) {
-                ctx.begin_path();
-                ctx.move_to(x, 0.0);
-                ctx.line_to(x, size.1);
-                ctx.stroke();
-            }
-            for y in (0..=((size.1 as i32) / 50)).map(|i| i as f64 * 50.0) {
-                ctx.begin_path();
-                ctx.move_to(0.0, y);
-                ctx.line_to(size.0, y);
-                ctx.stroke();
-            }
-
-            // Draw solar systems and planets with fog of war
-            if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
-                for system_id in &galaxy.solar_systems {
-                    if let Some(system) = props.solar_systems.get(system_id) {
-                        let is_discovered = props.discovered_solar_systems.contains(system_id);
-                        let is_explored = props.explored_solar_systems.contains(system_id);
-
-                        // System box
-                        let x = system.position.0;
-                        let y = system.position.1;
-                        let w = 260.0;
-                        let h = 80.0;
-
-                        if is_discovered {
-                            // Draw discovered but not explored systems with dimmed appearance
-                            if is_explored {
-                                // Fully explored system - normal appearance
-                                ctx.set_stroke_style(&JsValue::from_str("#4CAF50"));
-                                ctx.set_line_width(2.0);
-                                ctx.stroke_rect(x, y, w, h);
-
-                                // System title
-                                ctx.set_fill_style(&JsValue::from_str("#4CAF50"));
-                                ctx.set_font("bold 14px Segoe UI, sans-serif");
-                                ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
-
-                                // Planets
-                                let mut px = x + 20.0;
-                                let py = y + 40.0;
-                                for planet_id in &system.planets {
-                                    if let Some(planet) = props.planets.get(planet_id) {
-                                        // color by class
-                                        let color = match planet.class {
-                                            PlanetClass::Barren => "#8B4513",
-                                            PlanetClass::Terran => "#228B22",
-                                            PlanetClass::GasGiant => "#FFD700",
-                                            PlanetClass::Ocean => "#0066CC",
-                                            PlanetClass::Desert => "#F4A460",
-                                            PlanetClass::Ice => "#B0E0E6",
-                                            PlanetClass::Volcanic => "#FF4500",
-                                            PlanetClass::Toxic => "#9ACD32",
-                                            PlanetClass::Crystalline => "#DDA0DD",
-                                            PlanetClass::Metallic => "#C0C0C0",
-                                        };
-                                        ctx.set_fill_style(&JsValue::from_str(color));
-                                        let r = 7.0;
-                                        ctx.begin_path();
-                                        ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
-                                        ctx.fill();
-
-                                        // halo for conquered
-                                        if planet.state == PlanetState::Conquered {
-                                            ctx.set_stroke_style(&JsValue::from_str(
-                                                "rgba(76,175,80,0.8)",
-                                            ));
-                                            ctx.set_line_width(2.0);
-                                            ctx.begin_path();
-                                            ctx.arc(
-                                                px,
-                                                py,
-                                                r + 3.0,
-                                                0.0,
-                                                std::f64::consts::PI * 2.0,
-                                            )
-                                            .ok();
-                                            ctx.stroke();
-                                        }
-
-                                        px += 22.0;
-                                    }
-                                }
-                            } else {
-                                // Discovered but not explored - dimmed appearance
-                                ctx.set_stroke_style(&JsValue::from_str("rgba(76, 175, 80, 0.5)"));
-                                ctx.set_line_width(1.0);
-                                ctx.stroke_rect(x, y, w, h);
-
-                                // System title (dimmed)
-                                ctx.set_fill_style(&JsValue::from_str("rgba(76, 175, 80, 0.5)"));
-                                ctx.set_font("bold 14px Segoe UI, sans-serif");
-                                ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
-
-                                // Show question marks for planets (not explored yet)
-                                let mut px = x + 20.0;
-                                let py = y + 40.0;
-                                for _ in &system.planets {
-                                    ctx.set_fill_style(&JsValue::from_str(
-                                        "rgba(128, 128, 128, 0.7)",
-                                    ));
-                                    let r = 7.0;
-                                    ctx.begin_path();
-                                    ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
-                                    ctx.fill();
-                                    px += 22.0;
-                                }
-                            }
-                        } else {
-                            // Not discovered - show as fog of war
-                            ctx.set_fill_style(&JsValue::from_str("rgba(0, 0, 0, 0.8)"));
-                            ctx.fill_rect(x, y, w, h);
-
-                            // Show "???" for unknown systems
-                            ctx.set_fill_style(&JsValue::from_str("rgba(128, 128, 128, 0.5)"));
-                            ctx.set_font("bold 14px Segoe UI, sans-serif");
-                            ctx.fill_text("???", x + 10.0, y + 20.0).ok();
-                        }
-                    }
-                }
-            }
-        });
+    if galaxy.is_none() {
+        return html! {
+            <div class="galaxy-grid">
+                <div class="no-galaxy">
+                    { "No galaxy found" }
+                </div>
+            </div>
+        };
     }
 
-    // Click handling: simple hit-testing of planets along the linear layout inside each system
-    {
-        let canvas_ref = canvas_ref.clone();
-        let props = props.clone();
-        use_effect_with((), move |_| {
-            let noop: fn() = || {};
-            let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() else {
-                return noop;
-            };
+    let galaxy = galaxy.unwrap();
 
-            let on_planet_click = props.on_planet_click.clone();
-            let galaxies = props.galaxies.clone();
-            let solar_systems = props.solar_systems.clone();
-            let explored_solar_systems = props.explored_solar_systems.clone();
-            let current_galaxy = props.current_galaxy;
+    // Create a grid of solar systems
+    let grid_size = 10; // 10x10 grid
+    let mut grid_cells = vec![vec![None; grid_size]; grid_size];
 
-            let closure = Closure::wrap(Box::new(move |event: MouseEvent| {
-                let x = event.offset_x() as f64;
-                let y = event.offset_y() as f64;
+    // Place solar systems in the grid
+    for system_id in &galaxy.solar_systems {
+        if let Some(system) = props.solar_systems.get(system_id) {
+            let x = system.position.0 as usize;
+            let y = system.position.1 as usize;
 
-                log::info!("Canvas clicked at: ({}, {})", x, y);
-
-                if let Some(galaxy) = galaxies.get(&current_galaxy) {
-                    for system_id in &galaxy.solar_systems {
-                        if let Some(system) = solar_systems.get(system_id) {
-                            // Only allow clicking on explored systems
-                            if !explored_solar_systems.contains(system_id) {
-                                continue;
-                            }
-
-                            let sx = system.position.0;
-                            let sy = system.position.1;
-                            let w = 260.0;
-                            let h = 80.0;
-
-                            if x >= sx && x <= sx + w && y >= sy && y <= sy + h {
-                                log::info!("Click is within system {} bounds", system_id);
-
-                                // Planet row
-                                let mut px = sx + 20.0;
-                                let py = sy + 40.0;
-                                for planet_id in &system.planets {
-                                    let dx = x - px;
-                                    let dy = y - py;
-                                    let distance = (dx * dx + dy * dy).sqrt();
-
-                                    if distance <= 9.0 {
-                                        log::info!("Clicked on planet {}", planet_id);
-                                        on_planet_click.emit(*planet_id);
-                                        return;
-                                    }
-                                    px += 22.0;
-                                }
-                            }
-                        }
-                    }
-                }
-            }) as Box<dyn FnMut(_)>);
-
-            canvas
-                .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
-                .ok();
-
-            // Return cleanup function
-            move || {
-                // Event listener will be cleaned up automatically when closure is dropped
+            if x < grid_size && y < grid_size {
+                grid_cells[y][x] = Some(*system_id);
             }
-        });
+        }
     }
 
     html! {
-        <canvas ref={canvas_ref} style="width: 100%; height: 100%; display: block;" />
+        <div class="galaxy-grid">
+            <div class="grid-container">
+                { for (0..grid_size).map(|y| {
+                    html! {
+                        <div class="grid-row" key={y}>
+                            { for (0..grid_size).map(|x| {
+                                let cell_content = grid_cells[y][x];
+                                html! {
+                                    <div class="grid-cell" key={x}>
+                                        { if let Some(system_id) = cell_content {
+                                            if let Some(system) = props.solar_systems.get(&system_id) {
+                                                let is_discovered = props.discovered_solar_systems.contains(&system_id);
+                                                let is_explored = props.explored_solar_systems.contains(&system_id);
+
+                                                html! {
+                                                    <div class={format!("solar-system-cell {}",
+                                                        if is_explored { "explored" }
+                                                        else if is_discovered { "discovered" }
+                                                        else { "hidden" }
+                                                    )}>
+                                                        <div class="system-header">
+                                                            <h4>{ &system.name }</h4>
+                                                        </div>
+                                                        <div class="planets-container">
+                                                            { for system.planets.iter().enumerate().map(|(_i, planet_id)| {
+                                                                if let Some(planet) = props.planets.get(planet_id) {
+                                                                    let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
+                                                                    let planet_state = format!("{:?}", planet.state).to_lowercase();
+                                                                    let on_planet_click = props.on_planet_click.clone();
+                                                                    let planet_id = *planet_id;
+
+                                                                    html! {
+                                                                        <div
+                                                                            class={format!("planet {} {}", planet_class, planet_state)}
+                                                                            onclick={on_planet_click.reform(move |_| planet_id)}
+                                                                            title={format!("{} - {:?}", planet.name, planet.class)}
+                                                                        >
+                                                                            { if is_explored {
+                                                                                html! { <span class="planet-name">{ &planet.name }</span> }
+                                                                            } else {
+                                                                                html! { <span class="planet-unknown">{ "?" }</span> }
+                                                                            }}
+                                                                        </div>
+                                                                    }
+                                                                } else {
+                                                                    html! { <div class="planet missing">{ "?" }</div> }
+                                                                }
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                }
+                                            } else {
+                                                html! { <div class="system-error">{ "System not found" }</div> }
+                                            }
+                                        } else {
+                                            html! { <div class="empty-cell">{ " " }</div> }
+                                        }}
+                                    </div>
+                                }
+                            })}
+                        </div>
+                    }
+                })}
+            </div>
+        </div>
     }
 }
 

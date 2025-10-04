@@ -134,14 +134,196 @@
             border-left: 4px solid #4CAF50;
         }
 
-        /* Galaxy Map Styles */
-        .galaxy-map {
+        /* Galaxy Grid Styles */
+        .galaxy-grid {
             height: 100%;
-            position: relative;
             overflow: auto;
             min-height: 600px;
             background: rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 10px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .grid-row {
+            display: contents;
+        }
+
+        .grid-cell {
+            min-height: 120px;
+            min-width: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .solar-system-cell {
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .solar-system-cell.explored {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+        }
+
+        .solar-system-cell.discovered {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            opacity: 0.7;
+        }
+
+        .solar-system-cell.hidden {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(128, 128, 128, 0.3);
+        }
+
+        .system-header h4 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .solar-system-cell.discovered .system-header h4 {
+            color: rgba(76, 175, 80, 0.7);
+        }
+
+        .solar-system-cell.hidden .system-header h4 {
+            color: rgba(128, 128, 128, 0.5);
+        }
+
+        .planets-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .planet {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .planet:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .planet-name {
+            font-size: 8px;
+            color: white;
+        }
+
+        .planet-unknown {
+            color: rgba(128, 128, 128, 0.7);
+        }
+
+        /* Planet class colors */
+        .planet.barren {
+            background: #8B4513;
+        }
+
+        .planet.terran {
+            background: #228B22;
+        }
+
+        .planet.gas-giant {
+            background: #FFD700;
+        }
+
+        .planet.ocean {
+            background: #0066CC;
+        }
+
+        .planet.desert {
+            background: #F4A460;
+        }
+
+        .planet.ice {
+            background: #B0E0E6;
+        }
+
+        .planet.volcanic {
+            background: #FF4500;
+        }
+
+        .planet.toxic {
+            background: #9ACD32;
+        }
+
+        .planet.crystalline {
+            background: #DDA0DD;
+        }
+
+        .planet.metallic {
+            background: #C0C0C0;
+        }
+
+        /* Planet state styles */
+        .planet.unexplored {
+            opacity: 0.5;
+        }
+
+        .planet.explored {
+            opacity: 0.8;
+        }
+
+        .planet.conquered {
+            opacity: 1;
+            box-shadow: 0 0 8px #4CAF50;
+            border: 2px solid #4CAF50;
+        }
+
+        .planet.terraforming {
+            opacity: 0.9;
+            box-shadow: 0 0 8px #FFD700;
+            border: 2px solid #FFD700;
+        }
+
+        .empty-cell {
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 20px;
+        }
+
+        .system-error {
+            color: #f44336;
+            font-size: 10px;
+        }
+
+        .missing {
+            background: #666;
+            color: #999;
         }
 
         /* Keep info and map separated vertically */

@@ -183,7 +183,7 @@ fn App() -> Html {
         };
 
         html! {
-            <GalaxyCanvas
+            <GalaxyGrid
                 galaxies={galaxies}
                 solar_systems={solar_systems}
                 planets={planets}
