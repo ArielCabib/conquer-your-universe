@@ -1,10 +1,10 @@
-use crate::types::*;
-use crate::resource_system::ResourceSystem;
+use crate::galaxy_system::GalaxySystem;
 use crate::planet_system::PlanetSystem;
+use crate::prestige_system::PrestigeSystem;
+use crate::resource_system::ResourceSystem;
 use crate::supply_chain::SupplyChainSystem;
 use crate::transport_system::TransportSystem;
-use crate::galaxy_system::GalaxySystem;
-use crate::prestige_system::PrestigeSystem;
+use crate::types::*;
 use std::collections::HashMap;
 
 /// Main game engine that coordinates all systems
@@ -62,9 +62,11 @@ impl GameEngine {
     /// Initialize the game with starting galaxy
     pub fn initialize_game(&mut self) {
         // Generate starting galaxy
-        let mut galaxy = self.galaxy_system.generate_galaxy("Milky Way".to_string(), self.config.systems_per_galaxy);
+        let mut galaxy = self
+            .galaxy_system
+            .generate_galaxy("Milky Way".to_string(), self.config.systems_per_galaxy);
         self.game_state.current_galaxy = galaxy.id;
-        
+
         // Generate solar systems and planets
         let mut solar_system_ids = Vec::new();
         for i in 0..self.config.systems_per_galaxy {
@@ -85,7 +87,7 @@ impl GameEngine {
                 self.game_state.planets.insert(planet.id, planet);
             }
         }
-        
+
         // Update galaxy with solar system IDs
         galaxy.solar_systems = solar_system_ids;
         self.game_state.galaxies.insert(galaxy.id, galaxy);
@@ -94,14 +96,23 @@ impl GameEngine {
         self.initialize_empire_resources();
     }
 
-
     /// Initialize starting empire resources
     fn initialize_empire_resources(&mut self) {
-        self.game_state.empire_resources.insert(ResourceType::Energy, 1000);
-        self.game_state.empire_resources.insert(ResourceType::Minerals, 500);
-        self.game_state.empire_resources.insert(ResourceType::Population, 100);
-        self.game_state.empire_resources.insert(ResourceType::Technology, 50);
-        self.game_state.empire_resources.insert(ResourceType::Food, 200);
+        self.game_state
+            .empire_resources
+            .insert(ResourceType::Energy, 1000);
+        self.game_state
+            .empire_resources
+            .insert(ResourceType::Minerals, 500);
+        self.game_state
+            .empire_resources
+            .insert(ResourceType::Population, 100);
+        self.game_state
+            .empire_resources
+            .insert(ResourceType::Technology, 50);
+        self.game_state
+            .empire_resources
+            .insert(ResourceType::Food, 200);
     }
 
     /// Main game update loop
@@ -125,19 +136,25 @@ impl GameEngine {
 
     /// Update resource generation across all conquered planets
     fn update_resource_generation(&mut self) {
-        let conquered_planets: Vec<u64> = self.game_state.planets.values()
+        let conquered_planets: Vec<u64> = self
+            .game_state
+            .planets
+            .values()
             .filter(|planet| planet.state == PlanetState::Conquered)
             .map(|planet| planet.id)
             .collect();
 
-        let empire_generation = self.resource_system.calculate_empire_resource_generation(
-            &self.game_state.planets,
-            &conquered_planets,
-        );
+        let empire_generation = self
+            .resource_system
+            .calculate_empire_resource_generation(&self.game_state.planets, &conquered_planets);
 
         // Add generated resources to empire
         for (resource_type, amount) in empire_generation {
-            *self.game_state.empire_resources.entry(resource_type).or_insert(0) += amount;
+            *self
+                .game_state
+                .empire_resources
+                .entry(resource_type)
+                .or_insert(0) += amount;
         }
     }
 
@@ -178,7 +195,8 @@ impl GameEngine {
     /// Update terraforming projects
     fn update_terraforming(&mut self) {
         for planet in self.game_state.planets.values_mut() {
-            self.planet_system.update_terraforming_projects(planet, self.game_state.game_speed);
+            self.planet_system
+                .update_terraforming_projects(planet, self.game_state.game_speed);
         }
     }
 
@@ -186,6 +204,90 @@ impl GameEngine {
     fn update_conquest(&mut self) {
         // This would handle automatic conquest processes
         // For now, conquest is manual through player actions
+    }
+
+    /// Attempt to conquer a planet
+    pub fn attempt_planet_conquest(&mut self, planet_id: u64) -> ConquestResult {
+        // First, get a copy of the planet to calculate cost
+        let planet = if let Some(planet) = self.game_state.planets.get(&planet_id) {
+            planet.clone()
+        } else {
+            return ConquestResult::PlanetNotFound;
+        };
+
+        match planet.state {
+            PlanetState::Unexplored => {
+                // Calculate conquest cost
+                let conquest_cost = self.calculate_conquest_cost(&planet);
+
+                // Check if player can afford conquest
+                if self
+                    .resource_system
+                    .can_afford(&self.game_state.empire_resources, &conquest_cost)
+                {
+                    // Deduct resources
+                    self.resource_system
+                        .deduct_resources(&mut self.game_state.empire_resources, &conquest_cost);
+
+                    // Change planet state
+                    if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+                        planet.state = PlanetState::Conquered;
+                    }
+
+                    ConquestResult::Success {
+                        planet_id,
+                        cost: conquest_cost,
+                    }
+                } else {
+                    ConquestResult::InsufficientResources {
+                        required: conquest_cost,
+                        available: self.game_state.empire_resources.clone(),
+                    }
+                }
+            }
+            PlanetState::Explored => ConquestResult::AlreadyExplored,
+            PlanetState::Conquered => ConquestResult::AlreadyConquered,
+            PlanetState::Terraforming => ConquestResult::CurrentlyTerraforming,
+        }
+    }
+
+    /// Calculate conquest cost for a planet
+    fn calculate_conquest_cost(&self, planet: &Planet) -> HashMap<ResourceType, u64> {
+        let mut cost = HashMap::new();
+
+        // Base conquest cost
+        cost.insert(ResourceType::Energy, 100);
+        cost.insert(ResourceType::Minerals, 50);
+        cost.insert(ResourceType::Population, 25);
+
+        // Apply planet modifiers to cost
+        for modifier in &planet.modifiers {
+            match modifier.modifier_type {
+                ModifierType::DefensiveBonus => {
+                    // Higher defensive bonus = higher cost
+                    let energy_cost = cost.get(&ResourceType::Energy).copied().unwrap_or(0);
+                    cost.insert(
+                        ResourceType::Energy,
+                        energy_cost + (modifier.value * 2.0) as u64,
+                    );
+                }
+                ModifierType::ResourcePenalty => {
+                    // Resource penalties make conquest cheaper
+                    for (_resource_type, amount) in cost.iter_mut() {
+                        *amount = (*amount as f64 * (1.0 - modifier.value.abs() / 100.0)) as u64;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Apply galaxy conquest difficulty scaling
+        let scaling_factor = self.config.conquest_difficulty_scaling;
+        for (_resource_type, amount) in cost.iter_mut() {
+            *amount = (*amount as f64 * scaling_factor) as u64;
+        }
+
+        cost
     }
 
     /// Set game speed
@@ -241,7 +343,9 @@ impl GameEngine {
             self.game_state.planets.get(&from_planet),
             self.game_state.planets.get(&to_planet),
         ) {
-            let distance = ((from.position.0 - to.position.0).powi(2) + (from.position.1 - to.position.1).powi(2)).sqrt();
+            let distance = ((from.position.0 - to.position.0).powi(2)
+                + (from.position.1 - to.position.1).powi(2))
+            .sqrt();
             let transport = self.transport_system.start_transport(
                 from_planet,
                 to_planet,
@@ -259,16 +363,18 @@ impl GameEngine {
 
     /// Check if galaxy is ready for prestige
     pub fn check_prestige_eligibility(&self) -> bool {
-        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
+        if let Some(galaxy) = self
+            .game_state
+            .galaxies
+            .get(&self.game_state.current_galaxy)
+        {
             let progress = self.galaxy_system.get_galaxy_conquest_progress(
                 galaxy,
                 &self.game_state.solar_systems,
                 &self.game_state.planets,
             );
-            self.prestige_system.can_prestige(
-                self.game_state.total_prestige_points,
-                progress,
-            )
+            self.prestige_system
+                .can_prestige(self.game_state.total_prestige_points, progress)
         } else {
             false
         }
@@ -281,20 +387,24 @@ impl GameEngine {
         }
 
         // Calculate prestige points and bonuses
-        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
+        if let Some(galaxy) = self
+            .game_state
+            .galaxies
+            .get(&self.game_state.current_galaxy)
+        {
             let prestige_points = self.prestige_system.calculate_galaxy_prestige_points(
                 galaxy,
                 self.game_state.current_tick,
                 0.8, // Efficiency score - would be calculated from actual performance
             );
 
-            let bonuses = self.prestige_system.create_prestige_bonuses(
-                prestige_points,
-                &galaxy.galaxy_modifiers,
-            );
+            let bonuses = self
+                .prestige_system
+                .create_prestige_bonuses(prestige_points, &galaxy.galaxy_modifiers);
 
             // Apply prestige bonuses
-            self.prestige_system.apply_prestige_bonuses(&mut self.game_state, &bonuses);
+            self.prestige_system
+                .apply_prestige_bonuses(&mut self.game_state, &bonuses);
 
             // Update prestige points
             self.game_state.total_prestige_points += prestige_points;
@@ -329,19 +439,25 @@ impl GameEngine {
             Ok(game_state) => {
                 self.game_state = game_state;
                 true
-            },
+            }
             Err(_) => false,
         }
     }
 
     /// Get game statistics
     pub fn get_game_statistics(&self) -> GameStatistics {
-        let conquered_planets = self.game_state.planets.values()
+        let conquered_planets = self
+            .game_state
+            .planets
+            .values()
             .filter(|planet| planet.state == PlanetState::Conquered)
             .count();
 
         let total_planets = self.game_state.planets.len();
-        let total_factories: usize = self.game_state.planets.values()
+        let total_factories: usize = self
+            .game_state
+            .planets
+            .values()
             .map(|planet| planet.factories.len())
             .sum();
 

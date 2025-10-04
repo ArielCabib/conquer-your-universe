@@ -144,6 +144,20 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        /* Keep info and map separated vertically */
+        .galaxy-content {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 12px;
+        }
+
+        /* Make solar systems position within this container (not over the info) */
+        .solar-systems {
+            position: relative;
+            min-height: 800px;
+            /* room for absolutely positioned systems */
+        }
+
         .solar-system {
             position: absolute;
             background: rgba(255, 255, 255, 0.1);
@@ -409,6 +423,708 @@
             font-size: 16px;
             font-weight: bold;
             color: #4CAF50;
+        }
+
+        /* Conquest Cost Styles */
+        .conquest-cost {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .conquest-cost h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .cost-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cost-item.affordable {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .cost-item.insufficient {
+            border-left: 4px solid #f44336;
+        }
+
+        .resource-name {
+            font-weight: bold;
+        }
+
+        .cost-amount {
+            color: #ccc;
+        }
+
+        .conquest-status {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .conquest-status.ready {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .conquest-status.insufficient {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        /* Instructions Styles */
+        .instructions {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .instructions p {
+            margin: 5px 0;
+            color: #e0e0e0;
+        }
+
+        .instructions strong {
+            color: #4CAF50;
+        }
+
+        /* Planet Status Hints */
+        .planet-status-hint {
+            margin: 10px 0;
+        }
+
+        .status-hint {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .status-hint.unexplored {
+            background: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #ffc107;
+            color: #ffc107;
+        }
+
+        .status-hint.conquered {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .status-hint.explored {
+            background: rgba(33, 150, 243, 0.2);
+            border-left: 4px solid #2196F3;
+            color: #2196F3;
+        }
+
+        .status-hint.terraforming {
+            background: rgba(156, 39, 176, 0.2);
+            border-left: 4px solid #9C27B0;
+            color: #9C27B0;
+        }
+
+        /* Factory Management Styles */
+        .factory-management {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .factory-management h4 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .factory-management h5 {
+            color: #e0e0e0;
+            margin: 10px 0 8px 0;
+            font-size: 14px;
+        }
+
+        .factory-management h6 {
+            color: #ccc;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .existing-factories {
+            margin-bottom: 20px;
+        }
+
+        .no-factories {
+            color: #888;
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        .factory-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .factory-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .factory-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .factory-type {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .factory-status {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        .factory-efficiency {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .build-factories {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+
+        .factory-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .factory-option {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .factory-option.affordable {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .factory-option.insufficient {
+            border-left: 4px solid #f44336;
+            opacity: 0.7;
+        }
+
+        .factory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .factory-header h6 {
+            margin: 0;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .build-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .build-btn:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .build-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .factory-cost {
+            margin-top: 8px;
+        }
+
+        .factory-cost .cost-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .factory-cost .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+        }
+
+        .factory-cost .cost-item.affordable {
+            border-left: 2px solid #4CAF50;
+        }
+
+        .factory-cost .cost-item.insufficient {
+            border-left: 2px solid #f44336;
+        }
+
+        /* Transport System Styles */
+        .transport-system {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .transport-system h4 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .transport-system h5 {
+            color: #e0e0e0;
+            margin: 10px 0 8px 0;
+            font-size: 14px;
+        }
+
+        .transport-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .transport-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transport-row label {
+            min-width: 80px;
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .transport-row select,
+        .transport-row input {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .transport-row select:focus,
+        .transport-row input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .available-resources {
+            color: #888;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .transport-cost {
+            margin-bottom: 15px;
+        }
+
+        .transport-cost .cost-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .transport-cost .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+        }
+
+        .transport-cost .cost-item.affordable {
+            border-left: 2px solid #4CAF50;
+        }
+
+        .transport-cost .cost-item.insufficient {
+            border-left: 2px solid #f44336;
+        }
+
+        .transport-actions {
+            text-align: center;
+        }
+
+        .transport-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .transport-btn:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .transport-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        /* Prestige System Styles */
+        .prestige-system {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .prestige-system h4 {
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+
+        .prestige-system h5 {
+            color: #e0e0e0;
+            margin: 10px 0 8px 0;
+            font-size: 14px;
+        }
+
+        .prestige-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .prestige-points,
+        .galaxy-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prestige-points .label,
+        .galaxy-progress .label {
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .prestige-points .value {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: #e0e0e0;
+            font-size: 11px;
+            min-width: 40px;
+        }
+
+        .prestige-requirements {
+            margin-bottom: 15px;
+        }
+
+        .requirement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .requirement-label {
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .requirement-status.met {
+            color: #4CAF50;
+            font-size: 11px;
+        }
+
+        .requirement-status.not-met {
+            color: #f44336;
+            font-size: 11px;
+        }
+
+        .prestige-benefits {
+            margin-bottom: 15px;
+        }
+
+        .benefit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+        }
+
+        .benefit-icon {
+            font-size: 16px;
+        }
+
+        .benefit-text {
+            color: #e0e0e0;
+            font-size: 11px;
+        }
+
+        .prestige-actions {
+            text-align: center;
+        }
+
+        .prestige-btn {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .prestige-btn.available:hover {
+            background: #FFC107;
+            transform: translateY(-2px);
+        }
+
+        .prestige-btn.unavailable {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .prestige-hint {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #FFC107;
+        }
+
+        .prestige-hint p {
+            color: #FFC107;
+            font-size: 11px;
+            margin: 0;
+        }
+
+        /* Terraforming Project Styles */
+        .terraforming-project {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .terraforming-project h4 {
+            color: #9C27B0;
+            margin-bottom: 15px;
+        }
+
+        .terraforming-project h5 {
+            color: #e0e0e0;
+            margin: 10px 0 8px 0;
+            font-size: 14px;
+        }
+
+        .terraforming-project h6 {
+            color: #ccc;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .active-projects,
+        .available-terraforming {
+            margin-bottom: 20px;
+        }
+
+        .no-projects,
+        .no-modifiers {
+            color: #888;
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        .project-list,
+        .modifier-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .project-item,
+        .modifier-option {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modifier-option.affordable {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .modifier-option.insufficient {
+            border-left: 4px solid #f44336;
+            opacity: 0.7;
+        }
+
+        .project-header,
+        .modifier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .project-name,
+        .modifier-name {
+            font-weight: bold;
+            color: #9C27B0;
+        }
+
+        .project-progress {
+            color: #4CAF50;
+            font-size: 12px;
+        }
+
+        .modifier-value {
+            color: #f44336;
+            font-size: 12px;
+        }
+
+        .project-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .project-target {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .modifier-cost {
+            margin: 8px 0;
+        }
+
+        .modifier-cost .cost-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .modifier-cost .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+        }
+
+        .modifier-cost .cost-item.affordable {
+            border-left: 2px solid #4CAF50;
+        }
+
+        .modifier-cost .cost-item.insufficient {
+            border-left: 2px solid #f44336;
+        }
+
+        .terraform-btn {
+            background: #9C27B0;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .terraform-btn:hover:not(:disabled) {
+            background: #7B1FA2;
+        }
+
+        .terraform-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
         }
 
         @media (max-width: 768px) {

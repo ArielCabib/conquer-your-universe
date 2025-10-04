@@ -249,6 +249,23 @@ pub struct GameState {
     pub empire_resources: HashMap<ResourceType, u64>,
 }
 
+/// Conquest result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConquestResult {
+    Success {
+        planet_id: u64,
+        cost: HashMap<ResourceType, u64>,
+    },
+    InsufficientResources {
+        required: HashMap<ResourceType, u64>,
+        available: HashMap<ResourceType, u64>,
+    },
+    AlreadyConquered,
+    AlreadyExplored,
+    CurrentlyTerraforming,
+    PlanetNotFound,
+}
+
 /// Game configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameConfig {

@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -139,15 +140,50 @@ fn App() -> Html {
         let planets_clone = planets.clone();
         let on_planet_click = {
             let selected_planet = selected_planet.clone();
+            let game_engine = game_engine.clone();
             move |planet_id: u64| {
                 if let Some(planet) = planets_clone.get(&planet_id) {
                     selected_planet.set(Some(planet.clone()));
+                }
+
+                // Attempt conquest if planet is unexplored
+                if let Some(planet) = planets_clone.get(&planet_id) {
+                    if planet.state == PlanetState::Unexplored {
+                        let result = game_engine.borrow_mut().attempt_planet_conquest(planet_id);
+                        match result {
+                            ConquestResult::Success { planet_id, cost } => {
+                                log::info!(
+                                    "Successfully conquered planet {} for cost: {:?}",
+                                    planet_id,
+                                    cost
+                                );
+                            }
+                            ConquestResult::InsufficientResources {
+                                required,
+                                available,
+                            } => {
+                                log::warn!("Insufficient resources to conquer planet. Required: {:?}, Available: {:?}", required, available);
+                            }
+                            ConquestResult::AlreadyConquered => {
+                                log::info!("Planet {} is already conquered", planet_id);
+                            }
+                            ConquestResult::AlreadyExplored => {
+                                log::info!("Planet {} is already explored", planet_id);
+                            }
+                            ConquestResult::CurrentlyTerraforming => {
+                                log::info!("Planet {} is currently being terraformed", planet_id);
+                            }
+                            ConquestResult::PlanetNotFound => {
+                                log::error!("Planet {} not found", planet_id);
+                            }
+                        }
+                    }
                 }
             }
         };
 
         html! {
-            <GalaxyMap
+            <GalaxyCanvas
                 galaxies={galaxies}
                 solar_systems={solar_systems}
                 planets={planets}
@@ -159,36 +195,145 @@ fn App() -> Html {
 
     let planet_panel = {
         let planet = (*selected_planet).clone();
+        let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
         let on_close = {
             let selected_planet = selected_planet.clone();
             move |_| selected_planet.set(None)
         };
         let on_terraform = {
-            let _game_engine = game_engine.clone();
+            let game_engine = game_engine.clone();
             move |(planet_id, modifier_type)| {
-                // This would be implemented to start terraforming
-                log::info!(
-                    "Starting terraforming on planet {} for modifier {:?}",
+                // Calculate terraforming cost
+                let mut cost = HashMap::new();
+                cost.insert(ResourceType::Energy, 500);
+                cost.insert(ResourceType::Minerals, 300);
+                cost.insert(ResourceType::Population, 100);
+                cost.insert(ResourceType::Technology, 150);
+
+                let result = game_engine.borrow_mut().start_terraforming_project(
                     planet_id,
-                    modifier_type
+                    modifier_type,
+                    cost,
+                    1000, // duration
+                    200,  // energy cost
                 );
+                if result {
+                    log::info!(
+                        "Started terraforming project on planet {} for modifier {:?}",
+                        planet_id,
+                        modifier_type
+                    );
+                } else {
+                    log::warn!(
+                        "Failed to start terraforming project on planet {} for modifier {:?} - insufficient resources or planet not conquered",
+                        planet_id,
+                        modifier_type
+                    );
+                }
             }
         };
         let on_add_factory = {
-            let _game_engine = game_engine.clone();
+            let game_engine = game_engine.clone();
             move |(planet_id, factory_type)| {
-                // This would be implemented to add factory
-                log::info!("Adding factory {:?} to planet {}", factory_type, planet_id);
+                let result = game_engine
+                    .borrow_mut()
+                    .add_factory(planet_id, factory_type);
+                match result {
+                    Some(factory_id) => {
+                        log::info!(
+                            "Successfully added factory {:?} (ID: {}) to planet {}",
+                            factory_type,
+                            factory_id,
+                            planet_id
+                        );
+                    }
+                    None => {
+                        log::warn!("Failed to add factory {:?} to planet {} - insufficient resources or planet not conquered", factory_type, planet_id);
+                    }
+                }
+            }
+        };
+
+        let on_start_transport = {
+            let game_engine = game_engine.clone();
+            move |(from_planet, to_planet, resource_type, amount)| {
+                let result = game_engine.borrow_mut().start_resource_transport(
+                    from_planet,
+                    to_planet,
+                    resource_type,
+                    amount,
+                );
+                if result {
+                    log::info!(
+                        "Started transport of {} {} from planet {} to planet {}",
+                        amount,
+                        format!("{:?}", resource_type),
+                        from_planet,
+                        to_planet
+                    );
+                } else {
+                    log::warn!(
+                        "Failed to start transport of {} {} from planet {} to planet {} - insufficient resources or invalid planets",
+                        amount,
+                        format!("{:?}", resource_type),
+                        from_planet,
+                        to_planet
+                    );
+                }
+            }
+        };
+
+        let on_perform_prestige = {
+            let game_engine = game_engine.clone();
+            move |_| {
+                let success = game_engine.borrow_mut().perform_prestige();
+                if success {
+                    log::info!("Successfully prestiged to new galaxy!");
+                } else {
+                    log::warn!("Failed to prestige - requirements not met");
+                }
             }
         };
 
         html! {
-            <PlanetPanel
-                planet={planet}
-                on_close={Callback::from(on_close)}
-                on_terraform={Callback::from(on_terraform)}
-                on_add_factory={Callback::from(on_add_factory)}
-            />
+            <>
+                <PlanetPanel
+                    planet={planet.clone()}
+                    on_close={Callback::from(on_close)}
+                    on_terraform={Callback::from(on_terraform.clone())}
+                    on_add_factory={Callback::from(on_add_factory.clone())}
+                />
+                <ConquestCost
+                    planet={planet.clone()}
+                    empire_resources={empire_resources.clone()}
+                />
+                <FactoryManagement
+                    planet={planet.clone()}
+                    empire_resources={empire_resources.clone()}
+                    on_add_factory={Callback::from(on_add_factory)}
+                />
+                <TransportSystem
+                    planets={game_engine.borrow().game_state.planets.clone()}
+                    empire_resources={empire_resources.clone()}
+                    on_start_transport={Callback::from(on_start_transport)}
+                />
+                <PrestigeSystem
+                    current_prestige={game_engine.borrow().game_state.total_prestige_points}
+                    galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
+                        &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
+                        &game_engine.borrow().game_state.solar_systems,
+                        &game_engine.borrow().game_state.planets,
+                    )}
+                    can_prestige={game_engine.borrow().check_prestige_eligibility()}
+                    prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
+                    on_perform_prestige={Callback::from(on_perform_prestige)}
+                />
+                <components::TerraformingProject
+                    planet={planet}
+                    empire_resources={empire_resources}
+                    on_start_terraforming={Callback::from(on_terraform)}
+                />
+            </>
         }
     };
 

@@ -1,6 +1,8 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
 use std::collections::HashMap;
+use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MouseEvent};
 use yew::prelude::*;
 
 /// Galaxy map component showing solar systems and planets
@@ -27,6 +29,12 @@ pub fn GalaxyMap(props: &GalaxyMapProps) -> Html {
                             <h3>{ &galaxy.name }</h3>
                             <p>{ format!("Solar Systems: {}", galaxy.solar_systems.len()) }</p>
                             <p>{ format!("Conquered: {}", galaxy.is_conquered) }</p>
+                            <div class="instructions">
+                                <p><strong>{ "How to Play:" }</strong></p>
+                                <p>{ "- Click on planets (small circles) to conquer them" }</p>
+                                <p>{ "- Check the right panel for conquest costs" }</p>
+                                <p>{ "- Build your empire by conquering more planets!" }</p>
+                            </div>
                         </div>
                         <div class="solar-systems">
                             <p>{ format!("Found {} solar systems", galaxy.solar_systems.len()) }</p>
@@ -50,6 +58,176 @@ pub fn GalaxyMap(props: &GalaxyMapProps) -> Html {
                 html! { <p>{ "No galaxy loaded" }</p> }
             }}
         </div>
+    }
+}
+
+/// Canvas-based galaxy renderer
+#[derive(Properties, PartialEq, Clone)]
+pub struct GalaxyCanvasProps {
+    pub galaxies: HashMap<u64, Galaxy>,
+    pub solar_systems: HashMap<u64, SolarSystem>,
+    pub planets: HashMap<u64, Planet>,
+    pub current_galaxy: u64,
+    pub on_planet_click: Callback<u64>,
+}
+
+#[function_component]
+pub fn GalaxyCanvas(props: &GalaxyCanvasProps) -> Html {
+    let canvas_ref = use_node_ref();
+    let size = use_state(|| (1200.0f64, 900.0f64));
+
+    // Draw on mount and whenever data changes
+    {
+        let canvas_ref = canvas_ref.clone();
+        let props = props.clone();
+        let size = *size;
+        use_effect_with((props, size), move |(props, size)| {
+            let canvas = match canvas_ref.cast::<HtmlCanvasElement>() {
+                Some(c) => c,
+                None => return,
+            };
+            canvas.set_width(size.0 as u32);
+            canvas.set_height(size.1 as u32);
+
+            let context = canvas
+                .get_context("2d")
+                .ok()
+                .flatten()
+                .and_then(|ctx| ctx.dyn_into::<CanvasRenderingContext2d>().ok());
+            let Some(ctx) = context else {
+                return;
+            };
+
+            // Clear
+            ctx.set_fill_style(&JsValue::from_str("rgba(0,0,0,0.15)"));
+            ctx.fill_rect(0.0, 0.0, size.0, size.1);
+
+            // Draw grid background
+            ctx.set_stroke_style(&JsValue::from_str("rgba(255,255,255,0.08)"));
+            for x in (0..=((size.0 as i32) / 50)).map(|i| i as f64 * 50.0) {
+                ctx.begin_path();
+                ctx.move_to(x, 0.0);
+                ctx.line_to(x, size.1);
+                ctx.stroke();
+            }
+            for y in (0..=((size.1 as i32) / 50)).map(|i| i as f64 * 50.0) {
+                ctx.begin_path();
+                ctx.move_to(0.0, y);
+                ctx.line_to(size.0, y);
+                ctx.stroke();
+            }
+
+            // Draw solar systems and planets
+            if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
+                for system_id in &galaxy.solar_systems {
+                    if let Some(system) = props.solar_systems.get(system_id) {
+                        // System box
+                        let x = system.position.0;
+                        let y = system.position.1;
+                        let w = 260.0;
+                        let h = 80.0;
+                        ctx.set_stroke_style(&JsValue::from_str("#4CAF50"));
+                        ctx.set_line_width(2.0);
+                        ctx.stroke_rect(x, y, w, h);
+
+                        // System title
+                        ctx.set_fill_style(&JsValue::from_str("#4CAF50"));
+                        ctx.set_font("bold 14px Segoe UI, sans-serif");
+                        ctx.fill_text(&system.name, x + 10.0, y + 20.0).ok();
+
+                        // Planets
+                        let mut px = x + 20.0;
+                        let py = y + 40.0;
+                        for planet_id in &system.planets {
+                            if let Some(planet) = props.planets.get(planet_id) {
+                                // color by class
+                                let color = match planet.class {
+                                    PlanetClass::Barren => "#8B4513",
+                                    PlanetClass::Terran => "#228B22",
+                                    PlanetClass::GasGiant => "#FFD700",
+                                    PlanetClass::Ocean => "#0066CC",
+                                    PlanetClass::Desert => "#F4A460",
+                                    PlanetClass::Ice => "#B0E0E6",
+                                    PlanetClass::Volcanic => "#FF4500",
+                                    PlanetClass::Toxic => "#9ACD32",
+                                    PlanetClass::Crystalline => "#DDA0DD",
+                                    PlanetClass::Metallic => "#C0C0C0",
+                                };
+                                ctx.set_fill_style(&JsValue::from_str(color));
+                                let r = 7.0;
+                                ctx.begin_path();
+                                ctx.arc(px, py, r, 0.0, std::f64::consts::PI * 2.0).ok();
+                                ctx.fill();
+
+                                // halo for conquered
+                                if planet.state == PlanetState::Conquered {
+                                    ctx.set_stroke_style(&JsValue::from_str("rgba(76,175,80,0.8)"));
+                                    ctx.set_line_width(2.0);
+                                    ctx.begin_path();
+                                    ctx.arc(px, py, r + 3.0, 0.0, std::f64::consts::PI * 2.0)
+                                        .ok();
+                                    ctx.stroke();
+                                }
+
+                                px += 22.0;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Click handling: simple hit-testing of planets along the linear layout inside each system
+    {
+        let canvas_ref = canvas_ref.clone();
+        let props = props.clone();
+        use_effect_with((), move |_| {
+            let noop: fn() = || {};
+            let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() else {
+                return noop;
+            };
+            let closure = Closure::wrap(Box::new(move |event: MouseEvent| {
+                let x = event.offset_x() as f64;
+                let y = event.offset_y() as f64;
+
+                if let Some(galaxy) = props.galaxies.get(&props.current_galaxy) {
+                    for system_id in &galaxy.solar_systems {
+                        if let Some(system) = props.solar_systems.get(system_id) {
+                            let sx = system.position.0;
+                            let sy = system.position.1;
+                            let w = 260.0;
+                            let h = 80.0;
+                            if x >= sx && x <= sx + w && y >= sy && y <= sy + h {
+                                // Planet row
+                                let mut px = sx + 20.0;
+                                let py = sy + 40.0;
+                                for planet_id in &system.planets {
+                                    let dx = x - px;
+                                    let dy = y - py;
+                                    if (dx * dx + dy * dy).sqrt() <= 9.0 {
+                                        props.on_planet_click.emit(*planet_id);
+                                        return;
+                                    }
+                                    px += 22.0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }) as Box<dyn FnMut(_)>);
+
+            canvas
+                .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
+                .ok();
+            // Keep it alive for the page lifetime
+            closure.forget();
+            noop
+        });
+    }
+
+    html! {
+        <canvas ref={canvas_ref} style="width: 100%; height: 100%; display: block;" />
     }
 }
 
@@ -203,6 +381,31 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                     <button onclick={move |_| on_close.emit(())} class="close-btn">{"×"}</button>
                 </div>
 
+                <div class="planet-status-hint">
+                    { match planet.state {
+                        PlanetState::Unexplored => html! {
+                            <div class="status-hint unexplored">
+                                <strong>{ "Unexplored:" }</strong> { "Click on this planet in the galaxy map to conquer it!" }
+                            </div>
+                        },
+                        PlanetState::Conquered => html! {
+                            <div class="status-hint conquered">
+                                <strong>{ "Conquered:" }</strong> { "You can now build factories and terraform this planet." }
+                            </div>
+                        },
+                        PlanetState::Explored => html! {
+                            <div class="status-hint explored">
+                                <strong>{ "Explored:" }</strong> { "This planet has been explored but not yet conquered." }
+                            </div>
+                        },
+                        PlanetState::Terraforming => html! {
+                            <div class="status-hint terraforming">
+                                <strong>{ "Terraforming:" }</strong> { "This planet is currently being terraformed." }
+                            </div>
+                        },
+                    }}
+                </div>
+
                 <div class="panel-content">
                     <div class="planet-details">
                         <div class="detail-section">
@@ -327,6 +530,729 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
                 }) }
             </div>
         </div>
+    }
+}
+
+/// Factory management component
+#[derive(Properties, PartialEq, Clone)]
+pub struct FactoryManagementProps {
+    pub planet: Option<Planet>,
+    pub empire_resources: HashMap<ResourceType, u64>,
+    pub on_add_factory: Callback<(u64, FactoryType)>,
+}
+
+#[function_component]
+pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
+    if let Some(planet) = &props.planet {
+        if planet.state == PlanetState::Conquered {
+            // Calculate factory costs
+            let factory_costs = get_factory_costs();
+
+            html! {
+                <div class="factory-management">
+                    <h4>{ "Factory Management" }</h4>
+
+                    <div class="existing-factories">
+                        <h5>{ "Existing Factories" }</h5>
+                        { if planet.factories.is_empty() {
+                            html! { <p class="no-factories">{ "No factories built yet." }</p> }
+                        } else {
+                            html! {
+                                <div class="factory-list">
+                                    { for planet.factories.iter().map(|factory| {
+                                        html! {
+                                            <div class="factory-item">
+                                                <div class="factory-info">
+                                                    <span class="factory-type">{ format!("{:?}", factory.factory_type) }</span>
+                                                    <span class="factory-status">{ if factory.is_active { "Active" } else { "Inactive" } }</span>
+                                                </div>
+                                                <div class="factory-efficiency">
+                                                    <span>{ format!("Efficiency: {:.1}%", factory.efficiency * 100.0) }</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }) }
+                                </div>
+                            }
+                        }}
+                    </div>
+
+                    <div class="build-factories">
+                        <h5>{ "Build New Factory" }</h5>
+                        <div class="factory-options">
+                            { for factory_costs.iter().map(|(factory_type, cost)| {
+                                let can_afford = cost.iter().all(|(resource_type, required)| {
+                                    props.empire_resources.get(resource_type).copied().unwrap_or(0) >= *required
+                                });
+
+                                html! {
+                                    <div class={format!("factory-option {}", if can_afford { "affordable" } else { "insufficient" })}>
+                                        <div class="factory-header">
+                                            <h6>{ format!("{:?}", factory_type) }</h6>
+                                            <button
+                                                class="build-btn"
+                                                disabled={!can_afford}
+                                                onclick={
+                                                    let on_add_factory = props.on_add_factory.clone();
+                                                    let planet_id = planet.id;
+                                                    let factory_type = *factory_type;
+                                                    move |_| on_add_factory.emit((planet_id, factory_type))
+                                                }
+                                            >
+                                                { if can_afford { "Build" } else { "Insufficient Resources" } }
+                                            </button>
+                                        </div>
+                                        <div class="factory-cost">
+                                            <h6>{ "Cost:" }</h6>
+                                            <div class="cost-list">
+                                                { for cost.iter().map(|(resource_type, amount)| {
+                                                    let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                                                    let can_afford_resource = available >= *amount;
+                                                    html! {
+                                                        <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
+                                                            <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                                            <span class="cost-amount">{ format!("{}/{}", amount, available) }</span>
+                                                        </div>
+                                                    }
+                                                }) }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }) }
+                        </div>
+                    </div>
+                </div>
+            }
+        } else {
+            html! {}
+        }
+    } else {
+        html! {}
+    }
+}
+
+/// Get factory costs for different factory types
+fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
+    let mut costs = HashMap::new();
+
+    // Basic Manufacturing
+    let mut basic_manufacturing = HashMap::new();
+    basic_manufacturing.insert(ResourceType::Energy, 200);
+    basic_manufacturing.insert(ResourceType::Minerals, 100);
+    basic_manufacturing.insert(ResourceType::Population, 50);
+    costs.insert(FactoryType::BasicManufacturing, basic_manufacturing);
+
+    // Advanced Manufacturing
+    let mut advanced_manufacturing = HashMap::new();
+    advanced_manufacturing.insert(ResourceType::Energy, 500);
+    advanced_manufacturing.insert(ResourceType::Minerals, 300);
+    advanced_manufacturing.insert(ResourceType::Population, 100);
+    advanced_manufacturing.insert(ResourceType::Technology, 50);
+    costs.insert(FactoryType::AdvancedManufacturing, advanced_manufacturing);
+
+    // Electronics
+    let mut electronics = HashMap::new();
+    electronics.insert(ResourceType::Energy, 300);
+    electronics.insert(ResourceType::Minerals, 200);
+    electronics.insert(ResourceType::Population, 75);
+    electronics.insert(ResourceType::Technology, 100);
+    costs.insert(FactoryType::Electronics, electronics);
+
+    // Pharmaceuticals
+    let mut pharmaceuticals = HashMap::new();
+    pharmaceuticals.insert(ResourceType::Energy, 250);
+    pharmaceuticals.insert(ResourceType::Minerals, 150);
+    pharmaceuticals.insert(ResourceType::Population, 60);
+    pharmaceuticals.insert(ResourceType::Technology, 80);
+    costs.insert(FactoryType::Pharmaceuticals, pharmaceuticals);
+
+    // Research Facility
+    let mut research_facility = HashMap::new();
+    research_facility.insert(ResourceType::Energy, 300);
+    research_facility.insert(ResourceType::Minerals, 200);
+    research_facility.insert(ResourceType::Population, 100);
+    research_facility.insert(ResourceType::Technology, 100);
+    costs.insert(FactoryType::Research, research_facility);
+
+    // Shipyard
+    let mut shipyard = HashMap::new();
+    shipyard.insert(ResourceType::Energy, 800);
+    shipyard.insert(ResourceType::Minerals, 600);
+    shipyard.insert(ResourceType::Population, 200);
+    shipyard.insert(ResourceType::Technology, 150);
+    costs.insert(FactoryType::Shipyard, shipyard);
+
+    // Weapons
+    let mut weapons = HashMap::new();
+    weapons.insert(ResourceType::Energy, 400);
+    weapons.insert(ResourceType::Minerals, 500);
+    weapons.insert(ResourceType::Population, 150);
+    weapons.insert(ResourceType::Technology, 200);
+    costs.insert(FactoryType::Weapons, weapons);
+
+    costs
+}
+
+/// Transport system component
+#[derive(Properties, PartialEq, Clone)]
+pub struct TransportSystemProps {
+    pub planets: HashMap<u64, Planet>,
+    pub empire_resources: HashMap<ResourceType, u64>,
+    pub on_start_transport: Callback<(u64, u64, ResourceType, u64)>, // from_planet, to_planet, resource_type, amount
+}
+
+#[function_component]
+pub fn TransportSystem(props: &TransportSystemProps) -> Html {
+    let from_planet = use_state(|| None::<u64>);
+    let to_planet = use_state(|| None::<u64>);
+    let selected_resource = use_state(|| ResourceType::Energy);
+    let transport_amount = use_state(|| 100u64);
+
+    let conquered_planets: Vec<&Planet> = props
+        .planets
+        .values()
+        .filter(|planet| planet.state == PlanetState::Conquered)
+        .collect();
+
+    let available_resources = if let Some(planet_id) = *from_planet {
+        props
+            .planets
+            .get(&planet_id)
+            .map(|planet| planet.resources.clone())
+            .unwrap_or_default()
+    } else {
+        props.empire_resources.clone()
+    };
+
+    let transport_cost = calculate_transport_cost(
+        *from_planet,
+        *to_planet,
+        &props.planets,
+        *selected_resource,
+        *transport_amount,
+    );
+
+    let can_afford_transport = transport_cost.iter().all(|(resource_type, cost)| {
+        props
+            .empire_resources
+            .get(resource_type)
+            .copied()
+            .unwrap_or(0)
+            >= *cost
+    });
+
+    let has_resource = available_resources
+        .get(&*selected_resource)
+        .copied()
+        .unwrap_or(0)
+        >= *transport_amount;
+
+    html! {
+        <div class="transport-system">
+            <h4>{ "Transport System" }</h4>
+
+            <div class="transport-setup">
+                <div class="transport-row">
+                    <label>{ "From Planet:" }</label>
+                    <select
+                        value={from_planet.map(|id| id.to_string()).unwrap_or_default()}
+                        onchange={
+                            let from_planet = from_planet.clone();
+                            move |e: Event| {
+                                let target = e.target_dyn_into::<web_sys::HtmlElement>().unwrap();
+                                let value = target.get_attribute("value").unwrap_or_default();
+                                if value.is_empty() {
+                                    from_planet.set(None);
+                                } else {
+                                    from_planet.set(value.parse().ok());
+                                }
+                            }
+                        }
+                    >
+                        <option value="">{ "Select Source Planet" }</option>
+                        { for conquered_planets.iter().map(|planet| {
+                            html! {
+                                <option value={planet.id.to_string()}>{ &planet.name }</option>
+                            }
+                        }) }
+                    </select>
+                </div>
+
+                <div class="transport-row">
+                    <label>{ "To Planet:" }</label>
+                    <select
+                        value={to_planet.map(|id| id.to_string()).unwrap_or_default()}
+                        onchange={
+                            let to_planet = to_planet.clone();
+                            move |e: Event| {
+                                let target = e.target_dyn_into::<web_sys::HtmlElement>().unwrap();
+                                let value = target.get_attribute("value").unwrap_or_default();
+                                if value.is_empty() {
+                                    to_planet.set(None);
+                                } else {
+                                    to_planet.set(value.parse().ok());
+                                }
+                            }
+                        }
+                    >
+                        <option value="">{ "Select Destination Planet" }</option>
+                        { for conquered_planets.iter().map(|planet| {
+                            html! {
+                                <option value={planet.id.to_string()}>{ &planet.name }</option>
+                            }
+                        }) }
+                    </select>
+                </div>
+
+                <div class="transport-row">
+                    <label>{ "Resource:" }</label>
+                    <select
+                        value={format!("{:?}", *selected_resource)}
+                        onchange={
+                            let selected_resource = selected_resource.clone();
+                            move |e: Event| {
+                                let target = e.target_dyn_into::<web_sys::HtmlElement>().unwrap();
+                                let value = target.get_attribute("value").unwrap_or_default();
+                                // Simple mapping for resource types
+                                let resource = match value.as_str() {
+                                    "Energy" => ResourceType::Energy,
+                                    "Minerals" => ResourceType::Minerals,
+                                    "Population" => ResourceType::Population,
+                                    "Technology" => ResourceType::Technology,
+                                    "Food" => ResourceType::Food,
+                                    _ => ResourceType::Energy,
+                                };
+                                selected_resource.set(resource);
+                            }
+                        }
+                    >
+                        { for [ResourceType::Energy, ResourceType::Minerals, ResourceType::Population, ResourceType::Technology, ResourceType::Food].iter().map(|resource_type| {
+                            html! {
+                                <option value={format!("{:?}", resource_type)}>{ format!("{:?}", resource_type) }</option>
+                            }
+                        }) }
+                    </select>
+                </div>
+
+                <div class="transport-row">
+                    <label>{ "Amount:" }</label>
+                    <input
+                        type="number"
+                        value={transport_amount.to_string()}
+                        min="1"
+                        max={available_resources.get(&*selected_resource).copied().unwrap_or(0).to_string()}
+                        onchange={
+                            let transport_amount = transport_amount.clone();
+                            move |e: Event| {
+                                let target = e.target_dyn_into::<web_sys::HtmlElement>().unwrap();
+                                let value = target.get_attribute("value").unwrap_or_default();
+                                if let Ok(amount) = value.parse::<u64>() {
+                                    transport_amount.set(amount);
+                                }
+                            }
+                        }
+                    />
+                    <span class="available-resources">
+                        { format!("Available: {}", available_resources.get(&*selected_resource).copied().unwrap_or(0)) }
+                    </span>
+                </div>
+            </div>
+
+            <div class="transport-cost">
+                <h5>{ "Transport Cost" }</h5>
+                <div class="cost-list">
+                    { for transport_cost.iter().map(|(resource_type, cost)| {
+                        let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                        let can_afford_resource = available >= *cost;
+                        html! {
+                            <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
+                                <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                <span class="cost-amount">{ format!("{}/{}", cost, available) }</span>
+                            </div>
+                        }
+                    }) }
+                </div>
+            </div>
+
+            <div class="transport-actions">
+                <button
+                    class="transport-btn"
+                    disabled={!can_afford_transport || !has_resource || from_planet.is_none() || to_planet.is_none() || from_planet == to_planet}
+                    onclick={
+                        let on_start_transport = props.on_start_transport.clone();
+                        let from_planet = *from_planet;
+                        let to_planet = *to_planet;
+                        let selected_resource = *selected_resource;
+                        let transport_amount = *transport_amount;
+                        move |_| {
+                            if let (Some(from), Some(to)) = (from_planet, to_planet) {
+                                on_start_transport.emit((from, to, selected_resource, transport_amount));
+                            }
+                        }
+                    }
+                >
+                    { if from_planet == to_planet { "Same Planet" }
+                      else if !has_resource { "Insufficient Resource" }
+                      else if !can_afford_transport { "Insufficient Transport Cost" }
+                      else { "Start Transport" } }
+                </button>
+            </div>
+        </div>
+    }
+}
+
+/// Calculate transport cost between planets
+fn calculate_transport_cost(
+    from_planet: Option<u64>,
+    to_planet: Option<u64>,
+    planets: &HashMap<u64, Planet>,
+    resource_type: ResourceType,
+    amount: u64,
+) -> HashMap<ResourceType, u64> {
+    let mut cost = HashMap::new();
+
+    if let (Some(from_id), Some(to_id)) = (from_planet, to_planet) {
+        if let (Some(from), Some(to)) = (planets.get(&from_id), planets.get(&to_id)) {
+            // Calculate distance
+            let distance = ((from.position.0 - to.position.0).powi(2)
+                + (from.position.1 - to.position.1).powi(2))
+            .sqrt();
+
+            // Base transport cost based on distance and amount
+            let base_cost = (distance * 0.1 + amount as f64 * 0.05) as u64;
+
+            // Energy cost for transport
+            cost.insert(ResourceType::Energy, base_cost);
+
+            // Additional costs based on resource type
+            match resource_type {
+                ResourceType::Technology => {
+                    cost.insert(ResourceType::Population, base_cost / 2);
+                }
+                ResourceType::Population => {
+                    cost.insert(ResourceType::Energy, base_cost * 2);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    cost
+}
+
+/// Prestige system component
+#[derive(Properties, PartialEq, Clone)]
+pub struct PrestigeSystemProps {
+    pub current_prestige: u64,
+    pub galaxy_conquest_progress: f64,
+    pub can_prestige: bool,
+    pub prestige_requirements: u64,
+    pub on_perform_prestige: Callback<()>,
+}
+
+#[function_component]
+pub fn PrestigeSystem(props: &PrestigeSystemProps) -> Html {
+    let progress_percentage = (props.galaxy_conquest_progress * 100.0) as u32;
+
+    html! {
+        <div class="prestige-system">
+            <h4>{ "Prestige System" }</h4>
+
+            <div class="prestige-status">
+                <div class="prestige-info">
+                    <div class="prestige-points">
+                        <span class="label">{ "Current Prestige:" }</span>
+                        <span class="value">{ props.current_prestige }</span>
+                    </div>
+
+                    <div class="galaxy-progress">
+                        <span class="label">{ "Galaxy Progress:" }</span>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div
+                                    class="progress-fill"
+                                    style={format!("width: {}%", progress_percentage)}
+                                ></div>
+                            </div>
+                            <span class="progress-text">{ format!("{:.1}%", props.galaxy_conquest_progress * 100.0) }</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prestige-requirements">
+                    <h5>{ "Prestige Requirements" }</h5>
+                    <div class="requirement-item">
+                        <span class="requirement-label">{ "Galaxy Conquest:" }</span>
+                        <span class={format!("requirement-status {}", if props.galaxy_conquest_progress >= 0.8 { "met" } else { "not-met" })}>
+                            { if props.galaxy_conquest_progress >= 0.8 {
+                                "✓ 80% Complete".to_string()
+                            } else {
+                                format!("✗ {:.1}% Complete", props.galaxy_conquest_progress * 100.0)
+                            } }
+                        </span>
+                    </div>
+                    <div class="requirement-item">
+                        <span class="requirement-label">{ "Prestige Points:" }</span>
+                        <span class={format!("requirement-status {}", if props.current_prestige >= props.prestige_requirements { "met" } else { "not-met" })}>
+                            { if props.current_prestige >= props.prestige_requirements {
+                                format!("✓ {} Points", props.current_prestige)
+                            } else {
+                                format!("✗ {}/{} Points", props.current_prestige, props.prestige_requirements)
+                            } }
+                        </span>
+                    </div>
+                </div>
+
+                <div class="prestige-benefits">
+                    <h5>{ "Prestige Benefits" }</h5>
+                    <div class="benefit-list">
+                        <div class="benefit-item">
+                            <span class="benefit-icon">{ "🚀" }</span>
+                            <span class="benefit-text">{ "Start new galaxy with permanent bonuses" }</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">{ "⚡" }</span>
+                            <span class="benefit-text">{ "Increased resource generation rates" }</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">{ "🏭" }</span>
+                            <span class="benefit-text">{ "Factory efficiency bonuses" }</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">{ "🌍" }</span>
+                            <span class="benefit-text">{ "Faster planet conquest" }</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prestige-actions">
+                    <button
+                        class={format!("prestige-btn {}", if props.can_prestige { "available" } else { "unavailable" })}
+                        disabled={!props.can_prestige}
+                        onclick={
+                            let on_perform_prestige = props.on_perform_prestige.clone();
+                            move |_| on_perform_prestige.emit(())
+                        }
+                    >
+                        { if props.can_prestige { "🌟 Prestige to New Galaxy" } else { "Requirements Not Met" } }
+                    </button>
+
+                    { if !props.can_prestige {
+                        html! {
+                            <div class="prestige-hint">
+                                <p>{ "Complete 80% of current galaxy and accumulate prestige points to prestige." }</p>
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }}
+                </div>
+            </div>
+        </div>
+    }
+}
+
+/// Terraforming project component
+#[derive(Properties, PartialEq, Clone)]
+pub struct TerraformingProjectProps {
+    pub planet: Option<Planet>,
+    pub empire_resources: HashMap<ResourceType, u64>,
+    pub on_start_terraforming: Callback<(u64, ModifierType)>,
+}
+
+#[function_component]
+pub fn TerraformingProject(props: &TerraformingProjectProps) -> Html {
+    if let Some(planet) = &props.planet {
+        if planet.state == PlanetState::Conquered {
+            // Get negative modifiers that can be terraformed
+            let negative_modifiers: Vec<&Modifier> = planet
+                .modifiers
+                .iter()
+                .filter(|modifier| modifier.value < 0.0)
+                .collect();
+
+            html! {
+                <div class="terraforming-project">
+                    <h4>{ "Terraforming Projects" }</h4>
+
+                    <div class="active-projects">
+                        <h5>{ "Active Projects" }</h5>
+                        { if planet.terraforming_projects.is_empty() {
+                            html! { <p class="no-projects">{ "No active terraforming projects." }</p> }
+                        } else {
+                            html! {
+                                <div class="project-list">
+                                    { for planet.terraforming_projects.iter().map(|project| {
+                                        html! {
+                                            <div class="project-item">
+                                                <div class="project-header">
+                                                    <span class="project-name">{ &project.name }</span>
+                                                    <span class="project-progress">{ format!("{:.1}%", project.progress * 100.0) }</span>
+                                                </div>
+                                                <div class="project-details">
+                                                    <div class="progress-bar">
+                                                        <div
+                                                            class="progress-fill"
+                                                            style={format!("width: {}%", project.progress * 100.0)}
+                                                        ></div>
+                                                    </div>
+                                                    <div class="project-target">
+                                                        { format!("Target: {:?}", project.target_modifier) }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }) }
+                                </div>
+                            }
+                        }}
+                    </div>
+
+                    <div class="available-terraforming">
+                        <h5>{ "Available Terraforming" }</h5>
+                        { if negative_modifiers.is_empty() {
+                            html! { <p class="no-modifiers">{ "No negative modifiers to terraform." }</p> }
+                        } else {
+                            html! {
+                                <div class="modifier-list">
+                                    { for negative_modifiers.iter().map(|modifier| {
+                                        let terraforming_cost = calculate_terraforming_cost(modifier.modifier_type);
+                                        let can_afford = terraforming_cost.iter().all(|(resource_type, cost)| {
+                                            props.empire_resources.get(resource_type).copied().unwrap_or(0) >= *cost
+                                        });
+
+                                        html! {
+                                            <div class={format!("modifier-option {}", if can_afford { "affordable" } else { "insufficient" })}>
+                                                <div class="modifier-header">
+                                                    <span class="modifier-name">{ format!("{:?}", modifier.modifier_type) }</span>
+                                                    <span class="modifier-value">{ format!("{:.1}{}", modifier.value, if modifier.is_percentage { "%" } else { "" }) }</span>
+                                                </div>
+                                                <div class="modifier-cost">
+                                                    <h6>{ "Terraforming Cost:" }</h6>
+                                                    <div class="cost-list">
+                                                        { for terraforming_cost.iter().map(|(resource_type, cost)| {
+                                                            let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                                                            let can_afford_resource = available >= *cost;
+                                                            html! {
+                                                                <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
+                                                                    <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                                                    <span class="cost-amount">{ format!("{}/{}", cost, available) }</span>
+                                                                </div>
+                                                            }
+                                                        }) }
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    class="terraform-btn"
+                                                    disabled={!can_afford}
+                                                    onclick={
+                                                        let on_start_terraforming = props.on_start_terraforming.clone();
+                                                        let planet_id = planet.id;
+                                                        let modifier_type = modifier.modifier_type;
+                                                        move |_| on_start_terraforming.emit((planet_id, modifier_type))
+                                                    }
+                                                >
+                                                    { if can_afford { "Start Terraforming" } else { "Insufficient Resources" } }
+                                                </button>
+                                            </div>
+                                        }
+                                    }) }
+                                </div>
+                            }
+                        }}
+                    </div>
+                </div>
+            }
+        } else {
+            html! {}
+        }
+    } else {
+        html! {}
+    }
+}
+
+/// Calculate terraforming cost for a modifier type
+fn calculate_terraforming_cost(modifier_type: ModifierType) -> HashMap<ResourceType, u64> {
+    let mut cost = HashMap::new();
+
+    // Base terraforming cost
+    cost.insert(ResourceType::Energy, 500);
+    cost.insert(ResourceType::Minerals, 300);
+    cost.insert(ResourceType::Population, 100);
+    cost.insert(ResourceType::Technology, 150);
+
+    // Additional costs based on modifier type
+    match modifier_type {
+        ModifierType::ResourcePenalty => {
+            cost.insert(ResourceType::Energy, 400);
+            cost.insert(ResourceType::Minerals, 200);
+        }
+        ModifierType::DefensiveBonus => {
+            cost.insert(ResourceType::Population, 150);
+            cost.insert(ResourceType::Technology, 100);
+        }
+        _ => {
+            // Default cost for other modifiers
+            cost.insert(ResourceType::Energy, 300);
+            cost.insert(ResourceType::Minerals, 250);
+        }
+    }
+
+    cost
+}
+
+/// Conquest cost display component
+#[derive(Properties, PartialEq, Clone)]
+pub struct ConquestCostProps {
+    pub planet: Option<Planet>,
+    pub empire_resources: HashMap<ResourceType, u64>,
+}
+
+#[function_component]
+pub fn ConquestCost(props: &ConquestCostProps) -> Html {
+    if let Some(planet) = &props.planet {
+        if planet.state == PlanetState::Unexplored {
+            // Calculate conquest cost (simplified version)
+            let mut cost = HashMap::new();
+            cost.insert(ResourceType::Energy, 100);
+            cost.insert(ResourceType::Minerals, 50);
+            cost.insert(ResourceType::Population, 25);
+
+            let can_afford = cost.iter().all(|(resource_type, required)| {
+                props
+                    .empire_resources
+                    .get(resource_type)
+                    .copied()
+                    .unwrap_or(0)
+                    >= *required
+            });
+
+            html! {
+                <div class="conquest-cost">
+                    <h4>{ "Conquest Cost" }</h4>
+                    <div class="cost-list">
+                        { for cost.iter().map(|(resource_type, amount)| {
+                            let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                            let can_afford_resource = available >= *amount;
+                            html! {
+                                <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
+                                    <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                    <span class="cost-amount">{ format!("{}/{}", amount, available) }</span>
+                                </div>
+                            }
+                        }) }
+                    </div>
+                    <div class={format!("conquest-status {}", if can_afford { "ready" } else { "insufficient" })}>
+                        { if can_afford { "Ready to Conquer!" } else { "Insufficient Resources" } }
+                    </div>
+                </div>
+            }
+        } else {
+            html! {}
+        }
+    } else {
+        html! {}
     }
 }
 
