@@ -75,6 +75,46 @@ impl GalaxySystem {
         }
     }
 
+    /// Generate a solar system and return both the system and its planets
+    pub fn generate_solar_system_with_planets(
+        &mut self,
+        _galaxy_id: u64,
+        system_index: u32,
+    ) -> (SolarSystem, Vec<Planet>) {
+        let system_id = self.system_counter;
+        self.system_counter += 1;
+
+        let name = self.generate_system_name(system_index);
+        let position = self.generate_system_position(_galaxy_id, system_index);
+        let system_modifiers = self.generate_system_modifiers();
+
+        // Generate planets for this system
+        let planet_count = self.rng.gen_range(3..=8);
+        let mut planets = Vec::new();
+        let mut planet_objects = Vec::new();
+
+        for i in 0..planet_count {
+            let planet_position =
+                self.generate_planet_position_in_system(position, i, planet_count);
+            let planet = self
+                .planet_system
+                .generate_planet(planet_position, system_id);
+            planets.push(planet.id);
+            planet_objects.push(planet);
+        }
+
+        let system = SolarSystem {
+            id: system_id,
+            name,
+            planets,
+            system_modifiers,
+            position,
+            is_conquered: false,
+        };
+
+        (system, planet_objects)
+    }
+
     /// Generate system name
     fn generate_system_name(&mut self, index: u32) -> String {
         let prefixes = [

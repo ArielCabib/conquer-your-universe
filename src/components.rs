@@ -210,6 +210,7 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
     let mut grid_cells = vec![vec![None; grid_size]; grid_size];
 
     // Place planets in the grid
+    log::info!("Solar system {} has {} planets: {:?}", system.id, system.planets.len(), system.planets);
     for (i, planet_id) in system.planets.iter().enumerate() {
         if i < grid_size * grid_size {
             let x = i % grid_size;
@@ -233,6 +234,7 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
                                 html! {
                                     <div class="planet-cell" key={x}>
                                         { if let Some(planet_id) = cell_content {
+                                            log::info!("Looking up planet {} in system", planet_id);
                                             if let Some(planet) = props.planets.get(&planet_id) {
                                                 let planet_class = format!("{:?}", planet.class).to_lowercase().replace("_", "-");
                                                 let planet_state = format!("{:?}", planet.state).to_lowercase();

@@ -72,22 +72,18 @@ impl GameEngine {
         // Generate solar systems and planets
         let mut solar_system_ids = Vec::new();
         for i in 0..self.config.systems_per_galaxy {
-            let system = self.galaxy_system.generate_solar_system(galaxy.id, i);
+            let (system, planets) = self
+                .galaxy_system
+                .generate_solar_system_with_planets(galaxy.id, i);
             let system_id = system.id;
-            let system_position = system.position;
+
+            // Store the solar system
             self.game_state.solar_systems.insert(system.id, system);
             solar_system_ids.push(system_id);
 
-            // Generate planets for this system
-            for j in 0..self.config.planets_per_system {
-                let planet_position = self.galaxy_system.generate_planet_position_in_system(
-                    system_position,
-                    j,
-                    self.config.planets_per_system,
-                );
-                let planet = self
-                    .galaxy_system
-                    .generate_planet(planet_position, system_id);
+            // Store the planets
+            for planet in planets {
+                log::info!("Storing planet {} in system {}", planet.id, system_id);
                 self.game_state.planets.insert(planet.id, planet);
             }
         }
@@ -108,6 +104,14 @@ impl GameEngine {
 
         // Initialize empire resources
         self.initialize_empire_resources();
+
+        // Debug: Log the final state
+        log::info!(
+            "Game initialized with {} galaxies, {} solar systems, {} planets",
+            self.game_state.galaxies.len(),
+            self.game_state.solar_systems.len(),
+            self.game_state.planets.len()
+        );
     }
 
     /// Initialize starting empire resources
@@ -528,6 +532,11 @@ impl GameEngine {
     /// Get explored solar systems
     pub fn get_explored_solar_systems(&self) -> &HashSet<u64> {
         &self.game_state.explored_solar_systems
+    }
+
+    /// Get total planet count for debugging
+    pub fn get_planet_count(&self) -> usize {
+        self.game_state.planets.len()
     }
 
     /// Update exploration - gradually discover new solar systems
