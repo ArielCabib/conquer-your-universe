@@ -91,7 +91,7 @@ pub enum PlanetState {
 }
 
 /// A planet in the game
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Planet {
     pub id: u64,
     pub name: String,
@@ -106,7 +106,7 @@ pub struct Planet {
 }
 
 /// Terraforming project
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TerraformingProject {
     pub id: u64,
     pub name: String,
@@ -118,7 +118,7 @@ pub struct TerraformingProject {
 }
 
 /// Factory for producing products
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Factory {
     pub id: u64,
     pub factory_type: FactoryType,
@@ -140,7 +140,7 @@ pub enum FactoryType {
 }
 
 /// Production order in a factory
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProductionOrder {
     pub product: ResourceType,
     pub quantity: u64,
@@ -181,7 +181,7 @@ pub struct ResourceInTransit {
 }
 
 /// Solar system
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SolarSystem {
     pub id: u64,
     pub name: String,
@@ -192,7 +192,7 @@ pub struct SolarSystem {
 }
 
 /// Galaxy
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Galaxy {
     pub id: u64,
     pub name: String,

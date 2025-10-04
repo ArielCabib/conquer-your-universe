@@ -216,7 +216,7 @@ impl TransportSystem {
     pub fn optimize_routes(
         &self,
         routes: &mut HashMap<u64, TransportRoute>,
-        planets: &HashMap<u64, Planet>,
+        _planets: &HashMap<u64, Planet>,
     ) {
         // Simple optimization: increase efficiency for frequently used routes
         for route in routes.values_mut() {

@@ -62,38 +62,38 @@ impl GameEngine {
     /// Initialize the game with starting galaxy
     pub fn initialize_game(&mut self) {
         // Generate starting galaxy
-        let galaxy = self.galaxy_system.generate_galaxy("Milky Way".to_string(), self.config.systems_per_galaxy);
+        let mut galaxy = self.galaxy_system.generate_galaxy("Milky Way".to_string(), self.config.systems_per_galaxy);
         self.game_state.current_galaxy = galaxy.id;
-        self.game_state.galaxies.insert(galaxy.id, galaxy);
-
+        
         // Generate solar systems and planets
-        self.generate_initial_content();
+        let mut solar_system_ids = Vec::new();
+        for i in 0..self.config.systems_per_galaxy {
+            let system = self.galaxy_system.generate_solar_system(galaxy.id, i);
+            let system_id = system.id;
+            let system_position = system.position;
+            self.game_state.solar_systems.insert(system.id, system);
+            solar_system_ids.push(system_id);
+
+            // Generate planets for this system
+            for j in 0..self.config.planets_per_system {
+                let planet_position = self.galaxy_system.generate_planet_position_in_system(
+                    system_position,
+                    j,
+                    self.config.planets_per_system,
+                );
+                let planet = self.galaxy_system.generate_planet(planet_position);
+                self.game_state.planets.insert(planet.id, planet);
+            }
+        }
+        
+        // Update galaxy with solar system IDs
+        galaxy.solar_systems = solar_system_ids;
+        self.game_state.galaxies.insert(galaxy.id, galaxy);
 
         // Initialize empire resources
         self.initialize_empire_resources();
     }
 
-    /// Generate initial galaxy content
-    fn generate_initial_content(&mut self) {
-        if let Some(galaxy) = self.game_state.galaxies.get(&self.game_state.current_galaxy) {
-            for (i, &_system_id) in galaxy.solar_systems.iter().enumerate() {
-                let system = self.galaxy_system.generate_solar_system(galaxy.id, i as u32);
-                let system_position = system.position;
-                self.game_state.solar_systems.insert(system.id, system);
-
-                // Generate planets for this system
-                for j in 0..self.config.planets_per_system {
-                    let planet_position = self.galaxy_system.generate_planet_position_in_system(
-                        system_position,
-                        j,
-                        self.config.planets_per_system,
-                    );
-                    let planet = self.galaxy_system.generate_planet(planet_position);
-                    self.game_state.planets.insert(planet.id, planet);
-                }
-            }
-        }
-    }
 
     /// Initialize starting empire resources
     fn initialize_empire_resources(&mut self) {
@@ -361,7 +361,7 @@ impl GameEngine {
 }
 
 /// Game statistics for display
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GameStatistics {
     pub current_tick: u64,
     pub conquered_planets: usize,

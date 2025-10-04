@@ -1,6 +1,6 @@
 use crate::types::*;
-use std::collections::HashMap;
 use rand::Rng;
+use std::collections::HashMap;
 
 /// Galaxy and solar system management
 pub struct GalaxySystem {
@@ -51,13 +51,14 @@ impl GalaxySystem {
         let name = self.generate_system_name(system_index);
         let position = self.generate_system_position(_galaxy_id, system_index);
         let system_modifiers = self.generate_system_modifiers();
-        
+
         // Generate planets for this system
         let planet_count = self.rng.gen_range(3..=8);
         let mut planets = Vec::new();
 
         for i in 0..planet_count {
-            let planet_position = self.generate_planet_position_in_system(position, i, planet_count);
+            let planet_position =
+                self.generate_planet_position_in_system(position, i, planet_count);
             let planet = self.planet_system.generate_planet(planet_position);
             planets.push(planet.id);
         }
@@ -74,25 +75,31 @@ impl GalaxySystem {
 
     /// Generate system name
     fn generate_system_name(&mut self, index: u32) -> String {
-        let prefixes = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta"];
-        let suffixes = ["Sector", "Quadrant", "Region", "Zone", "Cluster", "Nebula", "Star", "System"];
-        
+        let prefixes = [
+            "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta",
+        ];
+        let suffixes = [
+            "Sector", "Quadrant", "Region", "Zone", "Cluster", "Nebula", "Star", "System",
+        ];
+
         let prefix = prefixes[index as usize % prefixes.len()];
         let suffix = suffixes[self.rng.gen_range(0..suffixes.len())];
         let number = index + 1;
-        
+
         format!("{} {} {}", prefix, suffix, number)
     }
 
     /// Generate system position within galaxy
     fn generate_system_position(&mut self, _galaxy_id: u64, system_index: u32) -> (f64, f64) {
-        // Generate positions in a spiral pattern for more realistic galaxy structure
-        let angle = (system_index as f64) * 0.618; // Golden angle for natural spiral
-        let radius = (system_index as f64).sqrt() * 50.0; // Increasing radius
-        
-        let x = angle.cos() * radius + self.rng.gen_range(-20.0..20.0);
-        let y = angle.sin() * radius + self.rng.gen_range(-20.0..20.0);
-        
+        // Generate positions in a grid pattern for better visibility
+        let cols = 5; // 5 columns
+        let row = system_index / cols;
+        let col = system_index % cols;
+
+        // Position systems in a grid with some spacing
+        let x = (col as f64) * 200.0 + 50.0; // 200px spacing, 50px offset
+        let y = (row as f64) * 150.0 + 50.0; // 150px spacing, 50px offset
+
         (x, y)
     }
 
@@ -106,35 +113,38 @@ impl GalaxySystem {
         // Generate planets in orbital rings around the system center
         let ring_radius = 30.0 + (planet_index as f64 * 15.0);
         let angle = (planet_index as f64) * 2.0 * std::f64::consts::PI / (total_planets as f64);
-        
+
         let x = system_position.0 + angle.cos() * ring_radius;
         let y = system_position.1 + angle.sin() * ring_radius;
-        
+
         (x, y)
     }
 
     /// Generate galaxy-level modifiers
     fn generate_galaxy_modifiers(&mut self) -> Vec<Modifier> {
         let mut modifiers = Vec::new();
-        
+
         // Galaxy type determines base modifiers
         let galaxy_type = self.rng.gen_range(0..5);
         match galaxy_type {
-            0 => { // Spiral Galaxy
+            0 => {
+                // Spiral Galaxy
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::ResearchBonus,
                     value: 25.0,
                     is_percentage: true,
                 });
-            },
-            1 => { // Elliptical Galaxy
+            }
+            1 => {
+                // Elliptical Galaxy
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::MineralMultiplier,
                     value: 50.0,
                     is_percentage: true,
                 });
-            },
-            2 => { // Irregular Galaxy
+            }
+            2 => {
+                // Irregular Galaxy
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::EnergyMultiplier,
                     value: 30.0,
@@ -145,23 +155,25 @@ impl GalaxySystem {
                     value: 20.0,
                     is_percentage: true,
                 });
-            },
-            3 => { // Dwarf Galaxy
+            }
+            3 => {
+                // Dwarf Galaxy
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::PopulationMultiplier,
                     value: 40.0,
                     is_percentage: true,
                 });
-            },
-            _ => { // Barred Spiral Galaxy
+            }
+            _ => {
+                // Barred Spiral Galaxy
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::TradeBonus,
                     value: 35.0,
                     is_percentage: true,
                 });
-            },
+            }
         }
-        
+
         // Random additional galaxy modifiers
         if self.rng.gen_bool(0.3) {
             modifiers.push(Modifier {
@@ -170,18 +182,19 @@ impl GalaxySystem {
                 is_percentage: true,
             });
         }
-        
+
         modifiers
     }
 
     /// Generate system-level modifiers
     fn generate_system_modifiers(&mut self) -> Vec<Modifier> {
         let mut modifiers = Vec::new();
-        
+
         // System type determines modifiers
         let system_type = self.rng.gen_range(0..4);
         match system_type {
-            0 => { // Binary Star System
+            0 => {
+                // Binary Star System
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::EnergyMultiplier,
                     value: 75.0,
@@ -192,15 +205,17 @@ impl GalaxySystem {
                     value: 25.0,
                     is_percentage: true,
                 });
-            },
-            1 => { // Single Star System
+            }
+            1 => {
+                // Single Star System
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::PopulationMultiplier,
                     value: 20.0,
                     is_percentage: true,
                 });
-            },
-            2 => { // Multiple Star System
+            }
+            2 => {
+                // Multiple Star System
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::TechnologyMultiplier,
                     value: 40.0,
@@ -211,8 +226,9 @@ impl GalaxySystem {
                     value: 30.0,
                     is_percentage: true,
                 });
-            },
-            _ => { // Young Star System
+            }
+            _ => {
+                // Young Star System
                 modifiers.push(Modifier {
                     modifier_type: ModifierType::MineralMultiplier,
                     value: 60.0,
@@ -223,9 +239,9 @@ impl GalaxySystem {
                     value: -30.0,
                     is_percentage: true,
                 });
-            },
+            }
         }
-        
+
         modifiers
     }
 
@@ -236,7 +252,8 @@ impl GalaxySystem {
         planets: &HashMap<u64, Planet>,
     ) -> bool {
         system.planets.iter().all(|planet_id| {
-            planets.get(planet_id)
+            planets
+                .get(planet_id)
                 .map(|planet| planet.state == PlanetState::Conquered)
                 .unwrap_or(false)
         })
@@ -250,7 +267,8 @@ impl GalaxySystem {
         planets: &HashMap<u64, Planet>,
     ) -> bool {
         galaxy.solar_systems.iter().all(|system_id| {
-            solar_systems.get(system_id)
+            solar_systems
+                .get(system_id)
                 .map(|system| self.is_system_conquered(system, planets))
                 .unwrap_or(false)
         })
@@ -268,9 +286,12 @@ impl GalaxySystem {
             return 1.0;
         }
 
-        let conquered_systems = galaxy.solar_systems.iter()
+        let conquered_systems = galaxy
+            .solar_systems
+            .iter()
             .filter(|system_id| {
-                solar_systems.get(system_id)
+                solar_systems
+                    .get(system_id)
                     .map(|system| self.is_system_conquered(system, planets))
                     .unwrap_or(false)
             })
@@ -290,9 +311,12 @@ impl GalaxySystem {
             return 1.0;
         }
 
-        let conquered_planets = system.planets.iter()
+        let conquered_planets = system
+            .planets
+            .iter()
             .filter(|planet_id| {
-                planets.get(planet_id)
+                planets
+                    .get(planet_id)
                     .map(|planet| planet.state == PlanetState::Conquered)
                     .unwrap_or(false)
             })
