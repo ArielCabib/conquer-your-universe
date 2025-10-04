@@ -650,22 +650,26 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
 
                     html! {
                         <div class={format!("resource-card {}", if is_at_capacity { "at-capacity" } else { "" })}>
-                            <div class="resource-header">
-                                <h4>{ format!("{:?}", resource_type) }</h4>
-                                { if is_at_capacity {
-                                    html! { <span class="capacity-warning">{ "FULL" }</span> }
-                                } else {
-                                    html! {}
-                                }}
+                            <div>
+                                <div class="resource-header">
+                                    <h4>{ format!("{:?}", resource_type) }</h4>
+                                    { if is_at_capacity {
+                                        html! { <span class="capacity-warning">{ "FULL" }</span> }
+                                    } else {
+                                        html! {}
+                                    }}
+                                </div>
+                                <div class="resource-amount">
+                                    { format!("{} / {}", *amount, storage_limit) }
+                                </div>
                             </div>
-                            <div class="resource-amount">
-                                { format!("{} / {}", *amount, storage_limit) }
-                            </div>
-                            <div class="resource-capacity-bar">
-                                <div class="capacity-fill" style={format!("width: {:.1}%", capacity_percentage)}></div>
-                            </div>
-                            <div class="resource-generation">
-                                { format!("+{}/tick", generation) }
+                            <div>
+                                <div class="resource-capacity-bar">
+                                    <div class="capacity-fill" style={format!("width: {:.1}%", capacity_percentage)}></div>
+                                </div>
+                                <div class="resource-generation">
+                                    { format!("+{}/tick", generation) }
+                                </div>
                             </div>
                         </div>
                     }
@@ -1428,6 +1432,7 @@ pub fn ConquestCost(props: &ConquestCostProps) -> Html {
 #[derive(Properties, PartialEq, Clone)]
 pub struct GameStatsProps {
     pub stats: GameStatistics,
+    pub planet_count: usize,
 }
 
 #[function_component]
@@ -1465,6 +1470,10 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
                 <div class="stat-item">
                     <span class="stat-label">{ "Status" }</span>
                     <span class="stat-value">{ if stats.is_paused { "Paused" } else { "Running" } }</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">{ "Total Planets" }</span>
+                    <span class="stat-value">{ props.planet_count }</span>
                 </div>
             </div>
         </div>

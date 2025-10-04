@@ -141,10 +141,7 @@ fn App() -> Html {
         let planet_count = game_engine.borrow().get_planet_count();
         html! {
             <>
-                <GameStats stats={stats} />
-                <div class="debug-info">
-                    <p>{ format!("Total Planets: {}", planet_count) }</p>
-                </div>
+                <GameStats stats={stats} planet_count={planet_count} />
             </>
         }
     };
