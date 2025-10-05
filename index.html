@@ -1348,6 +1348,7 @@
             padding: 8px;
             border-radius: 5px;
             background: var(--surface-soft);
+            color: var(--text-soft);
         }
 
         .cost-item.affordable {
@@ -1360,10 +1361,19 @@
 
         .resource-name {
             font-weight: bold;
+            color: var(--text-color);
         }
 
         .cost-amount {
-            color: var(--text-muted);
+            color: var(--text-soft);
+        }
+
+        .cost-item.affordable .cost-amount {
+            color: var(--accent-success);
+        }
+
+        .cost-item.insufficient .cost-amount {
+            color: var(--accent-warning);
         }
 
         .conquest-status {

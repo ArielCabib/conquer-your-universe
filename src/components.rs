@@ -1405,16 +1405,25 @@ pub fn ConquestCost(props: &ConquestCostProps) -> Html {
                 <div class="conquest-cost">
                     <h4>{ "Conquest Cost" }</h4>
                     <div class="cost-list">
-                        { for cost.iter().map(|(resource_type, amount)| {
-                            let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
-                            let can_afford_resource = available >= *amount;
-                            html! {
-                                <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
-                                    <span class="resource-name">{ format!("{:?}", resource_type) }</span>
-                                    <span class="cost-amount">{ format!("{}/{}", amount, available) }</span>
-                                </div>
-                            }
-                        }) }
+                        {{
+                            let mut ordered_cost: Vec<_> = cost.iter().collect();
+                            ordered_cost.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
+
+                            ordered_cost
+                                .into_iter()
+                                .map(|(resource_type, amount)| {
+                                    let available =
+                                        props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                                    let can_afford_resource = available >= *amount;
+                                    html! {
+                                        <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>
+                                            <span class="resource-name">{ format!("{:?}", resource_type) }</span>
+                                            <span class="cost-amount">{ format!("{}/{}", amount, available) }</span>
+                                        </div>
+                                    }
+                                })
+                                .collect::<Html>()
+                        }}
                     </div>
                     <div class={format!("conquest-status {}", if can_afford { "ready" } else { "insufficient" })}>
                         { if can_afford { "Ready to Conquer!" } else { "Insufficient Resources" } }
