@@ -805,11 +805,64 @@
         }
 
         .planet-class {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 10px;
-            color: var(--text-muted);
-            background: var(--surface-medium);
-            padding: 2px 6px;
-            border-radius: 3px;
+            font-weight: 600;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: transparent;
+        }
+
+        .planet-class::before {
+            content: "";
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--neutral-soft);
+            box-shadow: 0 0 0 2px var(--border-color);
+        }
+
+        .planet-card.barren .planet-class::before {
+            background: var(--planet-color-barren);
+        }
+
+        .planet-card.terran .planet-class::before {
+            background: var(--planet-color-terran);
+        }
+
+        .planet-card.gasgiant .planet-class::before {
+            background: var(--planet-color-gas-giant);
+        }
+
+        .planet-card.ocean .planet-class::before {
+            background: var(--planet-color-ocean);
+        }
+
+        .planet-card.desert .planet-class::before {
+            background: var(--planet-color-desert);
+        }
+
+        .planet-card.ice .planet-class::before {
+            background: var(--planet-color-ice);
+        }
+
+        .planet-card.volcanic .planet-class::before {
+            background: var(--planet-color-volcanic);
+        }
+
+        .planet-card.toxic .planet-class::before {
+            background: var(--planet-color-toxic);
+        }
+
+        .planet-card.crystalline .planet-class::before {
+            background: var(--planet-color-crystalline);
+        }
+
+        .planet-card.metallic .planet-class::before {
+            background: var(--planet-color-metallic);
         }
 
         .planet-status {
@@ -818,10 +871,61 @@
 
         .status-badge {
             font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            background: var(--neutral-soft);
+            color: var(--text-strong);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+
+        .status-badge::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 6px currentColor;
+        }
+
+        .planet-card.unexplored .status-badge {
+            background: var(--hidden-surface);
+            color: var(--button-on-prestige);
+        }
+
+        .planet-card.explored .status-badge {
             background: var(--success-soft);
             color: var(--accent-success);
+        }
+
+        .planet-card.conquered .status-badge {
+            background: var(--accent-success);
+            color: var(--surface-inverse);
+        }
+
+        .planet-card.terraforming .status-badge {
+            background: var(--accent-warning);
+            color: var(--surface-inverse);
+        }
+
+        .planet-card.unexplored .status-badge::before {
+            background: var(--surface-inverse);
+        }
+
+        .planet-card.explored .status-badge::before {
+            background: var(--accent-success);
+        }
+
+        .planet-card.conquered .status-badge::before {
+            background: var(--surface-inverse);
+        }
+
+        .planet-card.terraforming .status-badge::before {
+            background: var(--surface-inverse);
         }
 
         .planet-resources {
