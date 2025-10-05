@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -7,97 +7,13 @@
     <title>Conquer Your Universe</title>
     <style>
         :root {
-            color-scheme: light;
+            color-scheme: dark;
             --orbit-01: #2A1A11;
             --orbit-02: #5C3A27;
             --orbit-03: #F8E1C8;
             --orbit-04: #F2A7A0;
             --orbit-05: #88AFC6;
 
-            --bg-gradient-start: var(--orbit-05);
-            --bg-gradient-end: var(--orbit-03);
-            --text-color: var(--orbit-02);
-            --text-strong: var(--orbit-01);
-            --text-muted: var(--orbit-03);
-            --surface-strong: var(--orbit-03);
-            --surface-medium: var(--orbit-04);
-            --surface-soft: var(--orbit-05);
-            --surface-inverse: var(--orbit-01);
-            --border-color: var(--orbit-02);
-            --shadow-color: var(--orbit-01);
-            --scrollbar-track: var(--orbit-03);
-            --scrollbar-thumb: var(--orbit-05);
-            --scrollbar-thumb-hover: var(--orbit-04);
-            --button-bg: var(--orbit-05);
-            --button-bg-hover: var(--orbit-04);
-            --button-text: var(--orbit-01);
-            --button-active-bg: var(--orbit-04);
-            --button-active-shadow: var(--orbit-01);
-            --glass-highlight: var(--orbit-03);
-            --glass-muted: var(--orbit-02);
-            --muted-panel-bg: var(--orbit-03);
-            --no-selection-text: var(--orbit-02);
-            --no-selection-heading: var(--orbit-01);
-            --accent-success: var(--orbit-05);
-            --accent-success-hover: var(--orbit-04);
-            --accent-success-shadow: var(--orbit-01);
-            --success-soft: var(--orbit-05);
-            --success-soft-weak: var(--orbit-03);
-            --success-gradient-end: var(--orbit-03);
-            --accent-warning: var(--orbit-04);
-            --warning-soft: var(--orbit-04);
-            --warning-gradient-mid: var(--orbit-02);
-            --accent-danger: var(--orbit-01);
-            --danger-soft: var(--orbit-01);
-            --accent-info: var(--orbit-05);
-            --info-soft: var(--orbit-05);
-            --accent-secondary: var(--orbit-04);
-            --secondary-soft: var(--orbit-04);
-            --accent-terraforming: var(--orbit-05);
-            --accent-terraforming-hover: var(--orbit-02);
-            --terraforming-glow: var(--orbit-05);
-            --hidden-surface: var(--orbit-02);
-            --hidden-border: var(--orbit-01);
-            --neutral-soft: var(--orbit-03);
-            --neutral-strong: var(--orbit-02);
-            --button-on-accent: var(--orbit-03);
-            --modifier-positive: var(--orbit-05);
-            --modifier-negative: var(--orbit-01);
-            --modifier-neutral: var(--orbit-02);
-            --shadow-elevated: var(--orbit-01);
-            --heading-shadow: var(--orbit-02);
-            --danger-soft-hover: var(--orbit-04);
-            --danger-soft-strong: var(--orbit-01);
-            --danger-soft-weak: var(--orbit-03);
-            --warning-soft-strong: var(--orbit-04);
-            --warning-soft-weak: var(--orbit-03);
-            --info-soft-weak: var(--orbit-03);
-            --terraforming-soft: var(--orbit-05);
-            --warning-glow: var(--orbit-04);
-            --border-overlay: var(--orbit-03);
-            --border-glow: var(--orbit-05);
-            --button-disabled-bg: var(--orbit-03);
-            --button-on-danger: var(--orbit-03);
-            --button-on-prestige: var(--orbit-01);
-            --text-soft: var(--orbit-02);
-            --text-faint: var(--orbit-03);
-            --text-disabled: var(--orbit-03);
-            --accent-warning-bright: var(--orbit-04);
-            --accent-prestige: var(--orbit-04);
-            --planet-color-barren: var(--orbit-02);
-            --planet-color-terran: var(--orbit-05);
-            --planet-color-gas-giant: var(--orbit-05);
-            --planet-color-ocean: var(--orbit-05);
-            --planet-color-desert: var(--orbit-03);
-            --planet-color-ice: var(--orbit-05);
-            --planet-color-volcanic: var(--orbit-01);
-            --planet-color-toxic: var(--orbit-04);
-            --planet-color-crystalline: var(--orbit-05);
-            --planet-color-metallic: var(--orbit-02);
-        }
-
-        [data-theme="dark"] {
-            color-scheme: dark;
             --bg-gradient-start: var(--orbit-01);
             --bg-gradient-end: var(--orbit-02);
             --text-color: var(--orbit-03);
@@ -2180,24 +2096,6 @@
             }
         }
     </style>
-    <script>
-        (function () {
-            const root = document.documentElement;
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-
-            const applyTheme = (isDark) => {
-                root.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            };
-
-            applyTheme(prefersDark.matches);
-
-            if (typeof prefersDark.addEventListener === 'function') {
-                prefersDark.addEventListener('change', (event) => applyTheme(event.matches));
-            } else if (typeof prefersDark.addListener === 'function') {
-                prefersDark.addListener((event) => applyTheme(event.matches));
-            }
-        })();
-    </script>
 </head>
 
 <body>
