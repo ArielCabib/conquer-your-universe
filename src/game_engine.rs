@@ -168,22 +168,26 @@ impl GameEngine {
         }
 
         let speed_multiplier = self.game_state.game_speed as u64;
+        let previous_tick = self.game_state.current_tick;
+        let previous_second = previous_tick / TICKS_PER_SECOND as u64;
+        let next_tick = previous_tick + speed_multiplier;
+        let next_second = next_tick / TICKS_PER_SECOND as u64;
 
-        // Update all systems
+        // Update all systems once per update call
         self.update_factories();
         self.update_transport();
         self.update_terraforming();
         self.update_conquest();
         self.update_exploration();
 
-        // Every second
-        if self.game_state.current_tick % TICKS_PER_SECOND as u64 == 0 {
+        // Trigger per-second updates when crossing second boundaries
+        if previous_tick == 0 || next_second > previous_second {
             self.update_resource_generation();
             self.auto_save();
         }
 
-        // Increment game tick
-        self.game_state.current_tick += speed_multiplier;
+        // Increment game tick by simulated ticks at current speed
+        self.game_state.current_tick = next_tick;
     }
 
     /// Update resource generation across all conquered planets
