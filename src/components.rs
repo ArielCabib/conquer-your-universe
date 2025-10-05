@@ -1,6 +1,7 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
 use std::collections::{HashMap, HashSet};
+use web_sys::KeyboardEvent;
 use yew::prelude::*;
 
 fn format_modifier_value(modifier: &Modifier) -> String {
@@ -1433,11 +1434,17 @@ pub fn ConquestCost(props: &ConquestCostProps) -> Html {
 pub struct GameStatsProps {
     pub stats: GameStatistics,
     pub planet_count: usize,
+    pub on_prestige_card_click: Callback<()>,
+    pub on_status_card_click: Callback<()>,
 }
 
 #[function_component]
 pub fn GameStats(props: &GameStatsProps) -> Html {
     let stats = &props.stats;
+    let prestige_card_click = props.on_prestige_card_click.clone();
+    let prestige_card_keyboard = prestige_card_click.clone();
+    let status_card_click = props.on_status_card_click.clone();
+    let status_card_keyboard = status_card_click.clone();
 
     html! {
         <div class="game-stats">
@@ -1459,7 +1466,20 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
                     <span class="stat-label">{ "Total Resources" }</span>
                     <span class="stat-value">{ stats.total_resources }</span>
                 </div>
-                <div class="stat-item">
+                <div
+                    class={classes!("stat-item", "clickable", "prestige-card")}
+                    role="button"
+                    tabindex={0}
+                    onclick={Callback::from(move |_| prestige_card_click.emit(()))}
+                    onkeydown={Callback::from(move |event: KeyboardEvent| {
+                        let key = event.key();
+                        if key == "Enter" || key == " " {
+                            event.prevent_default();
+                            prestige_card_keyboard.emit(());
+                        }
+                    })}
+                    aria-label="View prestige system"
+                >
                     <span class="stat-label">{ "Prestige Points" }</span>
                     <span class="stat-value">{ stats.prestige_points }</span>
                 </div>
@@ -1467,7 +1487,20 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
                     <span class="stat-label">{ "Game Speed" }</span>
                     <span class="stat-value">{ format!("{}x", stats.game_speed as u64) }</span>
                 </div>
-                <div class="stat-item">
+                <div
+                    class={classes!("stat-item", "clickable", "status-card")}
+                    role="button"
+                    tabindex={0}
+                    onclick={Callback::from(move |_| status_card_click.emit(()))}
+                    onkeydown={Callback::from(move |event: KeyboardEvent| {
+                        let key = event.key();
+                        if key == "Enter" || key == " " {
+                            event.prevent_default();
+                            status_card_keyboard.emit(());
+                        }
+                    })}
+                    aria-label="Manage game status and speed"
+                >
                     <span class="stat-label">{ "Status" }</span>
                     <span class="stat-value">{ if stats.is_paused { "Paused" } else { "Running" } }</span>
                 </div>

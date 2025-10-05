@@ -66,12 +66,13 @@ impl GalaxySystem {
             let planet_position =
                 self.generate_planet_position_in_system(position, i, planet_count);
             let planet = if Some(i) == guaranteed_terran_index {
-                self
-                    .planet_system
-                    .generate_planet_with_class(PlanetClass::Terran, planet_position, system_id)
+                self.planet_system.generate_planet_with_class(
+                    PlanetClass::Terran,
+                    planet_position,
+                    system_id,
+                )
             } else {
-                self
-                    .planet_system
+                self.planet_system
                     .generate_planet(planet_position, system_id)
             };
             planets.push(planet.id);
@@ -115,12 +116,13 @@ impl GalaxySystem {
             let planet_position =
                 self.generate_planet_position_in_system(position, i, planet_count);
             let planet = if Some(i) == guaranteed_terran_index {
-                self
-                    .planet_system
-                    .generate_planet_with_class(PlanetClass::Terran, planet_position, system_id)
+                self.planet_system.generate_planet_with_class(
+                    PlanetClass::Terran,
+                    planet_position,
+                    system_id,
+                )
             } else {
-                self
-                    .planet_system
+                self.planet_system
                     .generate_planet(planet_position, system_id)
             };
             planets.push(planet.id);

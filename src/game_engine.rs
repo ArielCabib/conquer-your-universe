@@ -707,8 +707,8 @@ impl GameEngine {
         self.game_state.explored_solar_systems.insert(system_id);
 
         // Conquer the guaranteed Terran planet (fallback to first planet if something goes wrong)
-        if let Some(terran_planet_id) = guaranteed_terran_planet_id
-            .or_else(|| self.game_state.planets.keys().next().copied())
+        if let Some(terran_planet_id) =
+            guaranteed_terran_planet_id.or_else(|| self.game_state.planets.keys().next().copied())
         {
             if let Some(planet) = self.game_state.planets.get_mut(&terran_planet_id) {
                 planet.state = PlanetState::Conquered;

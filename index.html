@@ -1287,6 +1287,24 @@
             border-radius: 8px;
         }
 
+        .stat-item.clickable {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-item.clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        .stat-item.prestige-card .stat-value {
+            color: var(--accent-prestige);
+        }
+
+        .stat-item.status-card .stat-value {
+            color: var(--accent-info);
+        }
+
         .stat-label {
             font-size: 12px;
             color: var(--text-muted);
@@ -1393,13 +1411,13 @@
         }
 
         .status-hint.unexplored {
-            background: var(--warning-soft-strong);
+            background: var(--warning-soft-weak);
             border-left: 4px solid var(--accent-warning-bright);
             color: var(--accent-warning-bright);
         }
 
         .status-hint.conquered {
-            background: var(--success-soft);
+            background: var(--success-soft-weak);
             border-left: 4px solid var(--accent-success);
             color: var(--accent-success);
         }
@@ -1839,8 +1857,9 @@
         }
 
         .prestige-btn.unavailable {
-            background: var(--button-disabled-bg);
-            color: var(--text-disabled);
+            background: var(--warning-soft-weak);
+            color: var(--accent-warning);
+            border: 1px solid var(--accent-warning);
             cursor: not-allowed;
         }
 
@@ -1856,6 +1875,65 @@
             color: var(--accent-warning);
             font-size: 11px;
             margin: 0;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--surface-strong);
+            border-radius: 12px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            border: 1px solid var(--border-overlay);
+        }
+
+        .modal-content.prestige-modal {
+            padding: 20px;
+        }
+
+        .modal-content.prestige-modal .prestige-system {
+            background: var(--surface-medium);
+            backdrop-filter: none;
+        }
+
+        .modal-content.status-modal {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-section h4 {
+            margin: 0 0 12px 0;
+            color: var(--accent-info);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-soft);
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-color);
         }
 
         /* Terraforming Project Styles */

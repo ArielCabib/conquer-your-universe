@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
+use web_sys::MouseEvent;
 use yew::prelude::*;
 
 // Import all our game modules
@@ -19,7 +20,6 @@ mod types;
 use components::*;
 use game_engine::GameEngine;
 use types::*;
-
 
 const TICKS_PER_SECOND: u32 = 10; // Base ticks per second
 
@@ -45,18 +45,19 @@ fn App() -> Html {
     let game_speed_clone = game_speed.clone();
 
     use_effect(move || {
-        let interval = gloo_timers::callback::Interval::new(1000 / TICKS_PER_SECOND as u32, move || {
-            if !*is_paused_clone {
-                let speed_multiplier = *game_speed_clone as u64;
+        let interval =
+            gloo_timers::callback::Interval::new(1000 / TICKS_PER_SECOND as u32, move || {
+                if !*is_paused_clone {
+                    let speed_multiplier = *game_speed_clone as u64;
 
-                // Run multiple updates based on speed multiplier
-                for _ in 0..speed_multiplier {
-                    game_engine_clone.borrow_mut().update();
+                    // Run multiple updates based on speed multiplier
+                    for _ in 0..speed_multiplier {
+                        game_engine_clone.borrow_mut().update();
+                    }
+
+                    game_tick_clone.set(*game_tick_clone + speed_multiplier);
                 }
-
-                game_tick_clone.set(*game_tick_clone + speed_multiplier);
-            }
-        });
+            });
 
         move || drop(interval)
     });
@@ -139,13 +140,26 @@ fn App() -> Html {
     };
 
     let selected_planet = use_state(|| None::<Planet>);
+    let show_prestige_modal = use_state(|| false);
+    let show_status_modal = use_state(|| false);
     let game_stats = {
         let stats = game_engine.borrow().get_game_statistics();
         let planet_count = game_engine.borrow().get_planet_count();
+        let on_prestige_card_click = {
+            let show_prestige_modal = show_prestige_modal.clone();
+            Callback::from(move |_| show_prestige_modal.set(true))
+        };
+        let on_status_card_click = {
+            let show_status_modal = show_status_modal.clone();
+            Callback::from(move |_| show_status_modal.set(true))
+        };
         html! {
-            <>
-                <GameStats stats={stats} planet_count={planet_count} />
-            </>
+            <GameStats
+                stats={stats}
+                planet_count={planet_count}
+                on_prestige_card_click={on_prestige_card_click}
+                on_status_card_click={on_status_card_click}
+            />
         }
     };
 
@@ -173,6 +187,20 @@ fn App() -> Html {
                 storage_limits={storage_limits}
             />
         }
+    };
+
+    let on_perform_prestige_modal = {
+        let game_engine = game_engine.clone();
+        let show_prestige_modal = show_prestige_modal.clone();
+        Callback::from(move |_| {
+            let success = game_engine.borrow_mut().perform_prestige();
+            if success {
+                log::info!("Successfully prestiged to new galaxy!");
+                show_prestige_modal.set(false);
+            } else {
+                log::warn!("Failed to prestige - requirements not met");
+            }
+        })
     };
 
     // Navigation callbacks
@@ -335,18 +363,6 @@ fn App() -> Html {
                     }
                 };
 
-                let on_perform_prestige = {
-                    let game_engine = game_engine.clone();
-                    move |_| {
-                        let success = game_engine.borrow_mut().perform_prestige();
-                        if success {
-                            log::info!("Successfully prestiged to new galaxy!");
-                        } else {
-                            log::warn!("Failed to prestige - requirements not met");
-                        }
-                    }
-                };
-
                 html! {
                     <div class="planet-view">
                         <div class="view-controls">
@@ -381,17 +397,6 @@ fn App() -> Html {
                                 planets={game_engine.borrow().game_state.planets.clone()}
                                 empire_resources={empire_resources.clone()}
                                 on_start_transport={Callback::from(on_start_transport)}
-                            />
-                            <PrestigeSystem
-                                current_prestige={game_engine.borrow().game_state.total_prestige_points}
-                                galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
-                                    &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
-                                    &game_engine.borrow().game_state.solar_systems,
-                                    &game_engine.borrow().game_state.planets,
-                                )}
-                                can_prestige={game_engine.borrow().check_prestige_eligibility()}
-                                prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
-                                on_perform_prestige={Callback::from(on_perform_prestige)}
                             />
                             <components::TerraformingProject
                                 planet={planet}
@@ -494,18 +499,6 @@ fn App() -> Html {
             }
         };
 
-        let on_perform_prestige = {
-            let game_engine = game_engine.clone();
-            move |_| {
-                let success = game_engine.borrow_mut().perform_prestige();
-                if success {
-                    log::info!("Successfully prestiged to new galaxy!");
-                } else {
-                    log::warn!("Failed to prestige - requirements not met");
-                }
-            }
-        };
-
         if let Some(planet) = planet {
             html! {
                 <>
@@ -527,17 +520,6 @@ fn App() -> Html {
                         planets={game_engine.borrow().game_state.planets.clone()}
                         empire_resources={empire_resources.clone()}
                         on_start_transport={Callback::from(on_start_transport)}
-                    />
-                    <PrestigeSystem
-                        current_prestige={game_engine.borrow().game_state.total_prestige_points}
-                        galaxy_conquest_progress={game_engine.borrow().galaxy_system.get_galaxy_conquest_progress(
-                            &game_engine.borrow().game_state.galaxies.get(&game_engine.borrow().game_state.current_galaxy).unwrap(),
-                            &game_engine.borrow().game_state.solar_systems,
-                            &game_engine.borrow().game_state.planets,
-                        )}
-                        can_prestige={game_engine.borrow().check_prestige_eligibility()}
-                        prestige_requirements={game_engine.borrow().prestige_system.calculate_prestige_requirements(game_engine.borrow().game_state.total_prestige_points)}
-                        on_perform_prestige={Callback::from(on_perform_prestige)}
                     />
                     <components::TerraformingProject
                         planet={planet}
@@ -630,6 +612,92 @@ fn App() -> Html {
         }
     };
 
+    let prestige_modal = {
+        if *show_prestige_modal {
+            let overlay_close = {
+                let show_prestige_modal = show_prestige_modal.clone();
+                Callback::from(move |_| show_prestige_modal.set(false))
+            };
+            let close_button_click = overlay_close.clone();
+            let modal_click = Callback::from(|event: MouseEvent| event.stop_propagation());
+            let (current_prestige, galaxy_conquest_progress, can_prestige, prestige_requirements) = {
+                let engine = game_engine.borrow();
+                let current_prestige = engine.game_state.total_prestige_points;
+                let current_galaxy_id = engine.game_state.current_galaxy;
+                let galaxy_conquest_progress = engine
+                    .game_state
+                    .galaxies
+                    .get(&current_galaxy_id)
+                    .map(|galaxy| {
+                        engine.galaxy_system.get_galaxy_conquest_progress(
+                            galaxy,
+                            &engine.game_state.solar_systems,
+                            &engine.game_state.planets,
+                        )
+                    })
+                    .unwrap_or(0.0);
+                let prestige_requirements = engine
+                    .prestige_system
+                    .calculate_prestige_requirements(current_prestige);
+                let can_prestige = engine.check_prestige_eligibility();
+                (
+                    current_prestige,
+                    galaxy_conquest_progress,
+                    can_prestige,
+                    prestige_requirements,
+                )
+            };
+
+            html! {
+                <div class="modal-overlay" onclick={overlay_close}>
+                    <div class="modal-content prestige-modal" onclick={modal_click}>
+                        <button class="modal-close" onclick={close_button_click} aria-label="Close prestige details">{ "×" }</button>
+                        <PrestigeSystem
+                            current_prestige={current_prestige}
+                            galaxy_conquest_progress={galaxy_conquest_progress}
+                            can_prestige={can_prestige}
+                            prestige_requirements={prestige_requirements}
+                            on_perform_prestige={on_perform_prestige_modal.clone()}
+                        />
+                    </div>
+                </div>
+            }
+        } else {
+            html! {}
+        }
+    };
+
+    let status_modal = {
+        if *show_status_modal {
+            let overlay_close = {
+                let show_status_modal = show_status_modal.clone();
+                Callback::from(move |_| show_status_modal.set(false))
+            };
+            let close_button_click = overlay_close.clone();
+            let modal_click = Callback::from(|event: MouseEvent| event.stop_propagation());
+
+            html! {
+                <div class="modal-overlay" onclick={overlay_close}>
+                    <div class="modal-content status-modal" onclick={modal_click}>
+                        <button class="modal-close" onclick={close_button_click} aria-label="Close game controls">{ "×" }</button>
+                        <div class="modal-section">
+                            <h4>{ "Game Speed" }</h4>
+                            { speed_controls.clone() }
+                        </div>
+                        <div class="modal-section">
+                            <h4>{ "Session" }</h4>
+                            <div class="session-controls">
+                                { pause_button.clone() }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        } else {
+            html! {}
+        }
+    };
+
     html! {
         <div class="game-container">
             <header class="game-header">
@@ -638,16 +706,6 @@ fn App() -> Html {
                     <p class="header-subtitle">{ "Galactic command console" }</p>
                 </div>
                 <div class="header-actions">
-                    <div class="control-stack">
-                        <span class="control-label">{ "Game Speed" }</span>
-                        { speed_controls }
-                    </div>
-                    <div class="control-stack">
-                        <span class="control-label">{ "Session" }</span>
-                        <div class="session-controls">
-                            { pause_button }
-                        </div>
-                    </div>
                     <div class="control-stack">
                         <span class="control-label">{ "Data" }</span>
                         <div class="save-load-controls">
@@ -666,7 +724,7 @@ fn App() -> Html {
                         <div>
                             { game_stats }
                         </div>
-        <div>
+                        <div>
                             { empire_resources }
                         </div>
                     </div>
@@ -676,6 +734,8 @@ fn App() -> Html {
                     </div>
                 </div>
             </main>
+            { prestige_modal }
+            { status_modal }
         </div>
     }
 }
