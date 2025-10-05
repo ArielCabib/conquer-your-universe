@@ -56,12 +56,24 @@ impl GalaxySystem {
         let planet_count = self.rng.gen_range(3..=8);
         let mut planets = Vec::new();
 
+        let guaranteed_terran_index = if system_index == 0 {
+            Some(self.rng.gen_range(0..planet_count))
+        } else {
+            None
+        };
+
         for i in 0..planet_count {
             let planet_position =
                 self.generate_planet_position_in_system(position, i, planet_count);
-            let planet = self
-                .planet_system
-                .generate_planet(planet_position, system_id);
+            let planet = if Some(i) == guaranteed_terran_index {
+                self
+                    .planet_system
+                    .generate_planet_with_class(PlanetClass::Terran, planet_position, system_id)
+            } else {
+                self
+                    .planet_system
+                    .generate_planet(planet_position, system_id)
+            };
             planets.push(planet.id);
         }
 
@@ -93,12 +105,24 @@ impl GalaxySystem {
         let mut planets = Vec::new();
         let mut planet_objects = Vec::new();
 
+        let guaranteed_terran_index = if system_index == 0 {
+            Some(self.rng.gen_range(0..planet_count))
+        } else {
+            None
+        };
+
         for i in 0..planet_count {
             let planet_position =
                 self.generate_planet_position_in_system(position, i, planet_count);
-            let planet = self
-                .planet_system
-                .generate_planet(planet_position, system_id);
+            let planet = if Some(i) == guaranteed_terran_index {
+                self
+                    .planet_system
+                    .generate_planet_with_class(PlanetClass::Terran, planet_position, system_id)
+            } else {
+                self
+                    .planet_system
+                    .generate_planet(planet_position, system_id)
+            };
             planets.push(planet.id);
             planet_objects.push(planet);
         }

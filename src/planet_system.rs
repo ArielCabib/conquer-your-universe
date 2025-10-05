@@ -22,10 +22,30 @@ impl PlanetSystem {
 
     /// Generate a new planet with random properties
     pub fn generate_planet(&mut self, position: (f64, f64), solar_system_id: u64) -> Planet {
+        let planet_class = self.generate_planet_class();
+        self.build_planet(planet_class, position, solar_system_id)
+    }
+
+    /// Generate a new planet with a specific class
+    pub fn generate_planet_with_class(
+        &mut self,
+        planet_class: PlanetClass,
+        position: (f64, f64),
+        solar_system_id: u64,
+    ) -> Planet {
+        self.build_planet(planet_class, position, solar_system_id)
+    }
+
+    /// Internal helper to construct a planet instance
+    fn build_planet(
+        &mut self,
+        planet_class: PlanetClass,
+        position: (f64, f64),
+        solar_system_id: u64,
+    ) -> Planet {
         let planet_id = self.planet_counter;
         self.planet_counter += 1;
 
-        let planet_class = self.generate_planet_class();
         let name = self.generate_planet_name();
         let resources = self.generate_planet_resources(&planet_class);
         let modifiers = self.generate_planet_modifiers(&planet_class);
