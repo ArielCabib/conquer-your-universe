@@ -141,7 +141,7 @@ fn App() -> Html {
 
     let selected_planet = use_state(|| None::<Planet>);
     let show_prestige_modal = use_state(|| false);
-    let show_status_modal = use_state(|| false);
+    let show_controls_modal = use_state(|| false);
     let game_stats = {
         let stats = game_engine.borrow().get_game_statistics();
         let planet_count = game_engine.borrow().get_planet_count();
@@ -149,15 +149,20 @@ fn App() -> Html {
             let show_prestige_modal = show_prestige_modal.clone();
             Callback::from(move |_| show_prestige_modal.set(true))
         };
+        let on_speed_card_click = {
+            let show_controls_modal = show_controls_modal.clone();
+            Callback::from(move |_| show_controls_modal.set(true))
+        };
         let on_status_card_click = {
-            let show_status_modal = show_status_modal.clone();
-            Callback::from(move |_| show_status_modal.set(true))
+            let show_controls_modal = show_controls_modal.clone();
+            Callback::from(move |_| show_controls_modal.set(true))
         };
         html! {
             <GameStats
                 stats={stats}
                 planet_count={planet_count}
                 on_prestige_card_click={on_prestige_card_click}
+                on_speed_card_click={on_speed_card_click}
                 on_status_card_click={on_status_card_click}
             />
         }
@@ -667,11 +672,11 @@ fn App() -> Html {
         }
     };
 
-    let status_modal = {
-        if *show_status_modal {
+    let controls_modal = {
+        if *show_controls_modal {
             let overlay_close = {
-                let show_status_modal = show_status_modal.clone();
-                Callback::from(move |_| show_status_modal.set(false))
+                let show_controls_modal = show_controls_modal.clone();
+                Callback::from(move |_| show_controls_modal.set(false))
             };
             let close_button_click = overlay_close.clone();
             let modal_click = Callback::from(|event: MouseEvent| event.stop_propagation());
@@ -735,7 +740,7 @@ fn App() -> Html {
                 </div>
             </main>
             { prestige_modal }
-            { status_modal }
+            { controls_modal }
         </div>
     }
 }

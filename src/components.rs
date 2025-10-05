@@ -1435,6 +1435,7 @@ pub struct GameStatsProps {
     pub stats: GameStatistics,
     pub planet_count: usize,
     pub on_prestige_card_click: Callback<()>,
+    pub on_speed_card_click: Callback<()>,
     pub on_status_card_click: Callback<()>,
 }
 
@@ -1443,6 +1444,8 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
     let stats = &props.stats;
     let prestige_card_click = props.on_prestige_card_click.clone();
     let prestige_card_keyboard = prestige_card_click.clone();
+    let speed_card_click = props.on_speed_card_click.clone();
+    let speed_card_keyboard = speed_card_click.clone();
     let status_card_click = props.on_status_card_click.clone();
     let status_card_keyboard = status_card_click.clone();
 
@@ -1483,7 +1486,20 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
                     <span class="stat-label">{ "Prestige Points" }</span>
                     <span class="stat-value">{ stats.prestige_points }</span>
                 </div>
-                <div class="stat-item">
+                <div
+                    class={classes!("stat-item", "clickable", "speed-card")}
+                    role="button"
+                    tabindex={0}
+                    onclick={Callback::from(move |_| speed_card_click.emit(()))}
+                    onkeydown={Callback::from(move |event: KeyboardEvent| {
+                        let key = event.key();
+                        if key == "Enter" || key == " " {
+                            event.prevent_default();
+                            speed_card_keyboard.emit(());
+                        }
+                    })}
+                    aria-label="Adjust game speed"
+                >
                     <span class="stat-label">{ "Game Speed" }</span>
                     <span class="stat-value">{ format!("{}x", stats.game_speed as u64) }</span>
                 </div>
