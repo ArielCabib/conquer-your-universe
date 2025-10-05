@@ -207,16 +207,18 @@
         button.reset-btn {
             padding: 8px 16px;
             border-radius: 12px;
-            background: var(--danger-soft);
-            color: var(--accent-danger);
+            background: var(--accent-danger);
+            color: var(--button-on-danger);
             font-weight: 600;
             font-size: 0.85rem;
-            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 0 0 2px var(--danger-soft);
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
         }
 
         button.reset-btn:hover {
             background: var(--danger-soft-hover);
-            color: var(--button-on-danger);
+            color: var(--surface-inverse);
+            box-shadow: 0 0 0 2px var(--accent-danger);
             transform: translateY(-1px);
         }
 
@@ -903,20 +905,37 @@
 
         .planet-class-badge,
         .planet-state-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface-inverse);
+            color: var(--surface-medium);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .planet-class-badge::before,
+        .planet-state-badge::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
         }
 
         .planet-class-badge {
-            background: var(--success-soft);
-            color: var(--accent-success);
+            background: var(--accent-info);
+            color: var(--surface-inverse);
         }
 
         .planet-state-badge {
-            background: var(--warning-soft);
-            color: var(--accent-warning);
+            background: var(--accent-warning);
+            color: var(--surface-inverse);
         }
 
         .planet-info-grid {
@@ -980,7 +999,10 @@
         }
 
         .modifier-value.negative {
-            color: var(--modifier-negative);
+            color: var(--accent-warning);
+            background: rgba(242, 167, 160, 0.12);
+            padding: 2px 8px;
+            border-radius: 999px;
         }
 
         .modifier-value.neutral {
