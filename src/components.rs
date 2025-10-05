@@ -668,7 +668,7 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
                                     <div class="capacity-fill" style={format!("width: {:.1}%", capacity_percentage)}></div>
                                 </div>
                                 <div class="resource-generation">
-                                    { format!("+{}/tick", generation) }
+                                    { format!("+{}/sec", generation) }
                                 </div>
                             </div>
                         </div>
