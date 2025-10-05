@@ -20,17 +20,17 @@ jobs:
     - name: Cache cargo
       uses: Swatinem/rust-cache@v2
 
-    # - name: Install trunk
-    #   run: cargo install trunk
+    - name: Install trunk
+      run: cargo install trunk
 
-    # - name: Build with trunk
-    #   run: trunk build --release
+    - name: Build with trunk
+      run: trunk build --release
 
-    - name: test
-      run: |
-        mkdir dist
-        touch dist/index.html
-        echo "Test passed" > dist/index.html
+    # - name: test
+    #   run: |
+    #     mkdir dist
+    #     touch dist/index.html
+    #     echo "Test passed" > dist/index.html
 
     - name: Deploy to Cloudflare Pages
       uses: cloudflare/wrangler-action@v3
