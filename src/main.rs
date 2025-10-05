@@ -20,6 +20,9 @@ use components::*;
 use game_engine::GameEngine;
 use types::*;
 
+
+const TICKS_PER_SECOND: u32 = 10; // Base ticks per second
+
 #[function_component]
 fn App() -> Html {
     let game_engine = use_state(|| {
@@ -42,7 +45,7 @@ fn App() -> Html {
     let game_speed_clone = game_speed.clone();
 
     use_effect(move || {
-        let interval = gloo_timers::callback::Interval::new(100, move || {
+        let interval = gloo_timers::callback::Interval::new(1000 / TICKS_PER_SECOND as u32, move || {
             if !*is_paused_clone {
                 let speed_multiplier = *game_speed_clone as u64;
 

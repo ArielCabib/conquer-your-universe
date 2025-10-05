@@ -5,6 +5,7 @@ use crate::resource_system::ResourceSystem;
 use crate::supply_chain::SupplyChainSystem;
 use crate::transport_system::TransportSystem;
 use crate::types::*;
+use crate::TICKS_PER_SECOND;
 use chrono;
 use std::collections::{HashMap, HashSet};
 use wasm_bindgen::JsCast;
@@ -169,15 +170,15 @@ impl GameEngine {
         let speed_multiplier = self.game_state.game_speed as u64;
 
         // Update all systems
-        self.update_resource_generation();
         self.update_factories();
         self.update_transport();
         self.update_terraforming();
         self.update_conquest();
         self.update_exploration();
 
-        // Auto-save every second (assuming 60 ticks per second)
-        if self.game_state.current_tick % 60 == 0 {
+        // Every second
+        if self.game_state.current_tick % TICKS_PER_SECOND as u64 == 0 {
+            self.update_resource_generation();
             self.auto_save();
         }
 

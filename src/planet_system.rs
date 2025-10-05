@@ -92,74 +92,74 @@ impl PlanetSystem {
 
         match planet_class {
             PlanetClass::Barren => {
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(50..200));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(10..50));
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(50..200) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(10..50) / 10);
                 resources.insert(ResourceType::Population, 0);
-                resources.insert(ResourceType::Technology, self.rng.gen_range(5..30));
+                resources.insert(ResourceType::Technology, self.rng.gen_range(5..30) / 10);
                 resources.insert(ResourceType::Food, 0);
             }
             PlanetClass::Terran => {
-                resources.insert(ResourceType::Population, self.rng.gen_range(100..500));
-                resources.insert(ResourceType::Food, self.rng.gen_range(80..300));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(20..100));
-                resources.insert(ResourceType::Technology, self.rng.gen_range(10..80));
+                resources.insert(ResourceType::Population, self.rng.gen_range(100..500) / 10);
+                resources.insert(ResourceType::Food, self.rng.gen_range(80..300) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(20..100) / 10);
+                resources.insert(ResourceType::Technology, self.rng.gen_range(10..80) / 10);
             }
             PlanetClass::GasGiant => {
-                resources.insert(ResourceType::Energy, self.rng.gen_range(200..800));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(10..50));
+                resources.insert(ResourceType::Energy, self.rng.gen_range(200..800) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(10..50) / 10);
                 resources.insert(ResourceType::Population, 0);
-                resources.insert(ResourceType::Technology, self.rng.gen_range(5..20));
+                resources.insert(ResourceType::Technology, self.rng.gen_range(5..20) / 10);
                 resources.insert(ResourceType::Food, 0);
             }
             PlanetClass::Ocean => {
-                resources.insert(ResourceType::Food, self.rng.gen_range(150..600));
-                resources.insert(ResourceType::Population, self.rng.gen_range(50..300));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(20..100));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(30..120));
-                resources.insert(ResourceType::Technology, self.rng.gen_range(5..40));
+                resources.insert(ResourceType::Food, self.rng.gen_range(150..600) / 10);
+                resources.insert(ResourceType::Population, self.rng.gen_range(50..300) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(20..100) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(30..120) / 10);
+                resources.insert(ResourceType::Technology, self.rng.gen_range(5..40) / 10);
             }
             PlanetClass::Desert => {
-                resources.insert(ResourceType::Energy, self.rng.gen_range(100..400));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(40..200));
-                resources.insert(ResourceType::Population, self.rng.gen_range(10..80));
-                resources.insert(ResourceType::Technology, self.rng.gen_range(15..60));
-                resources.insert(ResourceType::Food, self.rng.gen_range(5..30));
+                resources.insert(ResourceType::Energy, self.rng.gen_range(100..400) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(40..200) / 10);
+                resources.insert(ResourceType::Population, self.rng.gen_range(10..80) / 10);
+                resources.insert(ResourceType::Technology, self.rng.gen_range(15..60) / 10);
+                resources.insert(ResourceType::Food, self.rng.gen_range(5..30) / 10);
             }
             PlanetClass::Ice => {
-                resources.insert(ResourceType::Technology, self.rng.gen_range(50..200));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150));
-                resources.insert(ResourceType::Population, self.rng.gen_range(5..50));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(10..60));
-                resources.insert(ResourceType::Food, self.rng.gen_range(5..40));
+                resources.insert(ResourceType::Technology, self.rng.gen_range(50..200) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(30..150) / 10);
+                resources.insert(ResourceType::Population, self.rng.gen_range(5..50) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(10..60) / 10);
+                resources.insert(ResourceType::Food, self.rng.gen_range(5..40) / 10);
             }
             PlanetClass::Volcanic => {
-                resources.insert(ResourceType::Energy, self.rng.gen_range(150..600));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(80..300));
+                resources.insert(ResourceType::Energy, self.rng.gen_range(150..600) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(80..300) / 10);
                 resources.insert(ResourceType::Population, 0);
-                resources.insert(ResourceType::Technology, self.rng.gen_range(10..50));
+                resources.insert(ResourceType::Technology, self.rng.gen_range(10..50) / 10);
                 resources.insert(ResourceType::Food, 0);
             }
             PlanetClass::Toxic => {
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(100..400));
-                resources.insert(ResourceType::Technology, self.rng.gen_range(20..100));
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(100..400) / 10);
+                resources.insert(ResourceType::Technology, self.rng.gen_range(20..100) / 10);
                 resources.insert(ResourceType::Population, 0);
-                resources.insert(ResourceType::Energy, self.rng.gen_range(30..150));
+                resources.insert(ResourceType::Energy, self.rng.gen_range(30..150) / 10);
                 resources.insert(ResourceType::Food, 0);
             }
             PlanetClass::Crystalline => {
-                resources.insert(ResourceType::Technology, self.rng.gen_range(100..500));
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(200..800));
-                resources.insert(ResourceType::Population, self.rng.gen_range(10..100));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(50..200));
-                resources.insert(ResourceType::Food, self.rng.gen_range(5..50));
+                resources.insert(ResourceType::Technology, self.rng.gen_range(100..500) / 10);
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(200..800) / 10);
+                resources.insert(ResourceType::Population, self.rng.gen_range(10..100) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(50..200) / 10);
+                resources.insert(ResourceType::Food, self.rng.gen_range(5..50) / 10);
             }
             PlanetClass::Metallic => {
-                resources.insert(ResourceType::Minerals, self.rng.gen_range(300..1000));
-                resources.insert(ResourceType::Technology, self.rng.gen_range(50..250));
-                resources.insert(ResourceType::Energy, self.rng.gen_range(40..180));
-                resources.insert(ResourceType::Population, self.rng.gen_range(20..150));
-                resources.insert(ResourceType::Food, self.rng.gen_range(10..80));
+                resources.insert(ResourceType::Minerals, self.rng.gen_range(300..1000) / 10);
+                resources.insert(ResourceType::Technology, self.rng.gen_range(50..250) / 10);
+                resources.insert(ResourceType::Energy, self.rng.gen_range(40..180) / 10);
+                resources.insert(ResourceType::Population, self.rng.gen_range(20..150) / 10);
+                resources.insert(ResourceType::Food, self.rng.gen_range(10..80) / 10);
             }
         }
 
