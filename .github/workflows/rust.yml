@@ -26,13 +26,17 @@ jobs:
     # - name: Build with trunk
     #   run: trunk build --release
 
+    - name: test
+      run: |
+        mkdir dist
+        touch dist/index.html
+        echo "Test passed" > dist/index.html
+
     - name: Deploy to Cloudflare Pages
       uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: |
-          ls -la
-          pages deploy --commit-dirty=true
+        command: pages deploy --commit-dirty=true
         wranglerVersion: "4.42.0"
     
