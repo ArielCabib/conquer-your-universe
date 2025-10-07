@@ -62,6 +62,7 @@ impl PlanetSystem {
             storage: HashMap::new(),
             position,
             solar_system_id,
+            population_cohorts: Vec::new(),
         }
     }
 
@@ -461,6 +462,7 @@ impl PlanetSystem {
             production_queue: Vec::new(),
             efficiency: 1.0,
             is_active: true,
+            level: 1,
         };
 
         planet.buildings.push(building);

@@ -7,6 +7,7 @@ use crate::transport_system::TransportSystem;
 use crate::types::*;
 use crate::TICKS_PER_SECOND;
 use chrono;
+use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
@@ -150,6 +151,7 @@ impl GameEngine {
             *amount = 0;
         }
         planet.storage.clear();
+        planet.population_cohorts.clear();
     }
 
     /// Initialize starting empire resources
@@ -283,6 +285,8 @@ impl GameEngine {
 
     /// Update resource generation across all conquered planets
     fn update_resource_generation(&mut self) {
+        self.update_population_dynamics();
+
         let conquered_planets: Vec<u64> = self
             .game_state
             .planets
@@ -374,6 +378,200 @@ impl GameEngine {
         }
 
         self.game_state.last_resource_generation = tick_generation;
+    }
+
+    /// Handle population growth, food consumption, and natural death each second.
+    fn update_population_dynamics(&mut self) {
+        let current_tick = self.game_state.current_tick;
+        let tick_rate = TICKS_PER_SECOND as u64;
+        let planet_ids: Vec<u64> = self.game_state.planets.keys().copied().collect();
+
+        for planet_id in planet_ids {
+            if let Some(mut planet) = self.game_state.planets.remove(&planet_id) {
+                Self::expire_population_cohorts(&mut planet, current_tick);
+
+                if planet.state == PlanetState::Conquered {
+                    let housing_units = planet.housing_units();
+                    let population_capacity = planet.population_capacity();
+
+                    let current_population = planet
+                        .resources
+                        .get(&ResourceType::Population)
+                        .copied()
+                        .unwrap_or(0);
+
+                    if population_capacity > 0 && current_population > population_capacity {
+                        let overflow = current_population - population_capacity;
+                        Self::remove_population_from_planet(&mut planet, overflow);
+                    }
+
+                    let current_population = planet
+                        .resources
+                        .get(&ResourceType::Population)
+                        .copied()
+                        .unwrap_or(0);
+
+                    if housing_units == 0 || population_capacity == 0 {
+                        if current_population > 0 {
+                            let loss = (current_population / 2)
+                                .max(STARVATION_MIN_LOSS)
+                                .min(current_population);
+                            if loss > 0 {
+                                Self::remove_population_from_planet(&mut planet, loss);
+                            }
+                        }
+                    } else {
+                        let food_required = housing_units * HOUSING_FOOD_UPKEEP_PER_LEVEL;
+                        let mut food_consumed = 0;
+
+                        if let Some(storage_food) = planet.storage.get_mut(&ResourceType::Food) {
+                            let consumed = food_required.min(*storage_food);
+                            *storage_food -= consumed;
+                            food_consumed += consumed;
+                        }
+
+                        if food_consumed < food_required {
+                            let remaining = food_required - food_consumed;
+                            let consumed_empire =
+                                self.consume_from_empire(ResourceType::Food, remaining);
+                            food_consumed += consumed_empire;
+                        }
+
+                        if food_consumed < food_required {
+                            let current_population = planet
+                                .resources
+                                .get(&ResourceType::Population)
+                                .copied()
+                                .unwrap_or(0);
+                            if current_population > 0 {
+                                let shortage = food_required - food_consumed;
+                                let mut loss =
+                                    ((current_population as f64) * STARVATION_LOSS_FRACTION) as u64;
+                                let shortage_loss =
+                                    STARVATION_MIN_LOSS.saturating_mul(shortage.max(1));
+                                loss = loss.max(shortage_loss).min(current_population);
+                                if loss > 0 {
+                                    Self::remove_population_from_planet(&mut planet, loss);
+                                }
+                            }
+                        } else {
+                            let current_population = planet
+                                .resources
+                                .get(&ResourceType::Population)
+                                .copied()
+                                .unwrap_or(0);
+                            let available_capacity =
+                                population_capacity.saturating_sub(current_population);
+                            if available_capacity > 0 {
+                                let births = (housing_units * HOUSING_PRODUCTION_PER_LEVEL)
+                                    .min(available_capacity);
+                                if births > 0 {
+                                    Self::add_population_cohort(
+                                        &mut planet,
+                                        births,
+                                        current_tick,
+                                        tick_rate,
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
+                self.game_state.planets.insert(planet_id, planet);
+            }
+        }
+    }
+
+    fn consume_from_empire(&mut self, resource_type: ResourceType, amount: u64) -> u64 {
+        if amount == 0 {
+            return 0;
+        }
+
+        if let Some(entry) = self.game_state.empire_resources.get_mut(&resource_type) {
+            let consumed = amount.min(*entry);
+            *entry -= consumed;
+            consumed
+        } else {
+            0
+        }
+    }
+
+    fn add_population_cohort(planet: &mut Planet, births: u64, current_tick: u64, tick_rate: u64) {
+        if births == 0 {
+            return;
+        }
+
+        let lifespan_seconds = if POPULATION_MAX_LIFESPAN_SECONDS > POPULATION_MIN_LIFESPAN_SECONDS
+        {
+            rand::thread_rng()
+                .gen_range(POPULATION_MIN_LIFESPAN_SECONDS..=POPULATION_MAX_LIFESPAN_SECONDS)
+        } else {
+            POPULATION_MIN_LIFESPAN_SECONDS
+        };
+        let death_tick = current_tick + lifespan_seconds * tick_rate;
+
+        let entry = planet
+            .resources
+            .entry(ResourceType::Population)
+            .or_insert(0);
+        *entry += births;
+
+        planet.population_cohorts.push(PopulationCohort {
+            amount: births,
+            death_tick,
+        });
+        planet
+            .population_cohorts
+            .sort_by_key(|cohort| cohort.death_tick);
+    }
+
+    fn expire_population_cohorts(planet: &mut Planet, current_tick: u64) {
+        let mut expired_total = 0;
+        planet.population_cohorts.retain(|cohort| {
+            if cohort.death_tick <= current_tick {
+                expired_total += cohort.amount;
+                false
+            } else {
+                true
+            }
+        });
+
+        if expired_total > 0 {
+            if let Some(pop) = planet.resources.get_mut(&ResourceType::Population) {
+                *pop = pop.saturating_sub(expired_total);
+            }
+        }
+    }
+
+    fn remove_population_from_planet(planet: &mut Planet, amount: u64) -> u64 {
+        if amount == 0 {
+            return 0;
+        }
+
+        if let Some(pop) = planet.resources.get_mut(&ResourceType::Population) {
+            *pop = pop.saturating_sub(amount);
+        }
+
+        let mut remaining = amount;
+        planet
+            .population_cohorts
+            .sort_by_key(|cohort| cohort.death_tick);
+        for cohort in planet.population_cohorts.iter_mut() {
+            if remaining == 0 {
+                break;
+            }
+            if cohort.amount > remaining {
+                cohort.amount -= remaining;
+                remaining = 0;
+            } else {
+                remaining -= cohort.amount;
+                cohort.amount = 0;
+            }
+        }
+        planet.population_cohorts.retain(|cohort| cohort.amount > 0);
+
+        amount.saturating_sub(remaining)
     }
 
     /// Update building production
@@ -575,9 +773,23 @@ impl GameEngine {
 
     /// Add building to a planet
     pub fn add_building(&mut self, planet_id: u64, building_type: BuildingType) -> Option<u64> {
+        let housing_units = if let Some(planet) = self.game_state.planets.get(&planet_id) {
+            planet.housing_units()
+        } else {
+            return None;
+        };
+
+        let cost = building_cost(building_type, housing_units);
+        if !self.can_afford_cost(&cost) {
+            return None;
+        }
+
+        self.deduct_cost(&cost);
+
         if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
             Some(self.planet_system.add_building(planet, building_type))
         } else {
+            self.refund_cost(&cost);
             None
         }
     }
@@ -609,6 +821,35 @@ impl GameEngine {
             true
         } else {
             false
+        }
+    }
+
+    fn can_afford_cost(&self, cost: &HashMap<ResourceType, u64>) -> bool {
+        cost.iter().all(|(resource_type, amount)| {
+            self.game_state
+                .empire_resources
+                .get(resource_type)
+                .copied()
+                .unwrap_or(0)
+                >= *amount
+        })
+    }
+
+    fn deduct_cost(&mut self, cost: &HashMap<ResourceType, u64>) {
+        for (resource_type, amount) in cost {
+            if let Some(entry) = self.game_state.empire_resources.get_mut(resource_type) {
+                *entry = entry.saturating_sub(*amount);
+            }
+        }
+    }
+
+    fn refund_cost(&mut self, cost: &HashMap<ResourceType, u64>) {
+        for (resource_type, amount) in cost {
+            *self
+                .game_state
+                .empire_resources
+                .entry(*resource_type)
+                .or_insert(0) += *amount;
         }
     }
 

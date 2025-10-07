@@ -288,6 +288,14 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let mut planet_resources: Vec<_> = planet.resources.iter().collect();
     planet_resources.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
 
+    let population_cap = planet.population_capacity();
+    let current_population = planet
+        .resources
+        .get(&ResourceType::Population)
+        .copied()
+        .unwrap_or(0);
+    let housing_units = planet.housing_units();
+
     let is_editing_name = use_state(|| false);
     let name_input = use_state(|| planet.name.clone());
     let name_input_ref = use_node_ref();
@@ -416,9 +424,9 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                 <span class="planet-state-badge">{ format!("{:?}", planet.state) }</span>
             </div>
 
-            <div class="planet-info-grid">
-                <div class="info-section">
-                    <h3>{ "Resources" }</h3>
+                    <div class="planet-info-grid">
+                        <div class="info-section">
+                            <h3>{ "Resources" }</h3>
                     <div class="resources-grid">
                         { for planet_resources.into_iter().map(|(resource_type, amount)| {
                             let resource_type_value = *resource_type;
@@ -468,6 +476,13 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                                 }
                             }
                         })}
+                    </div>
+
+                    <div class="info-section">
+                        <h3>{ "Population" }</h3>
+                        <p>{ format!("Population: {} / {}", current_population, population_cap) }</p>
+                        <p>{ format!("Housing Units: {}", housing_units) }</p>
+                        <p>{ format!("Food Upkeep: {} / sec", housing_units * HOUSING_FOOD_UPKEEP_PER_LEVEL) }</p>
                     </div>
                 </div>
 
@@ -660,7 +675,6 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
     if let Some(planet) = &props.planet {
         let planet_id = planet.id;
         let on_terraform = props.on_terraform.clone();
-        let on_add_building = props.on_add_building.clone();
 
         html! {
             <div class="planet-panel">
@@ -719,6 +733,30 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                     </div>
 
                     { if planet.state == PlanetState::Conquered {
+                        let housing_button = {
+                            let on_add_building = props.on_add_building.clone();
+                            let planet_id = planet_id;
+                            html! {
+                                <button
+                                    onclick={Callback::from(move |_| on_add_building.emit((planet_id, BuildingType::Housing)))}
+                                    class="action-btn"
+                                >
+                                    { "Build Housing" }
+                                </button>
+                            }
+                        };
+                        let factory_button = {
+                            let on_add_building = props.on_add_building.clone();
+                            let planet_id = planet_id;
+                            html! {
+                                <button
+                                    onclick={Callback::from(move |_| on_add_building.emit((planet_id, BuildingType::BasicManufacturing)))}
+                                    class="action-btn secondary"
+                                >
+                                    { "Build Factory" }
+                                </button>
+                            }
+                        };
                         html! {
                             <div class="planet-actions">
                                 <div class="action-section">
@@ -751,13 +789,21 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                                                 <div class="building">
                                                     <div class="building-type">{ format!("{:?}", building.building_type) }</div>
                                                     <div class="building-status">{ if building.is_active { "Active" } else { "Inactive" } }</div>
+                                                    {
+                                                        if building.building_type == BuildingType::Housing {
+                                                            html! { <div class="building-level">{ format!("Level {}", building.level) }</div> }
+                                                        } else {
+                                                            html! {}
+                                                        }
+                                                    }
                                                 </div>
                                             }
                                         }) }
                                     </div>
-                                    <button onclick={move |_| on_add_building.emit((planet_id, BuildingType::BasicManufacturing))} class="action-btn">
-                                        { "Add Building" }
-                                    </button>
+                                    <div class="building-buttons">
+                                        { housing_button }
+                                        { factory_button }
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -872,15 +918,24 @@ pub struct BuildingManagementProps {
     pub on_add_building: Callback<(u64, BuildingType)>,
 }
 
-// Static building costs to prevent re-calculation
-lazy_static::lazy_static! {
-    static ref BUILDING_COSTS: HashMap<BuildingType, HashMap<ResourceType, u64>> = get_building_costs();
-}
-
 #[function_component]
 pub fn BuildingManagement(props: &BuildingManagementProps) -> Html {
     if let Some(planet) = &props.planet {
         if planet.state == PlanetState::Conquered {
+            let building_types = [
+                BuildingType::Housing,
+                BuildingType::Farming,
+                BuildingType::PowerPlant,
+                BuildingType::Mining,
+                BuildingType::BasicManufacturing,
+                BuildingType::AdvancedManufacturing,
+                BuildingType::Electronics,
+                BuildingType::Pharmaceuticals,
+                BuildingType::Research,
+                BuildingType::Shipyard,
+                BuildingType::Weapons,
+                BuildingType::Observatory,
+            ];
             html! {
                 <div class="building-management">
                     <h4>{ "Building Management" }</h4>
@@ -913,7 +968,8 @@ pub fn BuildingManagement(props: &BuildingManagementProps) -> Html {
                     <div class="build-buildings">
                         <h5>{ "Build New Building" }</h5>
                         <div class="building-options">
-                            { for BUILDING_COSTS.iter().map(|(building_type, cost)| {
+                            { for building_types.iter().map(|building_type| {
+                                let cost = building_cost(*building_type, planet.housing_units());
                                 let can_afford = cost.iter().all(|(resource_type, required)| {
                                     planet.resources.get(resource_type).copied().unwrap_or(0) >= *required
                                 });
@@ -963,75 +1019,6 @@ pub fn BuildingManagement(props: &BuildingManagementProps) -> Html {
     } else {
         html! {}
     }
-}
-
-/// Get building costs for different building types
-fn get_building_costs() -> HashMap<BuildingType, HashMap<ResourceType, u64>> {
-    let mut costs = HashMap::new();
-
-    // Basic Manufacturing
-    let mut basic_manufacturing = HashMap::new();
-    basic_manufacturing.insert(ResourceType::Energy, 200);
-    basic_manufacturing.insert(ResourceType::Minerals, 100);
-    basic_manufacturing.insert(ResourceType::Population, 50);
-    costs.insert(BuildingType::BasicManufacturing, basic_manufacturing);
-
-    // Housing
-    let mut housing = HashMap::new();
-    housing.insert(ResourceType::Energy, 150);
-    housing.insert(ResourceType::Minerals, 75);
-    housing.insert(ResourceType::Food, 100);
-    costs.insert(BuildingType::Housing, housing);
-
-    // Advanced Manufacturing
-    let mut advanced_manufacturing = HashMap::new();
-    advanced_manufacturing.insert(ResourceType::Energy, 500);
-    advanced_manufacturing.insert(ResourceType::Minerals, 300);
-    advanced_manufacturing.insert(ResourceType::Population, 100);
-    advanced_manufacturing.insert(ResourceType::Technology, 50);
-    costs.insert(BuildingType::AdvancedManufacturing, advanced_manufacturing);
-
-    // Electronics
-    let mut electronics = HashMap::new();
-    electronics.insert(ResourceType::Energy, 300);
-    electronics.insert(ResourceType::Minerals, 200);
-    electronics.insert(ResourceType::Population, 75);
-    electronics.insert(ResourceType::Technology, 100);
-    costs.insert(BuildingType::Electronics, electronics);
-
-    // Pharmaceuticals
-    let mut pharmaceuticals = HashMap::new();
-    pharmaceuticals.insert(ResourceType::Energy, 250);
-    pharmaceuticals.insert(ResourceType::Minerals, 150);
-    pharmaceuticals.insert(ResourceType::Population, 60);
-    pharmaceuticals.insert(ResourceType::Technology, 80);
-    costs.insert(BuildingType::Pharmaceuticals, pharmaceuticals);
-
-    // Research Facility
-    let mut research_facility = HashMap::new();
-    research_facility.insert(ResourceType::Energy, 300);
-    research_facility.insert(ResourceType::Minerals, 200);
-    research_facility.insert(ResourceType::Population, 100);
-    research_facility.insert(ResourceType::Technology, 100);
-    costs.insert(BuildingType::Research, research_facility);
-
-    // Shipyard
-    let mut shipyard = HashMap::new();
-    shipyard.insert(ResourceType::Energy, 800);
-    shipyard.insert(ResourceType::Minerals, 600);
-    shipyard.insert(ResourceType::Population, 200);
-    shipyard.insert(ResourceType::Technology, 150);
-    costs.insert(BuildingType::Shipyard, shipyard);
-
-    // Weapons
-    let mut weapons = HashMap::new();
-    weapons.insert(ResourceType::Energy, 400);
-    weapons.insert(ResourceType::Minerals, 500);
-    weapons.insert(ResourceType::Population, 150);
-    weapons.insert(ResourceType::Technology, 200);
-    costs.insert(BuildingType::Weapons, weapons);
-
-    costs
 }
 
 /// Transport system component

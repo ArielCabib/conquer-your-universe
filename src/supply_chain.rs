@@ -417,6 +417,24 @@ impl SupplyChainSystem {
     ) -> f64 {
         let mut efficiency = 1.0;
 
+        let population_capacity = planet.population_capacity();
+        if population_capacity == 0 {
+            return 0.0;
+        }
+
+        let current_population = planet
+            .resources
+            .get(&ResourceType::Population)
+            .copied()
+            .unwrap_or(0);
+        if current_population == 0 {
+            return 0.0;
+        }
+
+        let workforce_factor =
+            (current_population as f64 / population_capacity as f64).clamp(0.0, 1.0);
+        efficiency *= workforce_factor.max(0.05);
+
         for modifier in &planet.modifiers {
             match modifier.modifier_type {
                 ModifierType::ManufacturingBonus => {
