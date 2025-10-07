@@ -1,4 +1,6 @@
+use gloo::storage::{LocalStorage, Storage};
 use gloo_timers::callback::Interval;
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use yew::{events::MouseEvent, prelude::*};
@@ -14,19 +16,38 @@ const PLANET_RADIUS: f64 = 200.0;
 const PLANET_CENTER_X: f64 = 300.0;
 const PLANET_CENTER_Y: f64 = 200.0;
 const SETTLER_RADIUS: f64 = 10.0;
-const SETTLER_LIFESPAN_MS: f64 = 5_000.0;
 const MOVE_INTERVAL_MS: f64 = 1_000.0;
 const MOVE_DISTANCE_MIN: f64 = 12.0;
 const MOVE_DISTANCE_MAX: f64 = 45.0;
 const FADING_DURATION_MS: f64 = 600.0;
+const STORAGE_KEY: &str = "conquer-your-universe::game_state";
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Serialize, Deserialize)]
+struct GameState {
+    settlers: Vec<SettlerState>,
+    next_settler_id: u64,
+    settler_min_lifespan_ms: f64,
+    settler_max_lifespan_ms: f64,
+}
+
+impl GameState {
+    fn new() -> Self {
+        Self {
+            settlers: Vec::new(),
+            next_settler_id: 0,
+            settler_min_lifespan_ms: 5_000.0,
+            settler_max_lifespan_ms: 10_000.0,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 enum SettlerPhase {
     Alive,
     Fading { started_ms: f64 },
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 struct SettlerState {
     id: u64,
     anchor_x: f64,
@@ -105,14 +126,33 @@ fn random_target_near(x: f64, y: f64) -> (f64, f64) {
 
 #[function_component]
 fn App() -> Html {
-    let settlers = use_mut_ref(|| Vec::<SettlerState>::new());
-    let next_id = use_state(|| 0_u64);
+    let game_state = use_mut_ref(GameState::new);
     let alive_count = use_state(|| 0_usize);
     let canvas_ref = use_node_ref();
 
     {
+        let game_state = game_state.clone();
+
+        use_effect_with((), move |_| {
+            match LocalStorage::get::<GameState>(STORAGE_KEY) {
+                Ok(stored_state) => {
+                    *game_state.borrow_mut() = stored_state;
+                }
+                Err(_) => {
+                    if let Ok(state) = game_state.try_borrow() {
+                        let snapshot = state.clone();
+                        drop(state);
+                        let _ = LocalStorage::set(STORAGE_KEY, &snapshot);
+                    }
+                }
+            }
+            || ()
+        });
+    }
+
+    {
         let canvas_ref = canvas_ref.clone();
-        let settlers = settlers.clone();
+        let game_state = game_state.clone();
         let alive_count_state = alive_count.clone();
 
         use_effect_with((), move |_| {
@@ -127,7 +167,8 @@ fn App() -> Html {
                     .and_then(|ctx| ctx.dyn_into::<CanvasRenderingContext2d>().ok())
                 {
                     let draw_context = context.clone();
-                    let settlers_handle = settlers.clone();
+                    let game_state_handle = game_state.clone();
+                    let alive_count_handle = alive_count_state.clone();
 
                     Interval::new(16, move || {
                         let now = current_time_ms();
@@ -144,91 +185,122 @@ fn App() -> Html {
                         );
                         draw_context.fill();
 
-                        let mut settlers_vec = settlers_handle.borrow_mut();
-                        let mut alive_total = 0_usize;
-                        settlers_vec.retain_mut(|settler| {
-                            let (current_x, current_y) = settler.position_at(now);
+                        if let Ok(mut state) = game_state_handle.try_borrow_mut() {
+                            let min_lifespan = state.settler_min_lifespan_ms;
+                            let max_lifespan = state.settler_max_lifespan_ms;
+                            let settlers_vec = &mut state.settlers;
+                            let mut alive_total = 0_usize;
 
-                            if matches!(settler.phase, SettlerPhase::Alive)
-                                && now - settler.birth_ms >= SETTLER_LIFESPAN_MS
-                            {
-                                settler.anchor_x = current_x;
-                                settler.anchor_y = current_y;
-                                settler.target_x = current_x;
-                                settler.target_y = current_y;
-                                settler.move_start_ms = now;
-                                settler.phase = SettlerPhase::Fading { started_ms: now };
-                            }
+                            settlers_vec.retain_mut(|settler| {
+                                let (current_x, current_y) = settler.position_at(now);
 
-                            match settler.phase {
-                                SettlerPhase::Alive => {
-                                    if now - settler.last_direction_change_ms >= MOVE_INTERVAL_MS {
-                                        let (target_x, target_y) =
-                                            random_target_near(current_x, current_y);
-                                        settler.anchor_x = current_x;
-                                        settler.anchor_y = current_y;
-                                        settler.target_x = target_x;
-                                        settler.target_y = target_y;
-                                        settler.move_start_ms = now;
-                                        settler.last_direction_change_ms = now;
-                                    }
-
-                                    draw_context.set_global_alpha(0.92);
-                                    draw_context.set_fill_style_str(ORBIT_04);
-                                    draw_context.begin_path();
-                                    let _ = draw_context.arc(
-                                        current_x,
-                                        current_y,
-                                        SETTLER_RADIUS,
-                                        0.0,
-                                        std::f64::consts::TAU,
-                                    );
-                                    draw_context.fill();
-                                    draw_context.set_global_alpha(1.0);
-                                    alive_total += 1;
-                                    true
+                                if matches!(settler.phase, SettlerPhase::Alive)
+                                    && now - settler.birth_ms
+                                        >= random_range(
+                                            min_lifespan,
+                                            max_lifespan,
+                                        )
+                                {
+                                    settler.anchor_x = current_x;
+                                    settler.anchor_y = current_y;
+                                    settler.target_x = current_x;
+                                    settler.target_y = current_y;
+                                    settler.move_start_ms = now;
+                                    settler.phase = SettlerPhase::Fading { started_ms: now };
                                 }
-                                SettlerPhase::Fading { started_ms } => {
-                                    let elapsed = now - started_ms;
-                                    if elapsed >= FADING_DURATION_MS {
-                                        false
-                                    } else {
-                                        let progress = (elapsed / FADING_DURATION_MS).clamp(0.0, 1.0);
-                                        let opacity = 1.0 - progress;
-                                        let radius = SETTLER_RADIUS * (1.0 + 0.6 * progress);
 
-                                        draw_context.set_global_alpha(opacity);
-                                        draw_context.set_fill_style_str(ORBIT_02);
+                                match settler.phase {
+                                    SettlerPhase::Alive => {
+                                        if now - settler.last_direction_change_ms >= MOVE_INTERVAL_MS
+                                        {
+                                            let (target_x, target_y) =
+                                                random_target_near(current_x, current_y);
+                                            settler.anchor_x = current_x;
+                                            settler.anchor_y = current_y;
+                                            settler.target_x = target_x;
+                                            settler.target_y = target_y;
+                                            settler.move_start_ms = now;
+                                            settler.last_direction_change_ms = now;
+                                        }
+
+                                        draw_context.set_global_alpha(0.92);
+                                        draw_context.set_fill_style_str(ORBIT_04);
                                         draw_context.begin_path();
                                         let _ = draw_context.arc(
                                             current_x,
                                             current_y,
-                                            radius,
+                                            SETTLER_RADIUS,
                                             0.0,
                                             std::f64::consts::TAU,
                                         );
                                         draw_context.fill();
                                         draw_context.set_global_alpha(1.0);
+                                        alive_total += 1;
                                         true
                                     }
-                                }
-                            }
-                        });
+                                    SettlerPhase::Fading { started_ms } => {
+                                        let elapsed = now - started_ms;
+                                        if elapsed >= FADING_DURATION_MS {
+                                            false
+                                        } else {
+                                            let progress =
+                                                (elapsed / FADING_DURATION_MS).clamp(0.0, 1.0);
+                                            let opacity = 1.0 - progress;
+                                            let radius =
+                                                SETTLER_RADIUS * (1.0 + 0.6 * progress);
 
-                        alive_count_state.set(alive_total);
+                                            draw_context.set_global_alpha(opacity);
+                                            draw_context.set_fill_style_str(ORBIT_02);
+                                            draw_context.begin_path();
+                                            let _ = draw_context.arc(
+                                                current_x,
+                                                current_y,
+                                                radius,
+                                                0.0,
+                                                std::f64::consts::TAU,
+                                            );
+                                            draw_context.fill();
+                                            draw_context.set_global_alpha(1.0);
+                                            true
+                                        }
+                                    }
+                                }
+                            });
+
+                            alive_count_handle.set(alive_total);
+                        }
                     })
                     .forget();
                 }
             }
+            || ()
+        });
+    }
+
+    {
+        let game_state = game_state.clone();
+
+        use_effect_with((), move |_| {
+            let game_state_handle = game_state.clone();
+
+            Interval::new(1_000, move || {
+                if let Ok(state) = game_state_handle.try_borrow() {
+                    let snapshot = state.clone();
+                    drop(state);
+                    if let Err(error) = LocalStorage::set(STORAGE_KEY, &snapshot) {
+                        log::warn!("Failed to persist game state: {:?}", error);
+                    }
+                }
+            })
+            .forget();
 
             || ()
         });
     }
 
     let handle_click = {
-        let settlers = settlers.clone();
+        let game_state = game_state.clone();
         let canvas_ref = canvas_ref.clone();
-        let next_id = next_id.clone();
 
         Callback::from(move |event: MouseEvent| {
             if let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() {
@@ -248,10 +320,14 @@ fn App() -> Html {
                 let canvas_y = (client_y - rect.top()) * scale_y;
 
                 if point_within_planet(canvas_x, canvas_y) {
-                    let id = *next_id;
-                    next_id.set(id + 1);
-                    let now = current_time_ms();
-                    settlers.borrow_mut().push(SettlerState::new(id, canvas_x, canvas_y, now));
+                    if let Ok(mut state) = game_state.try_borrow_mut() {
+                        let id = state.next_settler_id;
+                        state.next_settler_id += 1;
+                        let now = current_time_ms();
+                        state
+                            .settlers
+                            .push(SettlerState::new(id, canvas_x, canvas_y, now));
+                    }
                 }
             }
         })
