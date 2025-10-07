@@ -626,7 +626,6 @@ fn App() -> Html {
                 </div>
                 <div class="header-actions">
                     <div class="control-stack">
-                        <span class="control-label">{ "Data" }</span>
                         <div class="save-load-controls">
                             <button onclick={on_save_json} class="save-btn">{ "Save Game" }</button>
                             <input type="file" accept=".json" onchange={on_load_json} class="load-input" id="load-json-input" />
