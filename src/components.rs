@@ -106,7 +106,7 @@ pub struct PlanetDetailGridProps {
     pub planet: Planet,
     pub empire_resources: HashMap<ResourceType, u64>,
     pub on_terraform: Callback<(u64, ModifierType)>,
-    pub on_add_factory: Callback<(u64, FactoryType)>,
+    pub on_add_building: Callback<(u64, BuildingType)>,
     pub storage_limits: HashMap<ResourceType, u64>,
     pub on_mine_resource: Callback<ResourceType>,
 }
@@ -364,13 +364,13 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                 </div>
 
                 <div class="info-section">
-                    <h3>{ "Factories" }</h3>
-                    <div class="factories-grid">
-                        { for planet.factories.iter().map(|factory| {
+                    <h3>{ "Buildings" }</h3>
+                    <div class="buildings-grid">
+                        { for planet.buildings.iter().map(|building| {
                             html! {
-                                <div class="factory-card">
-                                    <span class="factory-type">{ format!("{:?}", factory.factory_type) }</span>
-                                    <span class="factory-level">{ format!("Level {}", factory.efficiency) }</span>
+                                <div class="building-card">
+                                    <span class="building-type">{ format!("{:?}", building.building_type) }</span>
+                                    <span class="building-level">{ format!("Level {}", building.efficiency) }</span>
                                 </div>
                             }
                         })}
@@ -528,7 +528,7 @@ pub fn PlanetView(props: &PlanetViewProps) -> Html {
 pub struct PlanetPanelProps {
     pub planet: Option<Planet>,
     pub on_terraform: Callback<(u64, ModifierType)>,
-    pub on_add_factory: Callback<(u64, FactoryType)>,
+    pub on_add_building: Callback<(u64, BuildingType)>,
 }
 
 #[function_component]
@@ -536,7 +536,7 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
     if let Some(planet) = &props.planet {
         let planet_id = planet.id;
         let on_terraform = props.on_terraform.clone();
-        let on_add_factory = props.on_add_factory.clone();
+        let on_add_building = props.on_add_building.clone();
 
         html! {
             <div class="planet-panel">
@@ -548,7 +548,7 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                     { match planet.state {
                         PlanetState::Conquered => html! {
                             <div class="status-hint conquered">
-                                <strong>{ "Conquered:" }</strong> { "You can now build factories and terraform this planet." }
+                                <strong>{ "Conquered:" }</strong> { "You can now build buildings and terraform this planet." }
                             </div>
                         },
                         PlanetState::Explored => html! {
@@ -620,19 +620,19 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                                 </div>
 
                                 <div class="action-section">
-                                    <h4>{ "Factories" }</h4>
-                                    <div class="factories">
-                                        { for planet.factories.iter().map(|factory| {
+                                    <h4>{ "Buildings" }</h4>
+                                    <div class="buildings">
+                                        { for planet.buildings.iter().map(|building| {
                                             html! {
-                                                <div class="factory">
-                                                    <div class="factory-type">{ format!("{:?}", factory.factory_type) }</div>
-                                                    <div class="factory-status">{ if factory.is_active { "Active" } else { "Inactive" } }</div>
+                                                <div class="building">
+                                                    <div class="building-type">{ format!("{:?}", building.building_type) }</div>
+                                                    <div class="building-status">{ if building.is_active { "Active" } else { "Inactive" } }</div>
                                                 </div>
                                             }
                                         }) }
                                     </div>
-                                    <button onclick={move |_| on_add_factory.emit((planet_id, FactoryType::BasicManufacturing))} class="action-btn">
-                                        { "Add Factory" }
+                                    <button onclick={move |_| on_add_building.emit((planet_id, BuildingType::BasicManufacturing))} class="action-btn">
+                                        { "Add Building" }
                                     </button>
                                 </div>
                             </div>
@@ -738,42 +738,42 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
     }
 }
 
-/// Factory management component
+/// Building management component
 #[derive(Properties, PartialEq, Clone)]
-pub struct FactoryManagementProps {
+pub struct BuildingManagementProps {
     pub planet: Option<Planet>,
-    pub on_add_factory: Callback<(u64, FactoryType)>,
+    pub on_add_building: Callback<(u64, BuildingType)>,
 }
 
-// Static factory costs to prevent re-calculation
+// Static building costs to prevent re-calculation
 lazy_static::lazy_static! {
-    static ref FACTORY_COSTS: HashMap<FactoryType, HashMap<ResourceType, u64>> = get_factory_costs();
+    static ref BUILDING_COSTS: HashMap<BuildingType, HashMap<ResourceType, u64>> = get_building_costs();
 }
 
 #[function_component]
-pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
+pub fn BuildingManagement(props: &BuildingManagementProps) -> Html {
     if let Some(planet) = &props.planet {
         if planet.state == PlanetState::Conquered {
             html! {
-                <div class="factory-management">
-                    <h4>{ "Factory Management" }</h4>
+                <div class="building-management">
+                    <h4>{ "Building Management" }</h4>
 
-                    <div class="existing-factories">
-                        <h5>{ "Existing Factories" }</h5>
-                        { if planet.factories.is_empty() {
-                            html! { <p class="no-factories">{ "No factories built yet." }</p> }
+                    <div class="existing-buildings">
+                        <h5>{ "Existing Buildings" }</h5>
+                        { if planet.buildings.is_empty() {
+                            html! { <p class="no-buildings">{ "No buildings built yet." }</p> }
                         } else {
                             html! {
-                                <div class="factory-list">
-                                    { for planet.factories.iter().map(|factory| {
+                                <div class="building-list">
+                                    { for planet.buildings.iter().map(|building| {
                                         html! {
-                                            <div class="factory-item">
-                                                <div class="factory-info">
-                                                    <span class="factory-type">{ format!("{:?}", factory.factory_type) }</span>
-                                                    <span class="factory-status">{ if factory.is_active { "Active" } else { "Inactive" } }</span>
+                                            <div class="building-item">
+                                                <div class="building-info">
+                                                    <span class="building-type">{ format!("{:?}", building.building_type) }</span>
+                                                    <span class="building-status">{ if building.is_active { "Active" } else { "Inactive" } }</span>
                                                 </div>
-                                                <div class="factory-efficiency">
-                                                    <span>{ format!("Efficiency: {:.1}%", factory.efficiency * 100.0) }</span>
+                                                <div class="building-efficiency">
+                                                    <span>{ format!("Efficiency: {:.1}%", building.efficiency * 100.0) }</span>
                                                 </div>
                                             </div>
                                         }
@@ -783,32 +783,32 @@ pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
                         }}
                     </div>
 
-                    <div class="build-factories">
-                        <h5>{ "Build New Factory" }</h5>
-                        <div class="factory-options">
-                            { for FACTORY_COSTS.iter().map(|(factory_type, cost)| {
+                    <div class="build-buildings">
+                        <h5>{ "Build New Building" }</h5>
+                        <div class="building-options">
+                            { for BUILDING_COSTS.iter().map(|(building_type, cost)| {
                                 let can_afford = cost.iter().all(|(resource_type, required)| {
                                     planet.resources.get(resource_type).copied().unwrap_or(0) >= *required
                                 });
 
                                 html! {
-                                    <div class={format!("factory-option {}", if can_afford { "affordable" } else { "insufficient" })}>
-                                        <div class="factory-header">
-                                            <h6>{ format!("{:?}", factory_type) }</h6>
+                                    <div class={format!("building-option {}", if can_afford { "affordable" } else { "insufficient" })}>
+                                        <div class="building-header">
+                                            <h6>{ format!("{:?}", building_type) }</h6>
                                             <button
                                                 class="build-btn"
                                                 disabled={!can_afford}
                                                 onclick={
-                                                    let on_add_factory = props.on_add_factory.clone();
+                                                    let on_add_building = props.on_add_building.clone();
                                                     let planet_id = planet.id;
-                                                    let factory_type = *factory_type;
-                                                    move |_| on_add_factory.emit((planet_id, factory_type))
+                                                    let building_type = *building_type;
+                                                    move |_| on_add_building.emit((planet_id, building_type))
                                                 }
                                             >
                                                 { if can_afford { "Build" } else { "Insufficient Resources" } }
                                             </button>
                                         </div>
-                                        <div class="factory-cost">
+                                        <div class="building-cost">
                                             <h6>{ "Cost:" }</h6>
                                             <div class="cost-list">
                                                 { for cost.iter().map(|(resource_type, amount)| {
@@ -838,8 +838,8 @@ pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
     }
 }
 
-/// Get factory costs for different factory types
-fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
+/// Get building costs for different building types
+fn get_building_costs() -> HashMap<BuildingType, HashMap<ResourceType, u64>> {
     let mut costs = HashMap::new();
 
     // Basic Manufacturing
@@ -847,14 +847,14 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     basic_manufacturing.insert(ResourceType::Energy, 200);
     basic_manufacturing.insert(ResourceType::Minerals, 100);
     basic_manufacturing.insert(ResourceType::Population, 50);
-    costs.insert(FactoryType::BasicManufacturing, basic_manufacturing);
+    costs.insert(BuildingType::BasicManufacturing, basic_manufacturing);
 
     // Housing
     let mut housing = HashMap::new();
     housing.insert(ResourceType::Energy, 150);
     housing.insert(ResourceType::Minerals, 75);
     housing.insert(ResourceType::Food, 100);
-    costs.insert(FactoryType::Housing, housing);
+    costs.insert(BuildingType::Housing, housing);
 
     // Advanced Manufacturing
     let mut advanced_manufacturing = HashMap::new();
@@ -862,7 +862,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     advanced_manufacturing.insert(ResourceType::Minerals, 300);
     advanced_manufacturing.insert(ResourceType::Population, 100);
     advanced_manufacturing.insert(ResourceType::Technology, 50);
-    costs.insert(FactoryType::AdvancedManufacturing, advanced_manufacturing);
+    costs.insert(BuildingType::AdvancedManufacturing, advanced_manufacturing);
 
     // Electronics
     let mut electronics = HashMap::new();
@@ -870,7 +870,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     electronics.insert(ResourceType::Minerals, 200);
     electronics.insert(ResourceType::Population, 75);
     electronics.insert(ResourceType::Technology, 100);
-    costs.insert(FactoryType::Electronics, electronics);
+    costs.insert(BuildingType::Electronics, electronics);
 
     // Pharmaceuticals
     let mut pharmaceuticals = HashMap::new();
@@ -878,7 +878,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     pharmaceuticals.insert(ResourceType::Minerals, 150);
     pharmaceuticals.insert(ResourceType::Population, 60);
     pharmaceuticals.insert(ResourceType::Technology, 80);
-    costs.insert(FactoryType::Pharmaceuticals, pharmaceuticals);
+    costs.insert(BuildingType::Pharmaceuticals, pharmaceuticals);
 
     // Research Facility
     let mut research_facility = HashMap::new();
@@ -886,7 +886,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     research_facility.insert(ResourceType::Minerals, 200);
     research_facility.insert(ResourceType::Population, 100);
     research_facility.insert(ResourceType::Technology, 100);
-    costs.insert(FactoryType::Research, research_facility);
+    costs.insert(BuildingType::Research, research_facility);
 
     // Shipyard
     let mut shipyard = HashMap::new();
@@ -894,7 +894,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     shipyard.insert(ResourceType::Minerals, 600);
     shipyard.insert(ResourceType::Population, 200);
     shipyard.insert(ResourceType::Technology, 150);
-    costs.insert(FactoryType::Shipyard, shipyard);
+    costs.insert(BuildingType::Shipyard, shipyard);
 
     // Weapons
     let mut weapons = HashMap::new();
@@ -902,7 +902,7 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     weapons.insert(ResourceType::Minerals, 500);
     weapons.insert(ResourceType::Population, 150);
     weapons.insert(ResourceType::Technology, 200);
-    costs.insert(FactoryType::Weapons, weapons);
+    costs.insert(BuildingType::Weapons, weapons);
 
     costs
 }
@@ -1230,7 +1230,7 @@ pub fn PrestigeSystem(props: &PrestigeSystemProps) -> Html {
                         </div>
                         <div class="benefit-item">
                             <span class="benefit-icon">{ "🏭" }</span>
-                            <span class="benefit-text">{ "Factory efficiency bonuses" }</span>
+                            <span class="benefit-text">{ "Building efficiency bonuses" }</span>
                         </div>
                         <div class="benefit-item">
                             <span class="benefit-icon">{ "🌍" }</span>
@@ -1535,8 +1535,8 @@ pub fn GameStats(props: &GameStatsProps) -> Html {
                     <span class="stat-value">{ format!("{}/{}", stats.conquered_planets, stats.total_planets) }</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">{ "Total Factories" }</span>
-                    <span class="stat-value">{ stats.total_factories }</span>
+                    <span class="stat-label">{ "Total Buildings" }</span>
+                    <span class="stat-value">{ stats.total_buildings }</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">{ "Total Resources" }</span>

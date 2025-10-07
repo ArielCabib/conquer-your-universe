@@ -100,7 +100,7 @@ pub struct Planet {
     pub resources: HashMap<ResourceType, u64>,
     pub modifiers: Vec<Modifier>,
     pub terraforming_projects: Vec<TerraformingProject>,
-    pub factories: Vec<Factory>,
+    pub buildings: Vec<Building>,
     pub storage: HashMap<ResourceType, u64>,
     pub position: (f64, f64), // x, y coordinates
     pub solar_system_id: u64,
@@ -118,19 +118,19 @@ pub struct TerraformingProject {
     pub energy_cost: u64,
 }
 
-/// Factory for producing products
+/// Building for producing products
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Factory {
+pub struct Building {
     pub id: u64,
-    pub factory_type: FactoryType,
+    pub building_type: BuildingType,
     pub production_queue: Vec<ProductionOrder>,
     pub efficiency: f64,
     pub is_active: bool,
 }
 
-/// Factory types
+/// Building types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum FactoryType {
+pub enum BuildingType {
     BasicManufacturing,
     AdvancedManufacturing,
     Electronics,
@@ -141,7 +141,7 @@ pub enum FactoryType {
     Housing,
 }
 
-/// Production order in a factory
+/// Production order in a building
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProductionOrder {
     pub product: ResourceType,
@@ -236,7 +236,7 @@ pub enum PrestigeBonusType {
     ConquestSpeed,
     TerraformingSpeed,
     TransportEfficiency,
-    FactoryEfficiency,
+    BuildingEfficiency,
     StartingResources,
     GalaxyModifier,
 }

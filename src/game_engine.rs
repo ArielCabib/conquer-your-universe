@@ -212,7 +212,7 @@ impl GameEngine {
         let next_second = next_tick / TICKS_PER_SECOND as u64;
 
         // Update all systems once per update call
-        self.update_factories();
+        self.update_buildings();
         self.update_transport();
         self.update_terraforming();
         self.update_conquest();
@@ -323,13 +323,13 @@ impl GameEngine {
         self.game_state.last_resource_generation = tick_generation;
     }
 
-    /// Update factory production
-    fn update_factories(&mut self) {
+    /// Update building production
+    fn update_buildings(&mut self) {
         for planet in self.game_state.planets.values_mut() {
             let planet_clone = planet.clone();
-            for factory in &mut planet.factories {
-                let produced_resources = self.supply_chain_system.update_factory_production(
-                    factory,
+            for building in &mut planet.buildings {
+                let produced_resources = self.supply_chain_system.update_building_production(
+                    building,
                     &planet_clone,
                     self.game_state.game_speed,
                 );
@@ -520,10 +520,10 @@ impl GameEngine {
         }
     }
 
-    /// Add factory to a planet
-    pub fn add_factory(&mut self, planet_id: u64, factory_type: FactoryType) -> Option<u64> {
+    /// Add building to a planet
+    pub fn add_building(&mut self, planet_id: u64, building_type: BuildingType) -> Option<u64> {
         if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
-            Some(self.planet_system.add_factory(planet, factory_type))
+            Some(self.planet_system.add_building(planet, building_type))
         } else {
             None
         }
@@ -834,11 +834,11 @@ impl GameEngine {
             .count();
 
         let total_planets = self.game_state.planets.len();
-        let total_factories: usize = self
+        let total_buildings: usize = self
             .game_state
             .planets
             .values()
-            .map(|planet| planet.factories.len())
+            .map(|planet| planet.buildings.len())
             .sum();
 
         let total_resources: u64 = self.game_state.empire_resources.values().sum();
@@ -847,7 +847,7 @@ impl GameEngine {
             current_tick: self.game_state.current_tick,
             conquered_planets,
             total_planets,
-            total_factories,
+            total_buildings,
             total_resources,
             prestige_points: self.game_state.total_prestige_points,
             game_speed: self.game_state.game_speed,
@@ -906,7 +906,7 @@ pub struct GameStatistics {
     pub current_tick: u64,
     pub conquered_planets: usize,
     pub total_planets: usize,
-    pub total_factories: usize,
+    pub total_buildings: usize,
     pub total_resources: u64,
     pub prestige_points: u64,
     pub game_speed: GameSpeed,

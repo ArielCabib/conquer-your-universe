@@ -987,7 +987,7 @@
 
         .resources-grid,
         .modifiers-grid,
-        .factories-grid,
+        .buildings-grid,
         .terraforming-grid {
             display: flex;
             flex-direction: column;
@@ -996,7 +996,7 @@
 
         .resource-card,
         .modifier-card,
-        .factory-card,
+        .building-card,
         .terraforming-card {
             display: flex;
             justify-content: space-between;
@@ -1009,7 +1009,7 @@
 
         .resource-name,
         .modifier-type,
-        .factory-type,
+        .building-type,
         .project-type {
             color: var(--text-muted);
         }
@@ -1032,7 +1032,7 @@
 
         .resource-amount,
         .modifier-value,
-        .factory-level,
+        .building-level,
         .project-progress {
             color: var(--text-color);
             font-weight: bold;
@@ -1302,7 +1302,6 @@
         .resource-amount {
             font-size: 20px;
             font-weight: bold;
-            margin-bottom: 5px;
         }
 
         .resource-generation {
@@ -1492,8 +1491,8 @@
             color: var(--accent-terraforming);
         }
 
-        /* Factory Management Styles */
-        .factory-management {
+        /* Building Management Styles */
+        .building-management {
             background: var(--surface-medium);
             padding: 15px;
             border-radius: 10px;
@@ -1501,103 +1500,103 @@
             backdrop-filter: blur(10px);
         }
 
-        .factory-management h4 {
+        .building-management h4 {
             color: var(--accent-success);
             margin-bottom: 15px;
         }
 
-        .factory-management h5 {
+        .building-management h5 {
             color: var(--text-soft);
             margin: 10px 0 8px 0;
             font-size: 14px;
         }
 
-        .factory-management h6 {
+        .building-management h6 {
             color: var(--text-muted);
             margin: 5px 0;
             font-size: 12px;
         }
 
-        .existing-factories {
+        .existing-buildings {
             margin-bottom: 20px;
         }
 
-        .no-factories {
+        .no-buildings {
             color: var(--text-faint);
             font-style: italic;
             margin: 10px 0;
         }
 
-        .factory-list {
+        .building-list {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .factory-item {
+        .building-item {
             background: var(--surface-soft);
             padding: 10px;
             border-radius: 5px;
             border-left: 3px solid var(--accent-success);
         }
 
-        .factory-info {
+        .building-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 5px;
         }
 
-        .factory-type {
+        .building-type {
             font-weight: bold;
             color: var(--accent-success);
         }
 
-        .factory-status {
+        .building-status {
             color: var(--text-muted);
             font-size: 12px;
         }
 
-        .factory-efficiency {
+        .building-efficiency {
             color: var(--text-faint);
             font-size: 11px;
         }
 
-        .build-factories {
+        .build-buildings {
             border-top: 1px solid var(--border-overlay);
             padding-top: 15px;
         }
 
-        .factory-options {
+        .building-options {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
 
-        .factory-option {
+        .building-option {
             background: var(--surface-soft);
             padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--border-overlay);
         }
 
-        .factory-option.affordable {
+        .building-option.affordable {
             border-left: 4px solid var(--accent-success);
         }
 
-        .factory-option.insufficient {
+        .building-option.insufficient {
             border-left: 4px solid var(--accent-danger);
             opacity: 0.7;
         }
 
-        .factory-header {
+        .building-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
         }
 
-        .factory-header h6 {
+        .building-header h6 {
             margin: 0;
             color: var(--text-soft);
             font-size: 14px;
@@ -1624,18 +1623,18 @@
             cursor: not-allowed;
         }
 
-        .factory-cost {
+        .building-cost {
             margin-top: 8px;
         }
 
-        .factory-cost .cost-list {
+        .building-cost .cost-list {
             display: flex;
             flex-direction: column;
             gap: 4px;
             margin-top: 5px;
         }
 
-        .factory-cost .cost-item {
+        .building-cost .cost-item {
             display: flex;
             justify-content: space-between;
             padding: 4px 8px;
@@ -1644,11 +1643,11 @@
             font-size: 11px;
         }
 
-        .factory-cost .cost-item.affordable {
+        .building-cost .cost-item.affordable {
             border-left: 2px solid var(--accent-success);
         }
 
-        .factory-cost .cost-item.insufficient {
+        .building-cost .cost-item.insufficient {
             border-left: 2px solid var(--accent-danger);
         }
 
@@ -2206,7 +2205,6 @@
             font-size: 1.1em;
             font-weight: bold;
             color: var(--accent-info);
-            margin-bottom: 8px;
         }
 
         .resource-card.at-capacity .resource-amount {

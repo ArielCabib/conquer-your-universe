@@ -4,18 +4,18 @@ use std::collections::{HashMap, HashSet, VecDeque};
 /// Supply chain and production system
 pub struct SupplyChainSystem {
     product_dependencies: HashMap<ResourceType, ProductDependency>,
-    factory_types: HashMap<FactoryType, Vec<ResourceType>>,
+    building_types: HashMap<BuildingType, Vec<ResourceType>>,
 }
 
 impl SupplyChainSystem {
     pub fn new() -> Self {
         let mut system = Self {
             product_dependencies: HashMap::new(),
-            factory_types: HashMap::new(),
+            building_types: HashMap::new(),
         };
 
         system.initialize_product_dependencies();
-        system.initialize_factory_types();
+        system.initialize_building_types();
         system
     }
 
@@ -268,15 +268,15 @@ impl SupplyChainSystem {
         );
     }
 
-    /// Initialize factory types and their capabilities
-    fn initialize_factory_types(&mut self) {
-        self.factory_types.insert(
-            FactoryType::BasicManufacturing,
+    /// Initialize building types and their capabilities
+    fn initialize_building_types(&mut self) {
+        self.building_types.insert(
+            BuildingType::BasicManufacturing,
             vec![ResourceType::Alloys, ResourceType::Electronics],
         );
 
-        self.factory_types.insert(
-            FactoryType::AdvancedManufacturing,
+        self.building_types.insert(
+            BuildingType::AdvancedManufacturing,
             vec![
                 ResourceType::Alloys,
                 ResourceType::Electronics,
@@ -284,23 +284,23 @@ impl SupplyChainSystem {
             ],
         );
 
-        self.factory_types
-            .insert(FactoryType::Electronics, vec![ResourceType::Electronics]);
+        self.building_types
+            .insert(BuildingType::Electronics, vec![ResourceType::Electronics]);
 
-        self.factory_types
-            .insert(FactoryType::Pharmaceuticals, vec![ResourceType::Medicine]);
+        self.building_types
+            .insert(BuildingType::Pharmaceuticals, vec![ResourceType::Medicine]);
 
-        self.factory_types
-            .insert(FactoryType::Shipyard, vec![ResourceType::Starships]);
+        self.building_types
+            .insert(BuildingType::Shipyard, vec![ResourceType::Starships]);
 
-        self.factory_types
-            .insert(FactoryType::Weapons, vec![ResourceType::AdvancedWeapons]);
+        self.building_types
+            .insert(BuildingType::Weapons, vec![ResourceType::AdvancedWeapons]);
 
-        self.factory_types
-            .insert(FactoryType::Research, vec![ResourceType::AISystems]);
+        self.building_types
+            .insert(BuildingType::Research, vec![ResourceType::AISystems]);
 
-        self.factory_types
-            .insert(FactoryType::Housing, vec![ResourceType::Population]);
+        self.building_types
+            .insert(BuildingType::Housing, vec![ResourceType::Population]);
     }
 
     /// Get all dependencies for a product (recursive)
@@ -379,27 +379,27 @@ impl SupplyChainSystem {
             .unwrap_or(0)
     }
 
-    /// Check if a factory can produce a specific product
-    pub fn can_factory_produce(&self, factory_type: &FactoryType, product: &ResourceType) -> bool {
-        self.factory_types
-            .get(factory_type)
+    /// Check if a building can produce a specific product
+    pub fn can_building_produce(&self, building_type: &BuildingType, product: &ResourceType) -> bool {
+        self.building_types
+            .get(building_type)
             .map(|products| products.contains(product))
             .unwrap_or(false)
     }
 
-    /// Get all products that a factory can produce
-    pub fn get_factory_products(&self, factory_type: &FactoryType) -> Vec<ResourceType> {
-        self.factory_types
-            .get(factory_type)
+    /// Get all products that a building can produce
+    pub fn get_building_products(&self, building_type: &BuildingType) -> Vec<ResourceType> {
+        self.building_types
+            .get(building_type)
             .cloned()
             .unwrap_or_default()
     }
 
-    /// Get the optimal factory type for producing a product
-    pub fn get_optimal_factory(&self, product: &ResourceType) -> Option<FactoryType> {
-        for (factory_type, products) in &self.factory_types {
+    /// Get the optimal building type for producing a product
+    pub fn get_optimal_building(&self, product: &ResourceType) -> Option<BuildingType> {
+        for (building_type, products) in &self.building_types {
             if products.contains(product) {
-                return Some(*factory_type);
+                return Some(*building_type);
             }
         }
         None
@@ -409,7 +409,7 @@ impl SupplyChainSystem {
     pub fn calculate_production_efficiency(
         &self,
         planet: &Planet,
-        factory_type: &FactoryType,
+        building_type: &BuildingType,
     ) -> f64 {
         let mut efficiency = 1.0;
 
@@ -419,7 +419,7 @@ impl SupplyChainSystem {
                     efficiency *= 1.0 + modifier.value / 100.0;
                 }
                 ModifierType::ResearchBonus => {
-                    if *factory_type == FactoryType::Research {
+                    if *building_type == BuildingType::Research {
                         efficiency *= 1.0 + modifier.value / 100.0;
                     }
                 }
@@ -430,25 +430,25 @@ impl SupplyChainSystem {
         efficiency
     }
 
-    /// Update factory production
-    pub fn update_factory_production(
+    /// Update building production
+    pub fn update_building_production(
         &self,
-        factory: &mut Factory,
+        building: &mut Building,
         planet: &Planet,
         game_speed: GameSpeed,
     ) -> Vec<ResourceAmount> {
         let mut produced_resources = Vec::new();
         let speed_multiplier = game_speed as u64;
 
-        if !factory.is_active {
+        if !building.is_active {
             return produced_resources;
         }
 
-        if factory.production_queue.is_empty() {
-            if let Some(products) = self.factory_types.get(&factory.factory_type) {
+        if building.production_queue.is_empty() {
+            if let Some(products) = self.building_types.get(&building.building_type) {
                 for product in products {
                     let quantity = self.default_production_quantity(product);
-                    factory.production_queue.push(ProductionOrder {
+                    building.production_queue.push(ProductionOrder {
                         product: *product,
                         quantity,
                         priority: u8::MAX / 2,
@@ -456,18 +456,18 @@ impl SupplyChainSystem {
                     });
                 }
 
-                factory
+                building
                     .production_queue
                     .sort_by(|a, b| b.priority.cmp(&a.priority));
             }
         }
 
-        for order in &mut factory.production_queue {
+        for order in &mut building.production_queue {
             if order.progress < 1.0 {
                 let production_time = self.get_production_time(&order.product).max(1);
                 let production_rate = 1.0 / production_time as f64;
                 let efficiency =
-                    self.calculate_production_efficiency(planet, &factory.factory_type);
+                    self.calculate_production_efficiency(planet, &building.building_type);
 
                 order.progress += production_rate * efficiency * speed_multiplier as f64;
 
@@ -482,7 +482,7 @@ impl SupplyChainSystem {
         }
 
         // Remove completed orders
-        factory
+        building
             .production_queue
             .retain(|order| order.progress < 1.0);
 
@@ -508,16 +508,16 @@ impl SupplyChainSystem {
         }
     }
 
-    /// Add a production order to a factory
+    /// Add a production order to a building
     pub fn add_production_order(
         &self,
-        factory: &mut Factory,
+        building: &mut Building,
         product: ResourceType,
         quantity: u64,
         priority: u8,
     ) -> bool {
-        // Check if factory can produce this product
-        if !self.can_factory_produce(&factory.factory_type, &product) {
+        // Check if building can produce this product
+        if !self.can_building_produce(&building.building_type, &product) {
             return false;
         }
 
@@ -528,10 +528,10 @@ impl SupplyChainSystem {
             progress: 0.0,
         };
 
-        factory.production_queue.push(order);
+        building.production_queue.push(order);
 
         // Sort by priority (higher priority first)
-        factory
+        building
             .production_queue
             .sort_by(|a, b| b.priority.cmp(&a.priority));
 

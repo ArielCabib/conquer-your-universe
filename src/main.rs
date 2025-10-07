@@ -350,16 +350,16 @@ fn App() -> Html {
                     }
                 };
 
-                let on_add_factory = {
+                let on_add_building = {
                     let game_engine = game_engine.clone();
-                    move |(planet_id, factory_type): (u64, FactoryType)| {
+                    move |(planet_id, building_type): (u64, BuildingType)| {
                         let result = game_engine
                             .borrow_mut()
-                            .add_factory(planet_id, factory_type);
+                            .add_building(planet_id, building_type);
                         if result.is_some() {
-                            log::info!("Added factory to planet {}", planet_id);
+                            log::info!("Added building to planet {}", planet_id);
                         } else {
-                            log::warn!("Failed to add factory");
+                            log::warn!("Failed to add building");
                         }
                     }
                 };
@@ -375,7 +375,7 @@ fn App() -> Html {
                                 planet={planet.clone()}
                                 empire_resources={empire_resources.clone()}
                                 on_terraform={Callback::from(on_terraform.clone())}
-                                on_add_factory={Callback::from(on_add_factory.clone())}
+                                on_add_building={Callback::from(on_add_building.clone())}
                                 on_mine_resource={on_mine_resource.clone()}
                                 storage_limits={storage_limits.clone()}
                             />

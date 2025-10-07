@@ -16,7 +16,7 @@ impl PrestigeSystem {
         prestige_multipliers.insert(PrestigeBonusType::ConquestSpeed, 1.15);
         prestige_multipliers.insert(PrestigeBonusType::TerraformingSpeed, 1.25);
         prestige_multipliers.insert(PrestigeBonusType::TransportEfficiency, 1.1);
-        prestige_multipliers.insert(PrestigeBonusType::FactoryEfficiency, 1.15);
+        prestige_multipliers.insert(PrestigeBonusType::BuildingEfficiency, 1.15);
         prestige_multipliers.insert(PrestigeBonusType::StartingResources, 1.5);
         prestige_multipliers.insert(PrestigeBonusType::GalaxyModifier, 1.0);
 
@@ -118,7 +118,7 @@ impl PrestigeSystem {
                 ModifierType::TechnologyMultiplier => PrestigeBonusType::ResearchSpeed,
                 ModifierType::DefensiveBonus => PrestigeBonusType::ConquestSpeed,
                 ModifierType::TradeBonus => PrestigeBonusType::TransportEfficiency,
-                ModifierType::ManufacturingBonus => PrestigeBonusType::FactoryEfficiency,
+                ModifierType::ManufacturingBonus => PrestigeBonusType::BuildingEfficiency,
                 _ => continue,
             };
 
@@ -173,9 +173,9 @@ impl PrestigeSystem {
                     // Apply to transport route efficiency
                     // This would be applied during transport calculations
                 }
-                PrestigeBonusType::FactoryEfficiency => {
-                    // Apply to factory production efficiency
-                    // This would be applied during factory calculations
+                PrestigeBonusType::BuildingEfficiency => {
+                    // Apply to building production efficiency
+                    // This would be applied during building calculations
                 }
                 PrestigeBonusType::StartingResources => {
                     // Apply to initial empire resources

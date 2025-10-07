@@ -189,8 +189,8 @@ impl TransportSystem {
             }
             ResourceType::Minerals => {
                 // Mineral need based on manufacturing
-                let factory_count = planet.factories.len() as f64;
-                0.05 + (factory_count * 0.02)
+                let building_count = planet.buildings.len() as f64;
+                0.05 + (building_count * 0.02)
             }
             ResourceType::Population => {
                 // Population need based on planet capacity
@@ -204,12 +204,12 @@ impl TransportSystem {
             }
             ResourceType::Technology => {
                 // Technology need based on research facilities
-                let research_factories = planet
-                    .factories
+                let research_buildings = planet
+                    .buildings
                     .iter()
-                    .filter(|f| f.factory_type == FactoryType::Research)
+                    .filter(|f| f.building_type == BuildingType::Research)
                     .count() as f64;
-                0.02 + (research_factories * 0.05)
+                0.02 + (research_buildings * 0.05)
             }
             ResourceType::Food => {
                 // Food need based on population

@@ -7,7 +7,7 @@ pub struct PlanetSystem {
     rng: rand::rngs::ThreadRng,
     planet_counter: u64,
     terraforming_project_counter: u64,
-    factory_counter: u64,
+    building_counter: u64,
 }
 
 impl PlanetSystem {
@@ -16,7 +16,7 @@ impl PlanetSystem {
             rng: rand::thread_rng(),
             planet_counter: 0,
             terraforming_project_counter: 0,
-            factory_counter: 0,
+            building_counter: 0,
         }
     }
 
@@ -58,7 +58,7 @@ impl PlanetSystem {
             resources,
             modifiers,
             terraforming_projects: Vec::new(),
-            factories: Vec::new(),
+            buildings: Vec::new(),
             storage: HashMap::new(),
             position,
             solar_system_id,
@@ -450,21 +450,21 @@ impl PlanetSystem {
         planet.modifiers.push(new_modifier);
     }
 
-    /// Add a factory to a planet
-    pub fn add_factory(&mut self, planet: &mut Planet, factory_type: FactoryType) -> u64 {
-        let factory_id = self.factory_counter;
-        self.factory_counter += 1;
+    /// Add a building to a planet
+    pub fn add_building(&mut self, planet: &mut Planet, building_type: BuildingType) -> u64 {
+        let building_id = self.building_counter;
+        self.building_counter += 1;
 
-        let factory = Factory {
-            id: factory_id,
-            factory_type,
+        let building = Building {
+            id: building_id,
+            building_type,
             production_queue: Vec::new(),
             efficiency: 1.0,
             is_active: true,
         };
 
-        planet.factories.push(factory);
-        factory_id
+        planet.buildings.push(building);
+        building_id
     }
 
     /// Get the next planet ID
