@@ -41,6 +41,7 @@ impl GameEngine {
             empire_resources: HashMap::new(),
             explored_solar_systems: HashSet::new(),
             discovered_solar_systems: HashSet::new(),
+            last_resource_generation: HashMap::new(),
         };
 
         let config = GameConfig {
@@ -200,30 +201,88 @@ impl GameEngine {
             .map(|planet| planet.id)
             .collect();
 
-        let empire_generation = self
-            .resource_system
-            .calculate_empire_resource_generation(&self.game_state.planets, &conquered_planets);
+        let mut tick_generation: HashMap<ResourceType, u64> = HashMap::new();
 
-        // Add generated resources to empire with storage limits
-        for (resource_type, amount) in empire_generation {
-            let current_amount = self
-                .game_state
-                .empire_resources
-                .get(&resource_type)
-                .copied()
-                .unwrap_or(0);
-            let storage_capacity = self.resource_system.get_storage_capacity(&resource_type);
-            let max_to_add = storage_capacity.saturating_sub(current_amount);
-            let actual_amount = amount.min(max_to_add);
+        for planet_id in conquered_planets {
+            if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+                let mut storage_updates: Vec<(ResourceType, u64)> = Vec::new();
 
-            if actual_amount > 0 {
-                *self
-                    .game_state
-                    .empire_resources
-                    .entry(resource_type)
-                    .or_insert(0) += actual_amount;
+                for (resource_type, amount) in planet.storage.iter() {
+                    if *amount == 0 {
+                        continue;
+                    }
+
+                    match resource_type {
+                        ResourceType::Population => {
+                            let population_entry = planet
+                                .resources
+                                .entry(ResourceType::Population)
+                                .or_insert(0);
+                            *population_entry += *amount;
+
+                            let current_amount = self
+                                .game_state
+                                .empire_resources
+                                .get(resource_type)
+                                .copied()
+                                .unwrap_or(0);
+                            let storage_capacity =
+                                self.resource_system.get_storage_capacity(resource_type);
+                            let max_to_add = storage_capacity.saturating_sub(current_amount);
+                            let actual_amount = (*amount).min(max_to_add);
+
+                            if actual_amount > 0 {
+                                *self
+                                    .game_state
+                                    .empire_resources
+                                    .entry(*resource_type)
+                                    .or_insert(0) += actual_amount;
+                            }
+
+                            if actual_amount > 0 {
+                                *tick_generation
+                                    .entry(ResourceType::Population)
+                                    .or_insert(0) += actual_amount;
+                            }
+                            storage_updates.push((*resource_type, 0));
+                        }
+                        _ => {
+                            let current_amount = self
+                                .game_state
+                                .empire_resources
+                                .get(resource_type)
+                                .copied()
+                                .unwrap_or(0);
+                            let storage_capacity = self.resource_system.get_storage_capacity(resource_type);
+                            let max_to_add = storage_capacity.saturating_sub(current_amount);
+                            let actual_amount = (*amount).min(max_to_add);
+
+                            if actual_amount > 0 {
+                                *self
+                                    .game_state
+                                    .empire_resources
+                                    .entry(*resource_type)
+                                    .or_insert(0) += actual_amount;
+                                *tick_generation.entry(*resource_type).or_insert(0) += actual_amount;
+                            }
+
+                            let remaining = amount.saturating_sub(actual_amount);
+                            storage_updates.push((*resource_type, remaining));
+                        }
+                    }
+                }
+
+                for (resource_type, remaining) in storage_updates {
+                    if remaining == 0 {
+                        planet.storage.remove(&resource_type);
+                    } else {
+                        planet.storage.insert(resource_type, remaining);
+                    }
+                }
             }
         }
+
+        self.game_state.last_resource_generation = tick_generation;
     }
 
     /// Update factory production
@@ -654,14 +713,15 @@ impl GameEngine {
             galaxies: HashMap::new(),
             solar_systems: HashMap::new(),
             planets: HashMap::new(),
+            transport_routes: HashMap::new(),
             resources_in_transit: Vec::new(),
+            product_dependencies: HashMap::new(),
             empire_resources: HashMap::new(),
             prestige_bonuses: Vec::new(),
             total_prestige_points: 0,
             explored_solar_systems: HashSet::new(),
             discovered_solar_systems: HashSet::new(),
-            product_dependencies: HashMap::new(),
-            transport_routes: HashMap::new(),
+            last_resource_generation: HashMap::new(),
         };
 
         // Manually initialize the game without loading from storage

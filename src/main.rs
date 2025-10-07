@@ -172,18 +172,9 @@ fn App() -> Html {
         let resources = game_engine.borrow().game_state.empire_resources.clone();
         let generation = game_engine
             .borrow()
-            .resource_system
-            .calculate_empire_resource_generation(
-                &game_engine.borrow().game_state.planets,
-                &game_engine
-                    .borrow()
-                    .game_state
-                    .planets
-                    .values()
-                    .filter(|planet| planet.state == PlanetState::Conquered)
-                    .map(|planet| planet.id)
-                    .collect::<Vec<_>>(),
-            );
+            .game_state
+            .last_resource_generation
+            .clone();
         let storage_limits = game_engine.borrow().resource_system.get_storage_limits();
         html! {
             <ResourceDashboard

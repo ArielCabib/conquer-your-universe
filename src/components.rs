@@ -792,6 +792,13 @@ fn get_factory_costs() -> HashMap<FactoryType, HashMap<ResourceType, u64>> {
     basic_manufacturing.insert(ResourceType::Population, 50);
     costs.insert(FactoryType::BasicManufacturing, basic_manufacturing);
 
+    // Housing
+    let mut housing = HashMap::new();
+    housing.insert(ResourceType::Energy, 150);
+    housing.insert(ResourceType::Minerals, 75);
+    housing.insert(ResourceType::Food, 100);
+    costs.insert(FactoryType::Housing, housing);
+
     // Advanced Manufacturing
     let mut advanced_manufacturing = HashMap::new();
     advanced_manufacturing.insert(ResourceType::Energy, 500);

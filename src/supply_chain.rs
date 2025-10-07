@@ -27,7 +27,7 @@ impl SupplyChainSystem {
             ProductDependency {
                 product: ResourceType::Energy,
                 dependencies: Vec::new(),
-                production_time: 0,
+                production_time: 5,
                 energy_cost: 0,
             },
         );
@@ -37,7 +37,7 @@ impl SupplyChainSystem {
             ProductDependency {
                 product: ResourceType::Minerals,
                 dependencies: Vec::new(),
-                production_time: 0,
+                production_time: 8,
                 energy_cost: 0,
             },
         );
@@ -47,7 +47,7 @@ impl SupplyChainSystem {
             ProductDependency {
                 product: ResourceType::Population,
                 dependencies: Vec::new(),
-                production_time: 0,
+                production_time: 10,
                 energy_cost: 0,
             },
         );
@@ -57,7 +57,7 @@ impl SupplyChainSystem {
             ProductDependency {
                 product: ResourceType::Technology,
                 dependencies: Vec::new(),
-                production_time: 0,
+                production_time: 12,
                 energy_cost: 0,
             },
         );
@@ -67,7 +67,7 @@ impl SupplyChainSystem {
             ProductDependency {
                 product: ResourceType::Food,
                 dependencies: Vec::new(),
-                production_time: 0,
+                production_time: 6,
                 energy_cost: 0,
             },
         );
@@ -298,6 +298,9 @@ impl SupplyChainSystem {
 
         self.factory_types
             .insert(FactoryType::Research, vec![ResourceType::AISystems]);
+
+        self.factory_types
+            .insert(FactoryType::Housing, vec![ResourceType::Population]);
     }
 
     /// Get all dependencies for a product (recursive)
@@ -441,9 +444,28 @@ impl SupplyChainSystem {
             return produced_resources;
         }
 
+        if factory.production_queue.is_empty() {
+            if let Some(products) = self.factory_types.get(&factory.factory_type) {
+                for product in products {
+                    let quantity = self.default_production_quantity(product);
+                    factory.production_queue.push(ProductionOrder {
+                        product: *product,
+                        quantity,
+                        priority: u8::MAX / 2,
+                        progress: 0.0,
+                    });
+                }
+
+                factory
+                    .production_queue
+                    .sort_by(|a, b| b.priority.cmp(&a.priority));
+            }
+        }
+
         for order in &mut factory.production_queue {
             if order.progress < 1.0 {
-                let production_rate = 1.0 / self.get_production_time(&order.product) as f64;
+                let production_time = self.get_production_time(&order.product).max(1);
+                let production_rate = 1.0 / production_time as f64;
                 let efficiency =
                     self.calculate_production_efficiency(planet, &factory.factory_type);
 
@@ -465,6 +487,25 @@ impl SupplyChainSystem {
             .retain(|order| order.progress < 1.0);
 
         produced_resources
+    }
+
+    /// Determine default production quantity when auto-queuing products
+    fn default_production_quantity(&self, product: &ResourceType) -> u64 {
+        match product {
+            ResourceType::Energy => 50,
+            ResourceType::Minerals => 40,
+            ResourceType::Food => 45,
+            ResourceType::Population => 25,
+            ResourceType::Technology => 20,
+            ResourceType::Alloys => 15,
+            ResourceType::Electronics => 15,
+            ResourceType::Medicine => 15,
+            ResourceType::Starships => 5,
+            ResourceType::AdvancedWeapons => 5,
+            ResourceType::AISystems => 5,
+            ResourceType::DysonSpheres => 1,
+            ResourceType::GalacticNetworks => 1,
+        }
     }
 
     /// Add a production order to a factory

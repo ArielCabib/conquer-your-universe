@@ -138,6 +138,7 @@ pub enum FactoryType {
     Shipyard,
     Weapons,
     Research,
+    Housing,
 }
 
 /// Production order in a factory
@@ -258,6 +259,8 @@ pub struct GameState {
     pub empire_resources: HashMap<ResourceType, u64>,
     pub explored_solar_systems: HashSet<u64>,
     pub discovered_solar_systems: HashSet<u64>,
+    #[serde(default)]
+    pub last_resource_generation: HashMap<ResourceType, u64>,
 }
 
 /// Conquest result
