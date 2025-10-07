@@ -159,31 +159,6 @@ fn App() -> Html {
 
     let show_prestige_modal = use_state(|| false);
     let show_controls_modal = use_state(|| false);
-    let game_stats = {
-        let stats = game_engine.borrow().get_game_statistics();
-        let planet_count = game_engine.borrow().get_planet_count();
-        let on_prestige_card_click = {
-            let show_prestige_modal = show_prestige_modal.clone();
-            Callback::from(move |_| show_prestige_modal.set(true))
-        };
-        let on_speed_card_click = {
-            let show_controls_modal = show_controls_modal.clone();
-            Callback::from(move |_| show_controls_modal.set(true))
-        };
-        let on_status_card_click = {
-            let show_controls_modal = show_controls_modal.clone();
-            Callback::from(move |_| show_controls_modal.set(true))
-        };
-        html! {
-            <GameStats
-                stats={stats}
-                planet_count={planet_count}
-                on_prestige_card_click={on_prestige_card_click}
-                on_speed_card_click={on_speed_card_click}
-                on_status_card_click={on_status_card_click}
-            />
-        }
-    };
 
     let on_mine_resource = {
         let game_engine = game_engine.clone();
@@ -215,24 +190,6 @@ fn App() -> Html {
                 }
             }
         })
-    };
-
-    let empire_resources = {
-        let resources = game_engine.borrow().game_state.empire_resources.clone();
-        let generation = game_engine
-            .borrow()
-            .game_state
-            .last_resource_generation
-            .clone();
-        let storage_limits = game_engine.borrow().resource_system.get_storage_limits();
-        html! {
-            <ResourceDashboard
-                empire_resources={resources}
-                resource_generation={generation}
-                storage_limits={storage_limits}
-                on_mine_resource={on_mine_resource.clone()}
-            />
-        }
     };
 
     let on_perform_prestige_modal = {
@@ -271,11 +228,11 @@ fn App() -> Html {
         }
     };
 
-    let on_back_to_galaxy = {
+    let on_back_to_galaxy: Callback<_> = {
         let current_view = current_view.clone();
-        move |_| {
+        Callback::from(move |_| {
             current_view.set(ViewMode::Galaxy);
-        }
+        })
     };
 
     let on_back_to_system = {
@@ -285,9 +242,19 @@ fn App() -> Html {
         }
     };
 
+    let on_back_to_planet: Callback<_> = {
+        let current_view = current_view.clone();
+        Callback::from(move |_| {
+            current_view.set(ViewMode::Planet);
+        })
+    };
+
+    let has_selected_planet = (*selected_planet).is_some();
+
     // Main content based on current view
     // Use refresh_trigger to ensure UI updates after JSON load
     let _refresh_trigger = *refresh_trigger;
+    let has_observatory = { game_engine.borrow().has_observatory() };
     let main_content = match *current_view {
         ViewMode::Galaxy => {
             let galaxies = game_engine.borrow().game_state.galaxies.clone();
@@ -308,35 +275,52 @@ fn App() -> Html {
             }
         }
         ViewMode::SolarSystem => {
-            if let Some(system_id) = *selected_solar_system {
-                if let Some(system) = game_engine
-                    .borrow()
-                    .game_state
-                    .solar_systems
-                    .get(&system_id)
-                {
-                    // Clone the system and planets once to avoid continuous re-renders
-                    let system_clone = system.clone();
-                    let planets = game_engine.borrow().game_state.planets.clone();
-                    let on_planet_click_callback = Callback::from(on_planet_click);
-
-                    html! {
-                        <div class="solar-system-view">
-                            <div class="view-controls">
-                                <button onclick={on_back_to_galaxy} class="back-button">{ "← Back to Galaxy" }</button>
-                            </div>
-                            <SolarSystemGrid
-                                solar_system={system_clone}
-                                planets={planets}
-                                on_planet_click={on_planet_click_callback}
-                            />
+            if !has_observatory {
+                html! {
+                    <div class="solar-system-view locked">
+                        <div class="view-controls">
+                            { if has_selected_planet {
+                                html! {
+                                    <button onclick={on_back_to_planet.clone()} class="back-button">{ "← Back to Planet" }</button>
+                                }
+                            } else {
+                                html! {}
+                            }}
+                            <h3 class="observatory-warning">{ "are we alone? build an observatory to find out..." }</h3>
                         </div>
-                    }
-                } else {
-                    html! { <div class="error">{ "Solar system not found" }</div> }
+                    </div>
                 }
             } else {
-                html! { <div class="error">{ "No solar system selected" }</div> }
+                if let Some(system_id) = *selected_solar_system {
+                    if let Some(system) = game_engine
+                        .borrow()
+                        .game_state
+                        .solar_systems
+                        .get(&system_id)
+                    {
+                        // Clone the system and planets once to avoid continuous re-renders
+                        let system_clone = system.clone();
+                        let planets = game_engine.borrow().game_state.planets.clone();
+                        let on_planet_click_callback = Callback::from(on_planet_click);
+
+                        html! {
+                            <div class="solar-system-view">
+                                <div class="view-controls">
+                                    <button onclick={on_back_to_galaxy} class="back-button">{ "← Back to Galaxy" }</button>
+                                </div>
+                                <SolarSystemGrid
+                                    solar_system={system_clone}
+                                    planets={planets}
+                                    on_planet_click={on_planet_click_callback}
+                                />
+                            </div>
+                        }
+                    } else {
+                        html! { <div class="error">{ "Solar system not found" }</div> }
+                    }
+                } else {
+                    html! { <div class="error">{ "No solar system selected" }</div> }
+                }
             }
         }
         ViewMode::Planet => {
@@ -384,7 +368,9 @@ fn App() -> Html {
                 html! {
                     <div class="planet-view">
                         <div class="view-controls">
-                            <button onclick={on_back_to_system} class="back-button">{ "← Back to Solar System" }</button>
+                            <button onclick={on_back_to_system} class="back-button">{ "← To Solar System" }</button>
+                            <h3 class="view-title">{ "Planet Dashboard" }</h3>
+                            <span class="view-controls-spacer"></span>
                         </div>
 
                         <div class="planet-details-section">
@@ -626,15 +612,6 @@ fn App() -> Html {
 
             <main>
                 <div class="game-layout">
-                    <div class="header-panel">
-                        <div>
-                            { game_stats }
-                        </div>
-                        <div>
-                            { empire_resources }
-                        </div>
-                    </div>
-
                     <div class="center-panel">
                         { main_content }
                     </div>

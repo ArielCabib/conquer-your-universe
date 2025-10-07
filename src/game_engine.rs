@@ -183,6 +183,20 @@ impl GameEngine {
             .cloned()
     }
 
+    /// Determine if any conquered planet has an observatory
+    pub fn has_observatory(&self) -> bool {
+        self.game_state
+            .planets
+            .values()
+            .filter(|planet| planet.state == PlanetState::Conquered)
+            .any(|planet| {
+                planet
+                    .buildings
+                    .iter()
+                    .any(|building| building.building_type == BuildingType::Observatory)
+            })
+    }
+
     /// Manually mine a resource via UI interactions
     pub fn mine_resource(&mut self, resource_type: ResourceType, amount: u64) -> bool {
         match resource_type {
