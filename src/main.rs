@@ -107,11 +107,13 @@ fn random_target_near(x: f64, y: f64) -> (f64, f64) {
 fn App() -> Html {
     let settlers = use_mut_ref(|| Vec::<SettlerState>::new());
     let next_id = use_state(|| 0_u64);
+    let alive_count = use_state(|| 0_usize);
     let canvas_ref = use_node_ref();
 
     {
         let canvas_ref = canvas_ref.clone();
         let settlers = settlers.clone();
+        let alive_count_state = alive_count.clone();
 
         use_effect_with((), move |_| {
             if let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() {
@@ -143,6 +145,7 @@ fn App() -> Html {
                         draw_context.fill();
 
                         let mut settlers_vec = settlers_handle.borrow_mut();
+                        let mut alive_total = 0_usize;
                         settlers_vec.retain_mut(|settler| {
                             let (current_x, current_y) = settler.position_at(now);
 
@@ -182,6 +185,7 @@ fn App() -> Html {
                                     );
                                     draw_context.fill();
                                     draw_context.set_global_alpha(1.0);
+                                    alive_total += 1;
                                     true
                                 }
                                 SettlerPhase::Fading { started_ms } => {
@@ -210,6 +214,8 @@ fn App() -> Html {
                                 }
                             }
                         });
+
+                        alive_count_state.set(alive_total);
                     })
                     .forget();
                 }
@@ -278,6 +284,15 @@ fn App() -> Html {
                 >
                     {"Your browser does not support HTML canvas."}
                 </canvas>
+                <div
+                    style={format!(
+                        "margin-top: 1.5rem; padding: 0.75rem 1.25rem; border: 1px solid {}; border-radius: 0.75rem; background-color: rgba(0,0,0,0.25); color: {}; font-size: clamp(1rem, 2vw, 1.15rem); letter-spacing: 0.05em;",
+                        ORBIT_02,
+                        ORBIT_03
+                    )}
+                >
+                    {format!("Settlers alive: {}", *alive_count)}
+                </div>
             </section>
         </main>
     }
