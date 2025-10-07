@@ -684,7 +684,6 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
 #[derive(Properties, PartialEq, Clone)]
 pub struct FactoryManagementProps {
     pub planet: Option<Planet>,
-    pub empire_resources: HashMap<ResourceType, u64>,
     pub on_add_factory: Callback<(u64, FactoryType)>,
 }
 
@@ -731,7 +730,7 @@ pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
                         <div class="factory-options">
                             { for FACTORY_COSTS.iter().map(|(factory_type, cost)| {
                                 let can_afford = cost.iter().all(|(resource_type, required)| {
-                                    props.empire_resources.get(resource_type).copied().unwrap_or(0) >= *required
+                                    planet.resources.get(resource_type).copied().unwrap_or(0) >= *required
                                 });
 
                                 html! {
@@ -755,7 +754,7 @@ pub fn FactoryManagement(props: &FactoryManagementProps) -> Html {
                                             <h6>{ "Cost:" }</h6>
                                             <div class="cost-list">
                                                 { for cost.iter().map(|(resource_type, amount)| {
-                                                    let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                                                    let available = planet.resources.get(resource_type).copied().unwrap_or(0);
                                                     let can_afford_resource = available >= *amount;
                                                     html! {
                                                         <div class={format!("cost-item {}", if can_afford_resource { "affordable" } else { "insufficient" })}>

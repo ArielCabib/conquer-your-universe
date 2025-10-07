@@ -240,9 +240,8 @@ impl GameEngine {
                             }
 
                             if actual_amount > 0 {
-                                *tick_generation
-                                    .entry(ResourceType::Population)
-                                    .or_insert(0) += actual_amount;
+                                *tick_generation.entry(ResourceType::Population).or_insert(0) +=
+                                    actual_amount;
                             }
                             storage_updates.push((*resource_type, 0));
                         }
@@ -253,7 +252,8 @@ impl GameEngine {
                                 .get(resource_type)
                                 .copied()
                                 .unwrap_or(0);
-                            let storage_capacity = self.resource_system.get_storage_capacity(resource_type);
+                            let storage_capacity =
+                                self.resource_system.get_storage_capacity(resource_type);
                             let max_to_add = storage_capacity.saturating_sub(current_amount);
                             let actual_amount = (*amount).min(max_to_add);
 
@@ -263,7 +263,8 @@ impl GameEngine {
                                     .empire_resources
                                     .entry(*resource_type)
                                     .or_insert(0) += actual_amount;
-                                *tick_generation.entry(*resource_type).or_insert(0) += actual_amount;
+                                *tick_generation.entry(*resource_type).or_insert(0) +=
+                                    actual_amount;
                             }
 
                             let remaining = amount.saturating_sub(actual_amount);

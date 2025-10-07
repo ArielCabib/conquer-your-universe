@@ -386,7 +386,6 @@ fn App() -> Html {
                             />
                             <FactoryManagement
                                 planet={planet.clone()}
-                                empire_resources={empire_resources.clone()}
                                 on_add_factory={Callback::from(on_add_factory.clone())}
                             />
                             <TransportSystem
@@ -506,12 +505,11 @@ fn App() -> Html {
                     <ConquestCost
                         planet={planet.clone()}
                         empire_resources={empire_resources.clone()}
-                    />
-                    <FactoryManagement
-                        planet={planet.clone()}
-                        empire_resources={empire_resources.clone()}
-                        on_add_factory={Callback::from(on_add_factory)}
-                    />
+                />
+                <FactoryManagement
+                    planet={planet.clone()}
+                    on_add_factory={Callback::from(on_add_factory)}
+                />
                     <TransportSystem
                         planets={game_engine.borrow().game_state.planets.clone()}
                         empire_resources={empire_resources.clone()}
