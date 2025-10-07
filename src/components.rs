@@ -107,6 +107,7 @@ pub struct PlanetDetailGridProps {
     pub empire_resources: HashMap<ResourceType, u64>,
     pub on_terraform: Callback<(u64, ModifierType)>,
     pub on_add_factory: Callback<(u64, FactoryType)>,
+    pub storage_limits: HashMap<ResourceType, u64>,
     pub on_mine_resource: Callback<ResourceType>,
 }
 
@@ -312,6 +313,13 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                             } else {
                                 *amount
                             };
+                            let storage_limit = props
+                                .storage_limits
+                                .get(&resource_type_value)
+                                .copied()
+                                .unwrap_or(1000);
+                            let amount_label =
+                                format!("{}/{}", display_amount, storage_limit);
 
                             if is_clickable {
                                 let on_mine_resource = props.on_mine_resource.clone();
@@ -324,14 +332,14 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                                         onclick={Callback::from(move |_| on_mine_resource.emit(resource_type_value))}
                                     >
                                         <span class="resource-name">{ resource_label.clone() }</span>
-                                        <span class="resource-amount">{ display_amount }</span>
+                                        <span class="resource-amount">{ amount_label.clone() }</span>
                                     </button>
                                 }
                             } else {
                                 html! {
                                     <div class="resource-card">
                                         <span class="resource-name">{ resource_label.clone() }</span>
-                                        <span class="resource-amount">{ display_amount }</span>
+                                        <span class="resource-amount">{ amount_label.clone() }</span>
                                     </div>
                                 }
                             }

@@ -325,6 +325,7 @@ fn App() -> Html {
         ViewMode::Planet => {
             if let Some(planet) = (*selected_planet).clone() {
                 let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
+                let storage_limits = game_engine.borrow().resource_system.get_storage_limits();
                 let on_terraform = {
                     let game_engine = game_engine.clone();
                     move |(planet_id, modifier_type): (u64, ModifierType)| {
@@ -376,6 +377,7 @@ fn App() -> Html {
                                 on_terraform={Callback::from(on_terraform.clone())}
                                 on_add_factory={Callback::from(on_add_factory.clone())}
                                 on_mine_resource={on_mine_resource.clone()}
+                                storage_limits={storage_limits.clone()}
                             />
                         </div>
                     </div>
