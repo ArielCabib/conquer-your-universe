@@ -794,6 +794,39 @@ impl GameEngine {
         }
     }
 
+    /// Upgrade an existing housing building on a planet.
+    pub fn upgrade_housing(&mut self, planet_id: u64, building_id: u64) -> bool {
+        let cost = if let Some(planet) = self.game_state.planets.get(&planet_id) {
+            if planet.buildings.iter().any(|building| {
+                building.id == building_id && building.building_type == BuildingType::Housing
+            }) {
+                building_cost(BuildingType::Housing, planet.housing_units())
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        };
+
+        if !self.can_afford_cost(&cost) {
+            return false;
+        }
+
+        self.deduct_cost(&cost);
+
+        if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+            if let Some(building) = planet.buildings.iter_mut().find(|building| {
+                building.id == building_id && building.building_type == BuildingType::Housing
+            }) {
+                building.level = building.level.saturating_add(1);
+                return true;
+            }
+        }
+
+        self.refund_cost(&cost);
+        false
+    }
+
     /// Start resource transport between planets
     pub fn start_resource_transport(
         &mut self,

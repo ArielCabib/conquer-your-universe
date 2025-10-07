@@ -356,14 +356,42 @@ fn App() -> Html {
 
                 let on_add_building = {
                     let game_engine = game_engine.clone();
+                    let selected_planet = selected_planet.clone();
+                    let refresh_trigger = refresh_trigger.clone();
                     move |(planet_id, building_type): (u64, BuildingType)| {
-                        let result = game_engine
-                            .borrow_mut()
-                            .add_building(planet_id, building_type);
+                        let mut engine = game_engine.borrow_mut();
+                        let result = engine.add_building(planet_id, building_type);
                         if result.is_some() {
+                            let updated_planet = engine.game_state.planets.get(&planet_id).cloned();
+                            drop(engine);
+                            if let Some(updated_planet) = updated_planet {
+                                selected_planet.set(Some(updated_planet));
+                            }
+                            refresh_trigger.set(*refresh_trigger + 1);
                             log::info!("Added building to planet {}", planet_id);
                         } else {
                             log::warn!("Failed to add building");
+                        }
+                    }
+                };
+
+                let on_upgrade_housing = {
+                    let game_engine = game_engine.clone();
+                    let selected_planet = selected_planet.clone();
+                    let refresh_trigger = refresh_trigger.clone();
+                    move |(planet_id, building_id): (u64, u64)| {
+                        let mut engine = game_engine.borrow_mut();
+                        let upgraded = engine.upgrade_housing(planet_id, building_id);
+                        if upgraded {
+                            let updated_planet = engine.game_state.planets.get(&planet_id).cloned();
+                            drop(engine);
+                            if let Some(updated_planet) = updated_planet {
+                                selected_planet.set(Some(updated_planet));
+                            }
+                            refresh_trigger.set(*refresh_trigger + 1);
+                            log::info!("Upgraded housing {} on planet {}", building_id, planet_id);
+                        } else {
+                            log::warn!("Failed to upgrade housing for planet {}", planet_id);
                         }
                     }
                 };
@@ -403,6 +431,7 @@ fn App() -> Html {
                                 planet={planet.clone()}
                                 on_rename_planet={Callback::from(on_rename_planet.clone())}
                                 empire_resources={empire_resources.clone()}
+                                on_upgrade_housing={Callback::from(on_upgrade_housing.clone())}
                                 on_terraform={Callback::from(on_terraform.clone())}
                                 on_add_building={Callback::from(on_add_building.clone())}
                                 on_mine_resource={on_mine_resource.clone()}
