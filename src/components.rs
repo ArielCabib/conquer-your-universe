@@ -287,6 +287,7 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let planet = &props.planet;
     let mut planet_resources: Vec<_> = planet.resources.iter().collect();
     planet_resources.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
+    planet_resources.retain(|(resource_type, _)| **resource_type != ResourceType::Population); // Population handled separately in UI
 
     let population_cap = planet.population_capacity();
     let current_population = planet
