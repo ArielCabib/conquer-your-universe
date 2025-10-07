@@ -265,10 +265,7 @@ impl Planet {
 }
 
 /// Determine the resource cost for constructing a building on a planet.
-pub fn building_cost(
-    building_type: BuildingType,
-    existing_housing_units: u64,
-) -> HashMap<ResourceType, u64> {
+pub fn building_cost(building_type: BuildingType, current_level: u8) -> HashMap<ResourceType, u64> {
     let mut cost = match building_type {
         BuildingType::BasicManufacturing => HashMap::from([
             (ResourceType::Energy, 200),
@@ -338,8 +335,12 @@ pub fn building_cost(
         ]),
     };
 
-    if building_type == BuildingType::Housing {
-        let multiplier = 1.25_f64.powf(existing_housing_units as f64);
+    let multiplier = match building_type {
+        BuildingType::Housing => 1.25_f64.powi(current_level as i32),
+        _ => 1.35_f64.powi(current_level as i32),
+    };
+
+    if multiplier > 1.0 {
         for value in cost.values_mut() {
             *value = ((*value as f64) * multiplier).ceil() as u64;
         }

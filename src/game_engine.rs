@@ -771,60 +771,46 @@ impl GameEngine {
         }
     }
 
-    /// Add building to a planet
+    /// Construct or upgrade a building (each building type is unique per planet).
     pub fn add_building(&mut self, planet_id: u64, building_type: BuildingType) -> Option<u64> {
-        let housing_units = if let Some(planet) = self.game_state.planets.get(&planet_id) {
-            planet.housing_units()
-        } else {
-            return None;
-        };
-
-        let cost = building_cost(building_type, housing_units);
-        if !self.can_afford_cost(&cost) {
-            return None;
-        }
-
-        self.deduct_cost(&cost);
-
-        if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
-            Some(self.planet_system.add_building(planet, building_type))
-        } else {
-            self.refund_cost(&cost);
-            None
-        }
-    }
-
-    /// Upgrade an existing housing building on a planet.
-    pub fn upgrade_housing(&mut self, planet_id: u64, building_id: u64) -> bool {
-        let cost = if let Some(planet) = self.game_state.planets.get(&planet_id) {
-            if planet.buildings.iter().any(|building| {
-                building.id == building_id && building.building_type == BuildingType::Housing
-            }) {
-                building_cost(BuildingType::Housing, planet.housing_units())
-            } else {
-                return false;
+        let current_level = match self.game_state.planets.get(&planet_id) {
+            Some(planet) => {
+                if let Some(building) = planet
+                    .buildings
+                    .iter()
+                    .find(|building| building.building_type == building_type)
+                {
+                    building.level
+                } else {
+                    0
+                }
             }
-        } else {
-            return false;
+            None => return None,
         };
 
+        let cost = building_cost(building_type, current_level);
         if !self.can_afford_cost(&cost) {
-            return false;
+            return None;
         }
 
         self.deduct_cost(&cost);
 
         if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
-            if let Some(building) = planet.buildings.iter_mut().find(|building| {
-                building.id == building_id && building.building_type == BuildingType::Housing
-            }) {
+            let building_id = if let Some(building) = planet
+                .buildings
+                .iter_mut()
+                .find(|building| building.building_type == building_type)
+            {
                 building.level = building.level.saturating_add(1);
-                return true;
-            }
+                building.id
+            } else {
+                self.planet_system.add_building(planet, building_type)
+            };
+            return Some(building_id);
         }
 
         self.refund_cost(&cost);
-        false
+        None
     }
 
     /// Start resource transport between planets

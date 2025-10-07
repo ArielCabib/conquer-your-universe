@@ -107,7 +107,6 @@ pub struct PlanetDetailGridProps {
     pub planet: Planet,
     pub on_rename_planet: Callback<(u64, String)>,
     pub empire_resources: HashMap<ResourceType, u64>,
-    pub on_upgrade_housing: Callback<(u64, u64)>,
     pub on_terraform: Callback<(u64, ModifierType)>,
     pub on_add_building: Callback<(u64, BuildingType)>,
     pub storage_limits: HashMap<ResourceType, u64>,
@@ -301,7 +300,6 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let name_input = use_state(|| planet.name.clone());
     let name_input_ref = use_node_ref();
 
-    let on_upgrade_housing = props.on_upgrade_housing.clone();
     let terraforming_projects = planet.terraforming_projects.clone();
     let has_terraforming_projects = !terraforming_projects.is_empty();
 
@@ -535,21 +533,91 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                         if planet.buildings.is_empty() {
                             html! { <p class="no-buildings">{ "No buildings constructed." }</p> }
                         } else {
-                            let mut next_housing_cost_items: Vec<(ResourceType, u64)> =
-                                building_cost(BuildingType::Housing, housing_units)
-                                    .iter()
-                                    .map(|(res, amt)| (*res, *amt))
-                                    .collect();
-                            next_housing_cost_items.sort_by_key(|(res, _)| resource_display_order(*res));
                             html! {
                                 <div class="buildings-grid">
                                     { for planet.buildings.iter().map(|building| {
-                                        let upgrade_button = if building.building_type == BuildingType::Housing {
-                                            let on_upgrade_housing = on_upgrade_housing.clone();
-                                            let cost_items = next_housing_cost_items.clone();
+                                        let mut upgrade_cost_items: Vec<(ResourceType, u64)> =
+                                            building_cost(building.building_type, building.level)
+                                                .into_iter()
+                                                .collect();
+                                        upgrade_cost_items
+                                            .sort_by_key(|(res, _)| resource_display_order(*res));
+                                        let can_upgrade = upgrade_cost_items.iter().all(|(res, amt)| {
+                                            props
+                                                .empire_resources
+                                                .get(res)
+                                                .copied()
+                                                .unwrap_or(0)
+                                                >= *amt
+                                        });
+                                        let upgrade_callback = {
+                                            let on_add_building = props.on_add_building.clone();
                                             let planet_id = planet.id;
-                                            let building_id = building.id;
-                                            let can_upgrade = cost_items.iter().all(|(res, amt)| {
+                                            let building_type = building.building_type;
+                                            Callback::from(move |_| on_add_building.emit((planet_id, building_type)))
+                                        };
+                                        html! {
+                                            <div class="building-card">
+                                                <div class="building-title">
+                                                    <span class="building-type">{ format!("{:?}", building.building_type) }</span>
+                                                    <span class="building-level">{ format!("Level {}", building.level) }</span>
+                                                </div>
+                                                <div class="building-upgrade">
+                                                    <button
+                                                        onclick={upgrade_callback}
+                                                        class="action-btn"
+                                                        disabled={!can_upgrade}
+                                                    >
+                                                        { if can_upgrade { "Upgrade" } else { "Upgrade (Need Resources)" } }
+                                                    </button>
+                                                    <div class="cost-summary">
+                                                        { for upgrade_cost_items.iter().map(|(resource_type, amount)| {
+                                                            let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
+                                                            let sufficient = available >= *amount;
+                                                            html! {
+                                                                <span class={classes!("cost-item", if sufficient { "affordable" } else { "insufficient" })}>
+                                                                    { format!("{:?}: {} / {}", resource_type, available, amount) }
+                                                                </span>
+                                                            }
+                                                        }) }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    })}
+                                </div>
+                            }
+                        }
+                    }
+
+                    {
+                        if planet.state == PlanetState::Conquered {
+                            let buildable_types = [
+                                BuildingType::Housing,
+                                BuildingType::BasicManufacturing,
+                                BuildingType::Farming,
+                                BuildingType::PowerPlant,
+                            ];
+                            let existing_types: HashSet<BuildingType> =
+                                planet.buildings.iter().map(|b| b.building_type).collect();
+                            let available_types: Vec<BuildingType> = buildable_types
+                                .iter()
+                                .copied()
+                                .filter(|t| !existing_types.contains(t))
+                                .collect();
+
+                            if available_types.is_empty() {
+                                html! {}
+                            } else {
+                                html! {
+                                    <div class="building-actions">
+                                        { for available_types.into_iter().map(|building_type| {
+                                            let mut cost_items: Vec<(ResourceType, u64)> =
+                                                building_cost(building_type, 0)
+                                                    .into_iter()
+                                                    .collect();
+                                            cost_items.sort_by_key(|(res, _)| resource_display_order(*res));
+                                            let can_construct = cost_items.iter().all(|(res, amt)| {
                                                 props
                                                     .empire_resources
                                                     .get(res)
@@ -557,14 +625,32 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                                                     .unwrap_or(0)
                                                     >= *amt
                                             });
+                                            let label = match building_type {
+                                                BuildingType::Housing => "Construct Housing".to_string(),
+                                                BuildingType::BasicManufacturing => "Construct Factory".to_string(),
+                                                BuildingType::Farming => "Construct Farm".to_string(),
+                                                BuildingType::PowerPlant => "Construct Power Plant".to_string(),
+                                                _ => format!("Construct {:?}", building_type),
+                                            };
+                                            let planet_id = planet.id;
+                                            let construct_callback = {
+                                                let on_add_building = props.on_add_building.clone();
+                                                Callback::from(move |_| on_add_building.emit((planet_id, building_type)))
+                                            };
                                             html! {
-                                                <div class="building-upgrade">
+                                                <div class="build-option">
                                                     <button
-                                                        onclick={Callback::from(move |_| on_upgrade_housing.emit((planet_id, building_id)))}
+                                                        onclick={construct_callback}
                                                         class="action-btn"
-                                                        disabled={!can_upgrade}
+                                                        disabled={!can_construct}
                                                     >
-                                                        { if can_upgrade { "Upgrade Housing" } else { "Upgrade (Need Resources)" } }
+                                                        {
+                                                            if can_construct {
+                                                                label.clone()
+                                                            } else {
+                                                                format!("{label} (Need Resources)")
+                                                            }
+                                                        }
                                                     </button>
                                                     <div class="cost-summary">
                                                         { for cost_items.iter().map(|(resource_type, amount)| {
@@ -579,76 +665,9 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                                                     </div>
                                                 </div>
                                             }
-                                        } else {
-                                            html! {}
-                                        };
-                                        html! {
-                                            <div class="building-card">
-                                                <div class="building-title">
-                                                    <span class="building-type">{ format!("{:?}", building.building_type) }</span>
-                                                    <span class="building-level">{ format!("Level {}", building.level) }</span>
-                                                </div>
-                                                { upgrade_button }
-                                            </div>
-                                        }
-                                    })}
-                                </div>
-                            }
-                        }
-                    }
-
-                    {
-                        if planet.state == PlanetState::Conquered {
-                            let mut housing_cost_items: Vec<(ResourceType, u64)> =
-                                building_cost(BuildingType::Housing, housing_units)
-                                    .iter()
-                                    .map(|(res, amt)| (*res, *amt))
-                                    .collect();
-                            housing_cost_items
-                                .sort_by_key(|(res, _)| resource_display_order(*res));
-                            let can_afford_housing = housing_cost_items.iter().all(|(res, amt)| {
-                                props
-                                    .empire_resources
-                                    .get(res)
-                                    .copied()
-                                    .unwrap_or(0)
-                                    >= *amt
-                            });
-                            let planet_id = planet.id;
-                            let housing_add_callback = {
-                                let on_add_building = props.on_add_building.clone();
-                                Callback::from(move |_| on_add_building.emit((planet_id, BuildingType::Housing)))
-                            };
-                            let factory_add_callback = {
-                                let on_add_building = props.on_add_building.clone();
-                                Callback::from(move |_| on_add_building.emit((planet_id, BuildingType::BasicManufacturing)))
-                            };
-                            html! {
-                                <div class="building-actions">
-                                    <div class="build-option">
-                                        <button
-                                            onclick={housing_add_callback}
-                                            class="action-btn"
-                                            disabled={!can_afford_housing}
-                                        >
-                                            { if can_afford_housing { "Build Housing" } else { "Build Housing (Need Resources)" } }
-                                        </button>
-                                        <div class="cost-summary">
-                                            { for housing_cost_items.iter().map(|(resource_type, amount)| {
-                                                let available = props.empire_resources.get(resource_type).copied().unwrap_or(0);
-                                                let sufficient = available >= *amount;
-                                                html! {
-                                                    <span class={classes!("cost-item", if sufficient { "affordable" } else { "insufficient" })}>
-                                                        { format!("{:?}: {} / {}", resource_type, available, amount) }
-                                                    </span>
-                                                }
-                                            }) }
-                                        </div>
+                                        }) }
                                     </div>
-                                    <button onclick={factory_add_callback} class="action-btn secondary">
-                                        { "Build Factory" }
-                                    </button>
-                                </div>
+                                }
                             }
                         } else {
                             html! {}
@@ -1071,7 +1090,13 @@ pub fn BuildingManagement(props: &BuildingManagementProps) -> Html {
                         <h5>{ "Build New Building" }</h5>
                         <div class="building-options">
                             { for building_types.iter().map(|building_type| {
-                                let cost = building_cost(*building_type, planet.housing_units());
+                                let current_level = planet
+                                    .buildings
+                                    .iter()
+                                    .find(|building| building.building_type == *building_type)
+                                    .map(|building| building.level)
+                                    .unwrap_or(0);
+                                let cost = building_cost(*building_type, current_level);
                                 let can_afford = cost.iter().all(|(resource_type, required)| {
                                     planet.resources.get(resource_type).copied().unwrap_or(0) >= *required
                                 });
