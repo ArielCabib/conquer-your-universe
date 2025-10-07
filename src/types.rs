@@ -139,6 +139,10 @@ pub enum BuildingType {
     Weapons,
     Research,
     Housing,
+    Observatory,
+    Farming,
+    PowerPlant,
+    Mining,
 }
 
 /// Production order in a building

@@ -283,6 +283,8 @@ pub fn SolarSystemGrid(props: &SolarSystemGridProps) -> Html {
 #[function_component]
 pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let planet = &props.planet;
+    let mut planet_resources: Vec<_> = planet.resources.iter().collect();
+    planet_resources.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
 
     html! {
         <div class="planet-detail-grid">
@@ -296,7 +298,7 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                 <div class="info-section">
                     <h3>{ "Resources" }</h3>
                     <div class="resources-grid">
-                        { for planet.resources.iter().map(|(resource_type, amount)| {
+                        { for planet_resources.into_iter().map(|(resource_type, amount)| {
                             let resource_type_value = *resource_type;
                             let resource_label = format!("{:?}", resource_type_value);
                             let is_clickable = planet.state == PlanetState::Conquered
@@ -668,11 +670,14 @@ pub struct ResourceDashboardProps {
 
 #[function_component]
 pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
+    let mut resources: Vec<_> = props.empire_resources.iter().collect();
+    resources.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
+
     html! {
         <div class="resource-dashboard">
             <h3>{ "Empire Resources" }</h3>
             <div class="resource-grid">
-                { for props.empire_resources.iter().map(|(resource_type, amount)| {
+                { for resources.into_iter().map(|(resource_type, amount)| {
                     let generation = props.resource_generation.get(resource_type).copied().unwrap_or(0);
                     let storage_limit = props.storage_limits.get(resource_type).copied().unwrap_or(1000);
                     let is_at_capacity = *amount >= storage_limit;
