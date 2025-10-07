@@ -13,8 +13,8 @@ impl ResourceSystem {
         // Set storage limits
         resource_storage_limits.insert(ResourceType::Energy, 10000);
         resource_storage_limits.insert(ResourceType::Minerals, 10000);
-        resource_storage_limits.insert(ResourceType::Population, 5000);
-        resource_storage_limits.insert(ResourceType::Technology, 2000);
+        resource_storage_limits.insert(ResourceType::Population, 0);
+        resource_storage_limits.insert(ResourceType::Technology, 0);
         resource_storage_limits.insert(ResourceType::Food, 8000);
 
         Self {

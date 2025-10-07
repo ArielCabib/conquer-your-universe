@@ -332,9 +332,9 @@ pub fn building_cost(
             (ResourceType::Population, 80),
         ]),
         BuildingType::Housing => HashMap::from([
-            (ResourceType::Energy, 150),
-            (ResourceType::Minerals, 75),
-            (ResourceType::Food, 100),
+            (ResourceType::Energy, 10),
+            (ResourceType::Minerals, 7),
+            (ResourceType::Food, 10),
         ]),
     };
 

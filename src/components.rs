@@ -302,6 +302,8 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let name_input_ref = use_node_ref();
 
     let on_upgrade_housing = props.on_upgrade_housing.clone();
+    let terraforming_projects = planet.terraforming_projects.clone();
+    let has_terraforming_projects = !terraforming_projects.is_empty();
 
     {
         let name_input = name_input.clone();
@@ -490,7 +492,7 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                 </div>
 
                 <div class="info-section">
-                    <h3>{ "Modifiers" }</h3>
+                    <h3>{ "Modifiers & Terraforming" }</h3>
                     <div class="modifiers-grid">
                         { for planet.modifiers.iter().map(|modifier| {
                             let formatted_value = format_modifier_value(modifier);
@@ -503,6 +505,28 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                             }
                         })}
                     </div>
+                    {
+                        if has_terraforming_projects {
+                            html! {
+                                <div class="terraforming-grid inline">
+                                    { for terraforming_projects.iter().map(|project| {
+                                        html! {
+                                            <div class="terraforming-card">
+                                                <span class="project-type">{ format!("{:?}", project.target_modifier) }</span>
+                                                <span class="project-progress">{ format!("{:.1}%", project.progress * 100.0) }</span>
+                                            </div>
+                                        }
+                                    })}
+                                </div>
+                            }
+                        } else {
+                            html! {
+                                <p class="no-terraforming">
+                                    { "No active terraforming projects." }
+                                </p>
+                            }
+                        }
+                    }
                 </div>
 
                 <div class="info-section">
@@ -560,8 +584,10 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                                         };
                                         html! {
                                             <div class="building-card">
-                                                <span class="building-type">{ format!("{:?}", building.building_type) }</span>
-                                                <span class="building-level">{ format!("Level {}", building.level) }</span>
+                                                <div class="building-title">
+                                                    <span class="building-type">{ format!("{:?}", building.building_type) }</span>
+                                                    <span class="building-level">{ format!("Level {}", building.level) }</span>
+                                                </div>
                                                 { upgrade_button }
                                             </div>
                                         }
@@ -628,20 +654,6 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                             html! {}
                         }
                     }
-                </div>
-
-                <div class="info-section">
-                    <h3>{ "Terraforming Projects" }</h3>
-                    <div class="terraforming-grid">
-                        { for planet.terraforming_projects.iter().map(|project| {
-                            html! {
-                                <div class="terraforming-card">
-                                    <span class="project-type">{ format!("{:?}", project.target_modifier) }</span>
-                                    <span class="project-progress">{ format!("{:.1}%", project.progress * 100.0) }</span>
-                                </div>
-                            }
-                        })}
-                    </div>
                 </div>
             </div>
         </div>
