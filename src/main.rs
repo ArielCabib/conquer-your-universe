@@ -31,12 +31,30 @@ fn App() -> Html {
         Rc::new(RefCell::new(engine))
     });
 
+    let initial_planet = {
+        let engine_rc = (*game_engine).clone();
+        let engine = engine_rc.borrow();
+        engine.get_first_conquered_planet()
+    };
+    let has_initial_planet = initial_planet.is_some();
+    let initial_solar_system = initial_planet
+        .as_ref()
+        .map(|planet| planet.solar_system_id);
+
     let game_tick = use_state(|| 0);
     let game_speed = use_state(|| GameSpeed::Normal);
     let is_paused = use_state(|| false);
-    let current_view = use_state(|| ViewMode::Galaxy);
-    let selected_solar_system = use_state(|| None::<u64>);
+    let current_view =
+        use_state(move || if has_initial_planet { ViewMode::Planet } else { ViewMode::Galaxy });
+    let selected_solar_system = {
+        let initial_solar_system = initial_solar_system;
+        use_state(move || initial_solar_system)
+    };
     let refresh_trigger = use_state(|| 0);
+    let selected_planet = {
+        let initial_planet = initial_planet;
+        use_state(move || initial_planet)
+    };
 
     // Game update loop with dynamic speed
     let game_engine_clone = game_engine.clone();
@@ -139,7 +157,6 @@ fn App() -> Html {
         }
     };
 
-    let selected_planet = use_state(|| None::<Planet>);
     let show_prestige_modal = use_state(|| false);
     let show_controls_modal = use_state(|| false);
     let game_stats = {
@@ -399,26 +416,49 @@ fn App() -> Html {
     let on_load_json = {
         let game_engine = game_engine.clone();
         let refresh_trigger = refresh_trigger.clone();
+        let current_view = current_view.clone();
+        let selected_solar_system = selected_solar_system.clone();
+        let selected_planet = selected_planet.clone();
         move |e: web_sys::Event| {
             if let Some(input) = e.target_dyn_into::<web_sys::HtmlInputElement>() {
                 if let Some(files) = input.files() {
                     if let Some(file) = files.get(0) {
                         let reader = web_sys::FileReader::new().unwrap();
                         let game_engine = game_engine.clone();
-
                         let refresh_trigger = refresh_trigger.clone();
+                        let current_view = current_view.clone();
+                        let selected_solar_system = selected_solar_system.clone();
+                        let selected_planet = selected_planet.clone();
+                        let input_for_closure = input.clone();
+
                         let onload = Closure::wrap(Box::new(move |e: web_sys::Event| {
                             if let Some(reader) = e.target_dyn_into::<web_sys::FileReader>() {
                                 if let Ok(result) = reader.result() {
                                     if let Some(content) = result.as_string() {
-                                        let success =
-                                            game_engine.borrow_mut().load_from_json_file(&content);
-                                        if success {
+                                        let load_success = {
+                                            let mut engine = game_engine.borrow_mut();
+                                            engine.load_from_json_file(&content)
+                                        };
+                                        if load_success {
                                             log::info!("Game loaded from JSON file");
-                                            // Trigger UI refresh
+
+                                            let starting_planet = {
+                                                let engine_ref = game_engine.borrow();
+                                                engine_ref.get_first_conquered_planet()
+                                            };
+
+                                            if let Some(planet) = starting_planet {
+                                                current_view.set(ViewMode::Planet);
+                                                selected_solar_system.set(Some(planet.solar_system_id));
+                                                selected_planet.set(Some(planet));
+                                            } else {
+                                                current_view.set(ViewMode::Galaxy);
+                                                selected_solar_system.set(None);
+                                                selected_planet.set(None);
+                                            }
+
                                             refresh_trigger.set(*refresh_trigger + 1);
-                                            // Clear the file input to prevent reloading the same file
-                                            input.set_value("");
+                                            input_for_closure.set_value("");
                                         } else {
                                             log::warn!("Failed to load game from JSON file");
                                         }
@@ -448,11 +488,27 @@ fn App() -> Html {
             if let Some(window) = web_sys::window() {
                 if let Ok(confirmed) = window.confirm_with_message("Are you sure you want to reset the game? This will delete all progress and cannot be undone.") {
                     if confirmed {
-                        game_engine.borrow_mut().reset_game();
-                        // Reset UI state
-                        current_view.set(ViewMode::Galaxy);
-                        selected_solar_system.set(None);
-                        selected_planet.set(None);
+                        let game_engine_rc = (*game_engine).clone();
+                        {
+                            let mut engine = game_engine_rc.borrow_mut();
+                            engine.reset_game();
+                        }
+
+                        let starting_planet = {
+                            let engine = game_engine_rc.borrow();
+                            engine.get_first_conquered_planet()
+                        };
+
+                        if let Some(planet) = starting_planet {
+                            current_view.set(ViewMode::Planet);
+                            selected_solar_system.set(Some(planet.solar_system_id));
+                            selected_planet.set(Some(planet));
+                        } else {
+                            current_view.set(ViewMode::Galaxy);
+                            selected_solar_system.set(None);
+                            selected_planet.set(None);
+                        }
+
                         // Trigger UI refresh
                         refresh_trigger.set(*refresh_trigger + 1);
                         log::info!("Game reset confirmed");

@@ -162,6 +162,16 @@ impl GameEngine {
             .insert(ResourceType::Food, 200);
     }
 
+    /// Retrieve the first conquered planet (by ID) if available
+    pub fn get_first_conquered_planet(&self) -> Option<Planet> {
+        self.game_state
+            .planets
+            .values()
+            .filter(|planet| planet.state == PlanetState::Conquered)
+            .min_by_key(|planet| planet.id)
+            .cloned()
+    }
+
     /// Manually mine a resource via UI interactions
     pub fn mine_resource(&mut self, resource_type: ResourceType, amount: u64) -> bool {
         match resource_type {
