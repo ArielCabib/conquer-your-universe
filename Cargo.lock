@@ -109,6 +109,7 @@ name = "conquer-your-universe"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "gloo",
  "gloo-timers",
  "js-sys",
  "lazy_static",
