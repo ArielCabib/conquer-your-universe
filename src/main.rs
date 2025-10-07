@@ -21,6 +21,7 @@ const MOVE_DISTANCE_MIN: f64 = 12.0;
 const MOVE_DISTANCE_MAX: f64 = 45.0;
 const FADING_DURATION_MS: f64 = 600.0;
 const STORAGE_KEY: &str = "conquer-your-universe::game_state";
+const BIRTH_ANIMATION_MS: f64 = 450.0;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct GameState {
@@ -223,13 +224,40 @@ fn App() -> Html {
                                             settler.last_direction_change_ms = now;
                                         }
 
-                                        draw_context.set_global_alpha(0.92);
+                                        let age_ms = now - settler.birth_ms;
+                                        let mut display_radius = SETTLER_RADIUS;
+                                        let mut base_alpha = 0.92;
+
+                                        if age_ms < BIRTH_ANIMATION_MS {
+                                            let progress = (age_ms / BIRTH_ANIMATION_MS)
+                                                .clamp(0.0, 1.0);
+                                            let eased = ease_out_quad(progress);
+                                            display_radius = (SETTLER_RADIUS * eased).max(1.2);
+                                            let halo_radius = display_radius
+                                                * (1.0 + 0.6 * (1.0 - eased));
+
+                                            draw_context.set_global_alpha((1.0 - progress) * 0.45);
+                                            draw_context.set_fill_style_str(ORBIT_05);
+                                            draw_context.begin_path();
+                                            let _ = draw_context.arc(
+                                                current_x,
+                                                current_y,
+                                                halo_radius,
+                                                0.0,
+                                                std::f64::consts::TAU,
+                                            );
+                                            draw_context.fill();
+
+                                            base_alpha = 0.74 + 0.18 * progress;
+                                        }
+
+                                        draw_context.set_global_alpha(base_alpha);
                                         draw_context.set_fill_style_str(ORBIT_04);
                                         draw_context.begin_path();
                                         let _ = draw_context.arc(
                                             current_x,
                                             current_y,
-                                            SETTLER_RADIUS,
+                                            display_radius,
                                             0.0,
                                             std::f64::consts::TAU,
                                         );
