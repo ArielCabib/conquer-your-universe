@@ -162,6 +162,43 @@ impl GameEngine {
             .insert(ResourceType::Food, 200);
     }
 
+    /// Manually mine a resource via UI interactions
+    pub fn mine_resource(&mut self, resource_type: ResourceType, amount: u64) -> bool {
+        match resource_type {
+            ResourceType::Energy | ResourceType::Minerals | ResourceType::Food => {}
+            _ => return false,
+        }
+
+        if amount == 0 {
+            return false;
+        }
+
+        let current_amount = self
+            .game_state
+            .empire_resources
+            .get(&resource_type)
+            .copied()
+            .unwrap_or(0);
+        let storage_capacity = self.resource_system.get_storage_capacity(&resource_type);
+
+        if current_amount >= storage_capacity {
+            return false;
+        }
+
+        let amount_to_add = amount.min(storage_capacity.saturating_sub(current_amount));
+        if amount_to_add == 0 {
+            return false;
+        }
+
+        *self
+            .game_state
+            .empire_resources
+            .entry(resource_type)
+            .or_insert(0) += amount_to_add;
+
+        true
+    }
+
     /// Main game update loop
     pub fn update(&mut self) {
         if self.game_state.is_paused {

@@ -862,6 +862,22 @@
             color: var(--text-muted);
         }
 
+        .resource-name.clickable {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--accent-success);
+            padding: 0;
+            font: inherit;
+            display: inline;
+        }
+
+        .resource-name.clickable:hover,
+        .resource-name.clickable:focus {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+
         .resource-amount {
             color: var(--text-color);
             font-weight: bold;
@@ -996,6 +1012,22 @@
         .factory-type,
         .project-type {
             color: var(--text-muted);
+        }
+
+        .resource-card.clickable {
+            cursor: pointer;
+            border: none;
+            background: var(--surface-medium);
+            font: inherit;
+            text-align: left;
+            width: 100%;
+        }
+
+        .resource-card.clickable:hover,
+        .resource-card.clickable:focus {
+            background: var(--surface-soft);
+            outline: 1px solid var(--accent-success);
+            outline-offset: 2px;
         }
 
         .resource-amount,

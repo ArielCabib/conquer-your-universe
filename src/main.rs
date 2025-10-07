@@ -168,6 +168,38 @@ fn App() -> Html {
         }
     };
 
+    let on_mine_resource = {
+        let game_engine = game_engine.clone();
+        let refresh_trigger = refresh_trigger.clone();
+        let selected_planet_handle = selected_planet.clone();
+        Callback::from(move |resource_type: ResourceType| {
+            let mined = {
+                let mut engine = game_engine.borrow_mut();
+                engine.mine_resource(resource_type, 1)
+            };
+
+            if mined {
+                refresh_trigger.set(*refresh_trigger + 1);
+
+                let current_planet = (*selected_planet_handle).clone();
+                if let Some(current_planet) = current_planet {
+                    let updated_planet = {
+                        let engine_ref = game_engine.borrow();
+                        engine_ref
+                            .game_state
+                            .planets
+                            .get(&current_planet.id)
+                            .cloned()
+                    };
+
+                    if let Some(updated_planet) = updated_planet {
+                        selected_planet_handle.set(Some(updated_planet));
+                    }
+                }
+            }
+        })
+    };
+
     let empire_resources = {
         let resources = game_engine.borrow().game_state.empire_resources.clone();
         let generation = game_engine
@@ -181,6 +213,7 @@ fn App() -> Html {
                 empire_resources={resources}
                 resource_generation={generation}
                 storage_limits={storage_limits}
+                on_mine_resource={on_mine_resource.clone()}
             />
         }
     };
@@ -330,35 +363,6 @@ fn App() -> Html {
                     }
                 };
 
-                let on_start_transport = {
-                    let game_engine = game_engine.clone();
-                    move |(from_planet, to_planet, resource_type, amount)| {
-                        let result = game_engine.borrow_mut().start_resource_transport(
-                            from_planet,
-                            to_planet,
-                            resource_type,
-                            amount,
-                        );
-                        if result {
-                            log::info!(
-                                "Started transport of {} {} from planet {} to planet {}",
-                                amount,
-                                format!("{:?}", resource_type),
-                                from_planet,
-                                to_planet
-                            );
-                        } else {
-                            log::warn!(
-                                "Failed to start transport of {} {} from planet {} to planet {} - insufficient resources or invalid planets",
-                                amount,
-                                format!("{:?}", resource_type),
-                                from_planet,
-                                to_planet
-                            );
-                        }
-                    }
-                };
-
                 html! {
                     <div class="planet-view">
                         <div class="view-controls">
@@ -371,163 +375,13 @@ fn App() -> Html {
                                 empire_resources={empire_resources.clone()}
                                 on_terraform={Callback::from(on_terraform.clone())}
                                 on_add_factory={Callback::from(on_add_factory.clone())}
-                            />
-                        </div>
-
-                        <div class="planet-management-section">
-                            <PlanetPanel
-                                planet={Some(planet.clone())}
-                                on_terraform={Callback::from(on_terraform.clone())}
-                                on_add_factory={Callback::from(on_add_factory.clone())}
-                            />
-                            <ConquestCost
-                                planet={planet.clone()}
-                                empire_resources={empire_resources.clone()}
-                            />
-                            <FactoryManagement
-                                planet={planet.clone()}
-                                on_add_factory={Callback::from(on_add_factory.clone())}
-                            />
-                            <TransportSystem
-                                planets={game_engine.borrow().game_state.planets.clone()}
-                                empire_resources={empire_resources.clone()}
-                                on_start_transport={Callback::from(on_start_transport)}
-                            />
-                            <components::TerraformingProject
-                                planet={planet}
-                                empire_resources={empire_resources}
-                                on_start_terraforming={Callback::from(on_terraform.clone())}
+                                on_mine_resource={on_mine_resource.clone()}
                             />
                         </div>
                     </div>
                 }
             } else {
                 html! { <div class="error">{ "No planet selected" }</div> }
-            }
-        }
-    };
-
-    // Planet panel functionality moved to planet view
-    let _planet_panel = {
-        let planet = (*selected_planet).clone();
-        let empire_resources = game_engine.borrow().game_state.empire_resources.clone();
-        let on_terraform = {
-            let game_engine = game_engine.clone();
-            move |(planet_id, modifier_type)| {
-                // Calculate terraforming cost
-                let mut cost = HashMap::new();
-                cost.insert(ResourceType::Energy, 500);
-                cost.insert(ResourceType::Minerals, 300);
-                cost.insert(ResourceType::Population, 100);
-                cost.insert(ResourceType::Technology, 150);
-
-                let result = game_engine.borrow_mut().start_terraforming_project(
-                    planet_id,
-                    modifier_type,
-                    cost,
-                    1000, // duration
-                    200,  // energy cost
-                );
-                if result {
-                    log::info!(
-                        "Started terraforming project on planet {} for modifier {:?}",
-                        planet_id,
-                        modifier_type
-                    );
-                } else {
-                    log::warn!(
-                        "Failed to start terraforming project on planet {} for modifier {:?} - insufficient resources or planet not conquered",
-                        planet_id,
-                        modifier_type
-                    );
-                }
-            }
-        };
-        let on_add_factory = {
-            let game_engine = game_engine.clone();
-            move |(planet_id, factory_type)| {
-                let result = game_engine
-                    .borrow_mut()
-                    .add_factory(planet_id, factory_type);
-                match result {
-                    Some(factory_id) => {
-                        log::info!(
-                            "Successfully added factory {:?} (ID: {}) to planet {}",
-                            factory_type,
-                            factory_id,
-                            planet_id
-                        );
-                    }
-                    None => {
-                        log::warn!("Failed to add factory {:?} to planet {} - insufficient resources or planet not conquered", factory_type, planet_id);
-                    }
-                }
-            }
-        };
-
-        let on_start_transport = {
-            let game_engine = game_engine.clone();
-            move |(from_planet, to_planet, resource_type, amount)| {
-                let result = game_engine.borrow_mut().start_resource_transport(
-                    from_planet,
-                    to_planet,
-                    resource_type,
-                    amount,
-                );
-                if result {
-                    log::info!(
-                        "Started transport of {} {} from planet {} to planet {}",
-                        amount,
-                        format!("{:?}", resource_type),
-                        from_planet,
-                        to_planet
-                    );
-                } else {
-                    log::warn!(
-                        "Failed to start transport of {} {} from planet {} to planet {} - insufficient resources or invalid planets",
-                        amount,
-                        format!("{:?}", resource_type),
-                        from_planet,
-                        to_planet
-                    );
-                }
-            }
-        };
-
-        if let Some(planet) = planet {
-            html! {
-                <>
-                    <PlanetPanel
-                        planet={planet.clone()}
-                        on_terraform={Callback::from(on_terraform.clone())}
-                        on_add_factory={Callback::from(on_add_factory.clone())}
-                    />
-                    <ConquestCost
-                        planet={planet.clone()}
-                        empire_resources={empire_resources.clone()}
-                />
-                <FactoryManagement
-                    planet={planet.clone()}
-                    on_add_factory={Callback::from(on_add_factory)}
-                />
-                    <TransportSystem
-                        planets={game_engine.borrow().game_state.planets.clone()}
-                        empire_resources={empire_resources.clone()}
-                        on_start_transport={Callback::from(on_start_transport)}
-                    />
-                    <components::TerraformingProject
-                        planet={planet}
-                        empire_resources={empire_resources}
-                        on_start_terraforming={Callback::from(on_terraform)}
-                    />
-                </>
-            }
-        } else {
-            html! {
-                <div class="no-planet-selected">
-                    <h3>{ "No Planet Selected" }</h3>
-                    <p>{ "Click on a planet to view its details and manage it." }</p>
-                </div>
             }
         }
     };

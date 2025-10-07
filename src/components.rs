@@ -107,6 +107,7 @@ pub struct PlanetDetailGridProps {
     pub empire_resources: HashMap<ResourceType, u64>,
     pub on_terraform: Callback<(u64, ModifierType)>,
     pub on_add_factory: Callback<(u64, FactoryType)>,
+    pub on_mine_resource: Callback<ResourceType>,
 }
 
 #[function_component]
@@ -295,11 +296,44 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
                     <h3>{ "Resources" }</h3>
                     <div class="resources-grid">
                         { for planet.resources.iter().map(|(resource_type, amount)| {
-                            html! {
-                                <div class="resource-card">
-                                    <span class="resource-name">{ format!("{:?}", resource_type) }</span>
-                                    <span class="resource-amount">{ *amount }</span>
-                                </div>
+                            let resource_type_value = *resource_type;
+                            let resource_label = format!("{:?}", resource_type_value);
+                            let is_clickable = planet.state == PlanetState::Conquered
+                                && matches!(
+                                    resource_type_value,
+                                    ResourceType::Minerals | ResourceType::Food | ResourceType::Energy
+                                );
+                            let display_amount = if is_clickable {
+                                props
+                                    .empire_resources
+                                    .get(&resource_type_value)
+                                    .copied()
+                                    .unwrap_or(*amount)
+                            } else {
+                                *amount
+                            };
+
+                            if is_clickable {
+                                let on_mine_resource = props.on_mine_resource.clone();
+                                html! {
+                                    <button
+                                        type="button"
+                                        class="resource-card clickable"
+                                        title="Click me to mine/harvest/etc."
+                                        aria-label={format!("{} - click to mine or harvest", resource_label)}
+                                        onclick={Callback::from(move |_| on_mine_resource.emit(resource_type_value))}
+                                    >
+                                        <span class="resource-name">{ resource_label.clone() }</span>
+                                        <span class="resource-amount">{ display_amount }</span>
+                                    </button>
+                                }
+                            } else {
+                                html! {
+                                    <div class="resource-card">
+                                        <span class="resource-name">{ resource_label.clone() }</span>
+                                        <span class="resource-amount">{ display_amount }</span>
+                                    </div>
+                                }
                             }
                         })}
                     </div>
@@ -536,20 +570,6 @@ pub fn PlanetPanel(props: &PlanetPanelProps) -> Html {
                         </div>
 
                         <div class="detail-section">
-                            <h4>{ "Resources" }</h4>
-                            <div class="resource-list">
-                                { for planet.resources.iter().map(|(resource_type, amount)| {
-                                    html! {
-                                        <div class="resource-item">
-                                            <span class="resource-name">{ format!("{:?}", resource_type) }</span>
-                                            <span class="resource-amount">{ *amount }</span>
-                                        </div>
-                                    }
-                                }) }
-                            </div>
-                        </div>
-
-                        <div class="detail-section">
                             <h4>{ "Modifiers" }</h4>
                             <div class="modifier-list">
                                 { for planet.modifiers.iter().map(|modifier| {
@@ -635,6 +655,7 @@ pub struct ResourceDashboardProps {
     pub empire_resources: HashMap<ResourceType, u64>,
     pub resource_generation: HashMap<ResourceType, u64>,
     pub storage_limits: HashMap<ResourceType, u64>,
+    pub on_mine_resource: Callback<ResourceType>,
 }
 
 #[function_component]
@@ -648,12 +669,41 @@ pub fn ResourceDashboard(props: &ResourceDashboardProps) -> Html {
                     let storage_limit = props.storage_limits.get(resource_type).copied().unwrap_or(1000);
                     let is_at_capacity = *amount >= storage_limit;
                     let capacity_percentage = (*amount as f64 / storage_limit as f64 * 100.0).min(100.0);
+                    let resource_type_value = *resource_type;
+                    let resource_label = format!("{:?}", resource_type_value);
+                    let is_clickable = matches!(
+                        resource_type_value,
+                        ResourceType::Minerals | ResourceType::Food | ResourceType::Energy
+                    );
+                    let resource_name_node = {
+                        if is_clickable {
+                            let on_mine_resource = props.on_mine_resource.clone();
+                            let label = resource_label.clone();
+                            html! {
+                                <button
+                                    type="button"
+                                    class="resource-name clickable"
+                                    title="Click me to mine/harvest/etc."
+                                    aria-label={format!("{} - click to mine or harvest", label)}
+                                    onclick={Callback::from(move |_| on_mine_resource.emit(resource_type_value))}
+                                >
+                                    { label }
+                                </button>
+                            }
+                        } else {
+                            html! {
+                                <span class="resource-name">
+                                    { resource_label.clone() }
+                                </span>
+                            }
+                        }
+                    };
 
                     html! {
                         <div class={format!("resource-card {}", if is_at_capacity { "at-capacity" } else { "" })}>
                             <div>
                                 <div class="resource-header">
-                                    <h4>{ format!("{:?}", resource_type) }</h4>
+                                    <h4>{ resource_name_node }</h4>
                                     { if is_at_capacity {
                                         html! { <span class="capacity-warning">{ "FULL" }</span> }
                                     } else {
