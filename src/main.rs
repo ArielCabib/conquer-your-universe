@@ -37,15 +37,18 @@ fn App() -> Html {
         engine.get_first_conquered_planet()
     };
     let has_initial_planet = initial_planet.is_some();
-    let initial_solar_system = initial_planet
-        .as_ref()
-        .map(|planet| planet.solar_system_id);
+    let initial_solar_system = initial_planet.as_ref().map(|planet| planet.solar_system_id);
 
     let game_tick = use_state(|| 0);
     let game_speed = use_state(|| GameSpeed::Normal);
     let is_paused = use_state(|| false);
-    let current_view =
-        use_state(move || if has_initial_planet { ViewMode::Planet } else { ViewMode::Galaxy });
+    let current_view = use_state(move || {
+        if has_initial_planet {
+            ViewMode::Planet
+        } else {
+            ViewMode::Galaxy
+        }
+    });
     let selected_solar_system = {
         let initial_solar_system = initial_solar_system;
         use_state(move || initial_solar_system)
@@ -365,6 +368,28 @@ fn App() -> Html {
                     }
                 };
 
+                let on_rename_planet = {
+                    let game_engine = game_engine.clone();
+                    let selected_planet = selected_planet.clone();
+                    let refresh_trigger = refresh_trigger.clone();
+                    move |(planet_id, new_name): (u64, String)| {
+                        let trimmed = new_name.trim();
+                        if trimmed.is_empty() {
+                            return;
+                        }
+                        let final_name = trimmed.to_string();
+                        let mut engine = game_engine.borrow_mut();
+                        if engine.rename_planet(planet_id, &final_name) {
+                            let updated_planet = engine.game_state.planets.get(&planet_id).cloned();
+                            drop(engine);
+                            if let Some(updated_planet) = updated_planet {
+                                selected_planet.set(Some(updated_planet));
+                            }
+                            refresh_trigger.set(*refresh_trigger + 1);
+                        }
+                    }
+                };
+
                 html! {
                     <div class="planet-view">
                         <div class="view-controls">
@@ -376,6 +401,7 @@ fn App() -> Html {
                         <div class="planet-details-section">
                             <PlanetDetailGrid
                                 planet={planet.clone()}
+                                on_rename_planet={Callback::from(on_rename_planet.clone())}
                                 empire_resources={empire_resources.clone()}
                                 on_terraform={Callback::from(on_terraform.clone())}
                                 on_add_building={Callback::from(on_add_building.clone())}
@@ -435,7 +461,8 @@ fn App() -> Html {
 
                                             if let Some(planet) = starting_planet {
                                                 current_view.set(ViewMode::Planet);
-                                                selected_solar_system.set(Some(planet.solar_system_id));
+                                                selected_solar_system
+                                                    .set(Some(planet.solar_system_id));
                                                 selected_planet.set(Some(planet));
                                             } else {
                                                 current_view.set(ViewMode::Galaxy);
@@ -595,7 +622,7 @@ fn App() -> Html {
             <header class="game-header">
                 <div class="header-title">
                     <h1>{ "Conquer Your Universe" }</h1>
-                    <p class="header-subtitle">{ "Galactic command console" }</p>
+                    <p class="header-subtitle">{ "Click around and find out!" }</p>
                 </div>
                 <div class="header-actions">
                     <div class="control-stack">

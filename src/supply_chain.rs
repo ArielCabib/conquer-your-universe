@@ -380,7 +380,11 @@ impl SupplyChainSystem {
     }
 
     /// Check if a building can produce a specific product
-    pub fn can_building_produce(&self, building_type: &BuildingType, product: &ResourceType) -> bool {
+    pub fn can_building_produce(
+        &self,
+        building_type: &BuildingType,
+        product: &ResourceType,
+    ) -> bool {
         self.building_types
             .get(building_type)
             .map(|products| products.contains(product))

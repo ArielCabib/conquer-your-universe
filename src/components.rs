@@ -1,8 +1,9 @@
 use crate::game_engine::GameStatistics;
 use crate::types::*;
 use std::collections::{HashMap, HashSet};
-use web_sys::KeyboardEvent;
+use web_sys::{FocusEvent, HtmlInputElement, InputEvent, KeyboardEvent};
 use yew::prelude::*;
+use yew::TargetCast;
 
 fn format_modifier_value(modifier: &Modifier) -> String {
     let value = modifier.value;
@@ -104,6 +105,7 @@ pub struct SolarSystemGridProps {
 #[derive(Properties, PartialEq, Clone)]
 pub struct PlanetDetailGridProps {
     pub planet: Planet,
+    pub on_rename_planet: Callback<(u64, String)>,
     pub empire_resources: HashMap<ResourceType, u64>,
     pub on_terraform: Callback<(u64, ModifierType)>,
     pub on_add_building: Callback<(u64, BuildingType)>,
@@ -286,10 +288,130 @@ pub fn PlanetDetailGrid(props: &PlanetDetailGridProps) -> Html {
     let mut planet_resources: Vec<_> = planet.resources.iter().collect();
     planet_resources.sort_by_key(|(resource_type, _)| resource_display_order(**resource_type));
 
+    let is_editing_name = use_state(|| false);
+    let name_input = use_state(|| planet.name.clone());
+    let name_input_ref = use_node_ref();
+
+    {
+        let name_input = name_input.clone();
+        use_effect_with(planet.name.clone(), move |new_name| {
+            name_input.set(new_name.clone());
+            || ()
+        });
+    }
+
+    {
+        let input_ref = name_input_ref.clone();
+        use_effect_with(*is_editing_name, move |is_editing| {
+            if *is_editing {
+                if let Some(input) = input_ref.cast::<HtmlInputElement>() {
+                    let _ = input.focus();
+                    let _ = input.select();
+                }
+            }
+            || ()
+        });
+    }
+
+    let on_name_click = {
+        let is_editing_name = is_editing_name.clone();
+        Callback::from(move |_| {
+            is_editing_name.set(true);
+        })
+    };
+
+    let on_name_input = {
+        let name_input = name_input.clone();
+        Callback::from(move |event: InputEvent| {
+            if let Some(input) = event.target_dyn_into::<HtmlInputElement>() {
+                name_input.set(input.value());
+            }
+        })
+    };
+
+    let planet_id = planet.id;
+    let on_name_keydown = {
+        let name_input = name_input.clone();
+        let is_editing_name = is_editing_name.clone();
+        let on_rename_planet = props.on_rename_planet.clone();
+        let original_name = planet.name.clone();
+        Callback::from(move |event: KeyboardEvent| match event.key().as_str() {
+            "Enter" => {
+                event.prevent_default();
+                let current_value = (*name_input).clone();
+                let trimmed = current_value.trim();
+                let final_name = if trimmed.is_empty() {
+                    original_name.clone()
+                } else {
+                    trimmed.to_string()
+                };
+                if final_name != original_name {
+                    on_rename_planet.emit((planet_id, final_name.clone()));
+                }
+                name_input.set(final_name);
+                is_editing_name.set(false);
+            }
+            "Escape" => {
+                event.prevent_default();
+                name_input.set(original_name.clone());
+                is_editing_name.set(false);
+            }
+            _ => {}
+        })
+    };
+
+    let on_name_blur = {
+        let name_input = name_input.clone();
+        let is_editing_name = is_editing_name.clone();
+        let on_rename_planet = props.on_rename_planet.clone();
+        let original_name = planet.name.clone();
+        Callback::from(move |_event: FocusEvent| {
+            if !*is_editing_name {
+                return;
+            }
+
+            let current_value = (*name_input).clone();
+            let trimmed = current_value.trim();
+            let final_name = if trimmed.is_empty() {
+                original_name.clone()
+            } else {
+                trimmed.to_string()
+            };
+            if final_name != original_name {
+                on_rename_planet.emit((planet_id, final_name.clone()));
+            }
+            name_input.set(final_name);
+            is_editing_name.set(false);
+        })
+    };
+
     html! {
         <div class="planet-detail-grid">
             <div class="planet-header">
-                <h2>{ &planet.name }</h2>
+                {
+                    if *is_editing_name {
+                        html! {
+                            <input
+                                ref={name_input_ref}
+                                class="planet-name-input"
+                                value={(*name_input).clone()}
+                                oninput={on_name_input.clone()}
+                                onkeydown={on_name_keydown.clone()}
+                                onblur={on_name_blur.clone()}
+                            />
+                        }
+                    } else {
+                        html! {
+                            <h2
+                                class="planet-name-display"
+                                onclick={on_name_click.clone()}
+                                title="Rename planet"
+                            >
+                                { planet.name.clone() }
+                            </h2>
+                        }
+                    }
+                }
                 <span class="planet-class-badge">{ format!("{:?}", planet.class) }</span>
                 <span class="planet-state-badge">{ format!("{:?}", planet.state) }</span>
             </div>

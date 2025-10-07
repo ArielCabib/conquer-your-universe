@@ -183,6 +183,24 @@ impl GameEngine {
             .cloned()
     }
 
+    /// Rename a planet by ID. Returns true if the planet existed and was renamed.
+    pub fn rename_planet(&mut self, planet_id: u64, new_name: &str) -> bool {
+        let trimmed = new_name.trim();
+        if trimmed.is_empty() {
+            return false;
+        }
+
+        if let Some(planet) = self.game_state.planets.get_mut(&planet_id) {
+            if planet.name != trimmed {
+                planet.name = trimmed.to_string();
+                log::info!("Renamed planet {} to {}", planet_id, planet.name);
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     /// Determine if any conquered planet has an observatory
     pub fn has_observatory(&self) -> bool {
         self.game_state
