@@ -119,8 +119,9 @@ impl GameEngine {
             if let Some(first_system) = self.game_state.solar_systems.get(first_system_id) {
                 if let Some(first_planet_id) = first_system.planets.first() {
                     if let Some(planet) = self.game_state.planets.get_mut(first_planet_id) {
-                        // Conquer the first planet
+                        // Conquer the first planet and reset its stocks so the player starts from zero
                         planet.state = PlanetState::Conquered;
+                        Self::reset_planet_resources(planet);
                         log::info!(
                             "Conquered starting planet {} in system {}",
                             planet.id,
@@ -143,23 +144,33 @@ impl GameEngine {
         );
     }
 
+    /// Ensure a planet starts without pre-generated resources or storage
+    fn reset_planet_resources(planet: &mut Planet) {
+        for amount in planet.resources.values_mut() {
+            *amount = 0;
+        }
+        planet.storage.clear();
+    }
+
     /// Initialize starting empire resources
     fn initialize_empire_resources(&mut self) {
+        self.game_state.empire_resources.clear();
+
         self.game_state
             .empire_resources
-            .insert(ResourceType::Energy, 1000);
+            .insert(ResourceType::Energy, 0);
         self.game_state
             .empire_resources
-            .insert(ResourceType::Minerals, 500);
+            .insert(ResourceType::Minerals, 0);
         self.game_state
             .empire_resources
-            .insert(ResourceType::Population, 100);
+            .insert(ResourceType::Population, 0);
         self.game_state
             .empire_resources
-            .insert(ResourceType::Technology, 50);
+            .insert(ResourceType::Technology, 0);
         self.game_state
             .empire_resources
-            .insert(ResourceType::Food, 200);
+            .insert(ResourceType::Food, 0);
     }
 
     /// Retrieve the first conquered planet (by ID) if available
@@ -824,6 +835,7 @@ impl GameEngine {
         {
             if let Some(planet) = self.game_state.planets.get_mut(&terran_planet_id) {
                 planet.state = PlanetState::Conquered;
+                Self::reset_planet_resources(planet);
                 log::info!("Conquered initial planet: {}", planet.name);
             }
         }
