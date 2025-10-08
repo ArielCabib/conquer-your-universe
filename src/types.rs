@@ -10,6 +10,9 @@ pub struct GameState {
     pub settler_max_lifespan_ms: f64,
     pub houses: Vec<HouseState>,
     pub next_house_id: u64,
+    pub settlers_base_capacity: u64,
+    pub houses_base_capacity: u64,
+    pub settlers_per_house: u64,
 }
 
 impl GameState {
@@ -21,6 +24,9 @@ impl GameState {
             settler_max_lifespan_ms: 20_000.0,
             houses: Vec::new(),
             next_house_id: 0,
+            settlers_base_capacity: 10,
+            houses_base_capacity: 5,
+            settlers_per_house: 5,
         }
     }
 }

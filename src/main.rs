@@ -807,10 +807,21 @@ fn App() -> Html {
     let alive_now = *alive_count;
     let can_build_house = alive_now >= 1;
 
-    let houses_built = game_state
-        .try_borrow()
-        .map(|state| state.houses.len())
-        .unwrap_or(0);
+    let (houses_built, settlers_base_capacity, houses_capacity_limit, settlers_per_house) =
+        game_state
+            .try_borrow()
+            .map(|state| {
+                (
+                    state.houses.len(),
+                    state.settlers_base_capacity as usize,
+                    state.houses_base_capacity as usize,
+                    state.settlers_per_house as usize,
+                )
+            })
+            .unwrap_or((0, 0, 0, 0));
+
+    let settlers_capacity_limit =
+        settlers_base_capacity.saturating_add(houses_built.saturating_mul(settlers_per_house));
 
     let should_show_build_prompt = alive_now >= 1 && houses_built == 0;
     let current_menu = (*context_menu_state).clone();
@@ -945,14 +956,25 @@ fn App() -> Html {
                         }
                     }
                 </div>
-                <div
-                    style={format!(
-                        "margin-top: 1.5rem; padding: 0.75rem 1.25rem; border: 1px solid {}; border-radius: 0.75rem; background-color: rgba(0,0,0,0.25); color: {}; font-size: clamp(1rem, 2vw, 1.15rem); letter-spacing: 0.05em;",
-                        ORBIT_02,
-                        ORBIT_03
-                    )}
-                >
-                    {format!("Settlers alive: {} · Houses built: {}", alive_now, houses_built)}
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 1.5rem; max-width: 600px; width: min(80vw, 540px);">
+                    <div
+                        style={format!(
+                            "margin-top: 1.5rem; padding: 0.75rem 1.25rem; border: 1px solid {}; border-radius: 0.75rem; background-color: rgba(0,0,0,0.25); color: {}; font-size: clamp(1rem, 2vw, 1.15rem); letter-spacing: 0.05em;",
+                            ORBIT_02,
+                            ORBIT_03
+                        )}
+                    >
+                        {format!("Settlers alive: {}/{}", alive_now, settlers_capacity_limit)}
+                    </div>
+                    <div
+                        style={format!(
+                            "margin-top: 1.5rem; padding: 0.75rem 1.25rem; border: 1px solid {}; border-radius: 0.75rem; background-color: rgba(0,0,0,0.25); color: {}; font-size: clamp(1rem, 2vw, 1.15rem); letter-spacing: 0.05em;",
+                            ORBIT_02,
+                            ORBIT_03
+                        )}
+                    >
+                        {format!("Houses built: {}/{}", houses_built, houses_capacity_limit)}
+                    </div>
                 </div>
             </section>
             <input
@@ -1011,7 +1033,7 @@ fn App() -> Html {
                                     >
                                         {"Restart Game"}
                                     </button>
-                                    
+
                                     <button
                                         type="button"
                                         onclick={save_game.clone()}
