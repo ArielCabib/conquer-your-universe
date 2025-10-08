@@ -26,7 +26,7 @@ impl GameState {
             next_house_id: 0,
             settlers_base_capacity: 10,
             houses_base_capacity: 5,
-            settlers_per_house: 5,
+            settlers_per_house: 10,
         }
     }
 }
@@ -85,10 +85,18 @@ pub struct HouseState {
     pub y: f64,
     #[serde(default)]
     pub built_ms: f64,
+    #[serde(default)]
+    pub last_spawn_ms: f64,
 }
 
 impl HouseState {
     pub fn new(id: u64, x: f64, y: f64, built_ms: f64) -> Self {
-        Self { id, x, y, built_ms }
+        Self {
+            id,
+            x,
+            y,
+            built_ms,
+            last_spawn_ms: built_ms,
+        }
     }
 }

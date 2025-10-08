@@ -59,6 +59,15 @@ fn random_target_near(x: f64, y: f64) -> (f64, f64) {
     (PLANET_CENTER_X, PLANET_CENTER_Y)
 }
 
+fn random_point_within_planet() -> (f64, f64) {
+    let max_radius = (PLANET_RADIUS - SETTLER_RADIUS).max(0.0);
+    let angle = random_angle();
+    let radius = max_radius * js_sys::Math::random().sqrt();
+    let x = PLANET_CENTER_X + radius * angle.cos();
+    let y = PLANET_CENTER_Y + radius * angle.sin();
+    (x, y)
+}
+
 fn ensure_settler_lifespans(state: &mut GameState) {
     let min_lifespan = state.settler_min_lifespan_ms;
     let max_lifespan = state.settler_max_lifespan_ms;
@@ -301,107 +310,152 @@ fn App() -> Html {
                                 alive_count_handle.set(alive_total);
                             }
                         } else if let Ok(mut state) = game_state_handle.try_borrow_mut() {
-                            let settlers_vec = &mut state.settlers;
                             let mut alive_total = 0_usize;
 
-                            settlers_vec.retain_mut(|settler| {
-                                let (current_x, current_y) = settler.position_at(now);
+                            {
+                                let settlers_vec = &mut state.settlers;
+                                settlers_vec.retain_mut(|settler| {
+                                    let (current_x, current_y) = settler.position_at(now);
 
-                                if matches!(settler.phase, SettlerPhase::Alive)
-                                    && now - settler.birth_ms >= settler.lifespan_ms
-                                {
-                                    settler.anchor_x = current_x;
-                                    settler.anchor_y = current_y;
-                                    settler.target_x = current_x;
-                                    settler.target_y = current_y;
-                                    settler.move_start_ms = now;
-                                    settler.phase = SettlerPhase::Fading { started_ms: now };
-                                }
-
-                                match settler.phase {
-                                    SettlerPhase::Alive => {
-                                        if now - settler.last_direction_change_ms
-                                            >= MOVE_INTERVAL_MS
-                                        {
-                                            let (target_x, target_y) =
-                                                random_target_near(current_x, current_y);
-                                            settler.anchor_x = current_x;
-                                            settler.anchor_y = current_y;
-                                            settler.target_x = target_x;
-                                            settler.target_y = target_y;
-                                            settler.move_start_ms = now;
-                                            settler.last_direction_change_ms = now;
-                                        }
-
-                                        let age_ms = now - settler.birth_ms;
-                                        let mut display_radius = SETTLER_RADIUS;
-                                        let mut base_alpha = 0.92;
-
-                                        if age_ms < BIRTH_ANIMATION_MS {
-                                            let progress =
-                                                (age_ms / BIRTH_ANIMATION_MS).clamp(0.0, 1.0);
-                                            let eased = ease_out_quad(progress);
-                                            display_radius = (SETTLER_RADIUS * eased).max(1.2);
-                                            let halo_radius =
-                                                display_radius * (1.0 + 0.6 * (1.0 - eased));
-
-                                            draw_context.set_global_alpha((1.0 - progress) * 0.45);
-                                            draw_context.set_fill_style_str(ORBIT_05);
-                                            draw_context.begin_path();
-                                            let _ = draw_context.arc(
-                                                current_x,
-                                                current_y,
-                                                halo_radius,
-                                                0.0,
-                                                std::f64::consts::TAU,
-                                            );
-                                            draw_context.fill();
-
-                                            base_alpha = 0.74 + 0.18 * progress;
-                                        }
-
-                                        draw_context.set_global_alpha(base_alpha);
-                                        draw_context.set_fill_style_str(ORBIT_04);
-                                        draw_context.begin_path();
-                                        let _ = draw_context.arc(
-                                            current_x,
-                                            current_y,
-                                            display_radius,
-                                            0.0,
-                                            std::f64::consts::TAU,
-                                        );
-                                        draw_context.fill();
-                                        draw_context.set_global_alpha(1.0);
-                                        alive_total += 1;
-                                        true
+                                    if matches!(settler.phase, SettlerPhase::Alive)
+                                        && now - settler.birth_ms >= settler.lifespan_ms
+                                    {
+                                        settler.anchor_x = current_x;
+                                        settler.anchor_y = current_y;
+                                        settler.target_x = current_x;
+                                        settler.target_y = current_y;
+                                        settler.move_start_ms = now;
+                                        settler.phase = SettlerPhase::Fading { started_ms: now };
                                     }
-                                    SettlerPhase::Fading { started_ms } => {
-                                        let elapsed = now - started_ms;
-                                        if elapsed >= FADING_DURATION_MS {
-                                            false
-                                        } else {
-                                            let progress =
-                                                (elapsed / FADING_DURATION_MS).clamp(0.0, 1.0);
-                                            let opacity = 1.0 - progress;
-                                            let radius = SETTLER_RADIUS * (1.0 + 0.6 * progress);
 
-                                            draw_context.set_global_alpha(opacity);
-                                            draw_context.set_fill_style_str(ORBIT_02);
+                                    match settler.phase {
+                                        SettlerPhase::Alive => {
+                                            if now - settler.last_direction_change_ms
+                                                >= MOVE_INTERVAL_MS
+                                            {
+                                                let (target_x, target_y) =
+                                                    random_target_near(current_x, current_y);
+                                                settler.anchor_x = current_x;
+                                                settler.anchor_y = current_y;
+                                                settler.target_x = target_x;
+                                                settler.target_y = target_y;
+                                                settler.move_start_ms = now;
+                                                settler.last_direction_change_ms = now;
+                                            }
+
+                                            let age_ms = now - settler.birth_ms;
+                                            let mut display_radius = SETTLER_RADIUS;
+                                            let mut base_alpha = 0.92;
+
+                                            if age_ms < BIRTH_ANIMATION_MS {
+                                                let progress =
+                                                    (age_ms / BIRTH_ANIMATION_MS).clamp(0.0, 1.0);
+                                                let eased = ease_out_quad(progress);
+                                                display_radius = (SETTLER_RADIUS * eased).max(1.2);
+                                                let halo_radius =
+                                                    display_radius * (1.0 + 0.6 * (1.0 - eased));
+
+                                                draw_context
+                                                    .set_global_alpha((1.0 - progress) * 0.45);
+                                                draw_context.set_fill_style_str(ORBIT_05);
+                                                draw_context.begin_path();
+                                                let _ = draw_context.arc(
+                                                    current_x,
+                                                    current_y,
+                                                    halo_radius,
+                                                    0.0,
+                                                    std::f64::consts::TAU,
+                                                );
+                                                draw_context.fill();
+
+                                                base_alpha = 0.74 + 0.18 * progress;
+                                            }
+
+                                            draw_context.set_global_alpha(base_alpha);
+                                            draw_context.set_fill_style_str(ORBIT_04);
                                             draw_context.begin_path();
                                             let _ = draw_context.arc(
                                                 current_x,
                                                 current_y,
-                                                radius,
+                                                display_radius,
                                                 0.0,
                                                 std::f64::consts::TAU,
                                             );
                                             draw_context.fill();
                                             draw_context.set_global_alpha(1.0);
+                                            alive_total += 1;
                                             true
                                         }
+                                        SettlerPhase::Fading { started_ms } => {
+                                            let elapsed = now - started_ms;
+                                            if elapsed >= FADING_DURATION_MS {
+                                                false
+                                            } else {
+                                                let progress =
+                                                    (elapsed / FADING_DURATION_MS).clamp(0.0, 1.0);
+                                                let opacity = 1.0 - progress;
+                                                let radius =
+                                                    SETTLER_RADIUS * (1.0 + 0.6 * progress);
+
+                                                draw_context.set_global_alpha(opacity);
+                                                draw_context.set_fill_style_str(ORBIT_02);
+                                                draw_context.begin_path();
+                                                let _ = draw_context.arc(
+                                                    current_x,
+                                                    current_y,
+                                                    radius,
+                                                    0.0,
+                                                    std::f64::consts::TAU,
+                                                );
+                                                draw_context.fill();
+                                                draw_context.set_global_alpha(1.0);
+                                                true
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+                            let base_capacity = state.settlers_base_capacity as usize;
+                            let settlers_per_house = state.settlers_per_house as usize;
+                            let houses_len = state.houses.len();
+                            let settlers_capacity_limit = base_capacity
+                                .saturating_add(houses_len.saturating_mul(settlers_per_house));
+                            let capacity_limit = if settlers_capacity_limit == 0 {
+                                None
+                            } else {
+                                Some(settlers_capacity_limit)
+                            };
+                            let min_lifespan = state.settler_min_lifespan_ms;
+                            let max_lifespan = state.settler_max_lifespan_ms;
+                            let mut new_settlers = Vec::new();
+                            let mut next_settler_id = state.next_settler_id;
+
+                            for house in &mut state.houses {
+                                if let Some(limit) = capacity_limit {
+                                    if alive_total >= limit {
+                                        break;
                                     }
                                 }
-                            });
+
+                                if now - house.last_spawn_ms >= 1_000.0 {
+                                    let (spawn_x, spawn_y) = random_point_within_planet();
+                                    let id = next_settler_id;
+                                    next_settler_id = next_settler_id.saturating_add(1);
+                                    let lifespan = random_range(min_lifespan, max_lifespan);
+                                    new_settlers.push(SettlerState::new(
+                                        id, spawn_x, spawn_y, now, lifespan,
+                                    ));
+                                    house.last_spawn_ms = now;
+                                    alive_total = alive_total.saturating_add(1);
+                                }
+                            }
+
+                            state.next_settler_id = next_settler_id;
+
+                            if !new_settlers.is_empty() {
+                                state.settlers.extend(new_settlers);
+                            }
 
                             for house in &state.houses {
                                 draw_house(&draw_context, house);
@@ -472,12 +526,8 @@ fn App() -> Html {
                     if let Ok(mut state) = game_state.try_borrow_mut() {
                         let base_capacity = state.settlers_base_capacity as usize;
                         let settlers_per_house = state.settlers_per_house as usize;
-                        let house_capacity = state
-                            .houses
-                            .len()
-                            .saturating_mul(settlers_per_house);
-                        let settlers_capacity_limit =
-                            base_capacity.saturating_add(house_capacity);
+                        let house_capacity = state.houses.len().saturating_mul(settlers_per_house);
+                        let settlers_capacity_limit = base_capacity.saturating_add(house_capacity);
                         let alive_now = *alive_count_handle;
 
                         if settlers_capacity_limit > 0 && alive_now >= settlers_capacity_limit {
@@ -840,8 +890,7 @@ fn App() -> Html {
             .unwrap_or((0, 0, 0, 0));
 
     let alive_now = *alive_count;
-    let has_house_capacity =
-        houses_capacity_limit == 0 || houses_built < houses_capacity_limit;
+    let has_house_capacity = houses_capacity_limit == 0 || houses_built < houses_capacity_limit;
     let can_build_house = alive_now >= 1 && has_house_capacity;
 
     let settlers_capacity_limit =
