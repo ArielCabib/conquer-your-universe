@@ -656,6 +656,12 @@ fn App() -> Html {
                 }
 
                 if let Ok(mut state_ref) = game_state.try_borrow_mut() {
+                    let house_limit = state_ref.houses_base_capacity as usize;
+                    if house_limit > 0 && state_ref.houses.len() >= house_limit {
+                        context_menu_state.set(None);
+                        return;
+                    }
+
                     let house_id = state_ref.next_house_id;
                     state_ref.next_house_id = state_ref.next_house_id.saturating_add(1);
                     let built_at = current_time_ms();
@@ -804,9 +810,6 @@ fn App() -> Html {
         canvas_cursor, canvas_pointer_events
     );
 
-    let alive_now = *alive_count;
-    let can_build_house = alive_now >= 1;
-
     let (houses_built, settlers_base_capacity, houses_capacity_limit, settlers_per_house) =
         game_state
             .try_borrow()
@@ -819,6 +822,11 @@ fn App() -> Html {
                 )
             })
             .unwrap_or((0, 0, 0, 0));
+
+    let alive_now = *alive_count;
+    let has_house_capacity =
+        houses_capacity_limit == 0 || houses_built < houses_capacity_limit;
+    let can_build_house = alive_now >= 1 && has_house_capacity;
 
     let settlers_capacity_limit =
         settlers_base_capacity.saturating_add(houses_built.saturating_mul(settlers_per_house));
