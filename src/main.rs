@@ -79,19 +79,6 @@ fn ensure_house_registry(state: &mut GameState) {
     }
 }
 
-fn random_planet_position() -> (f64, f64) {
-    let safe_radius = (PLANET_RADIUS - 28.0).max(0.0);
-    if safe_radius <= 0.0 {
-        return (PLANET_CENTER_X, PLANET_CENTER_Y);
-    }
-
-    let angle = random_angle();
-    let radius = safe_radius * js_sys::Math::random().sqrt();
-    let x = PLANET_CENTER_X + radius * angle.cos();
-    let y = PLANET_CENTER_Y + radius * angle.sin();
-    (x, y)
-}
-
 fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
     let base_width = 28.0;
     let base_height = 18.0;
@@ -141,6 +128,14 @@ fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
     let _ = context.restore();
 }
 
+#[derive(Clone, PartialEq)]
+struct ContextMenuState {
+    canvas_x: f64,
+    canvas_y: f64,
+    offset_x: f64,
+    offset_y: f64,
+}
+
 #[function_component]
 fn App() -> Html {
     let game_state = use_mut_ref(GameState::new);
@@ -150,6 +145,7 @@ fn App() -> Html {
     let is_modal_open = use_state(|| false);
     let is_paused = use_state(|| false);
     let pause_time = use_mut_ref(|| None::<f64>);
+    let context_menu_state = use_state(|| None::<ContextMenuState>);
 
     {
         let game_state = game_state.clone();
@@ -446,11 +442,14 @@ fn App() -> Html {
         let game_state = game_state.clone();
         let canvas_ref = canvas_ref.clone();
         let is_paused_state = is_paused.clone();
+        let context_menu_state = context_menu_state.clone();
 
         Callback::from(move |event: MouseEvent| {
             if *is_paused_state {
                 return;
             }
+
+            context_menu_state.set(None);
 
             if let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() {
                 let rect = canvas.get_bounding_client_rect();
@@ -482,6 +481,53 @@ fn App() -> Html {
                             .push(SettlerState::new(id, canvas_x, canvas_y, now, lifespan));
                     }
                 }
+            }
+        })
+    };
+
+    let handle_context_menu = {
+        let canvas_ref = canvas_ref.clone();
+        let is_paused_state = is_paused.clone();
+        let context_menu_state = context_menu_state.clone();
+
+        Callback::from(move |event: MouseEvent| {
+            event.prevent_default();
+
+            if *is_paused_state {
+                return;
+            }
+
+            if let Some(canvas) = canvas_ref.cast::<HtmlCanvasElement>() {
+                let rect = canvas.get_bounding_client_rect();
+                let width = rect.width();
+                let height = rect.height();
+
+                if width == 0.0 || height == 0.0 {
+                    context_menu_state.set(None);
+                    return;
+                }
+
+                let client_x = event.client_x() as f64;
+                let client_y = event.client_y() as f64;
+                let scale_x = (canvas.width() as f64) / width;
+                let scale_y = (canvas.height() as f64) / height;
+                let canvas_x = (client_x - rect.left()) * scale_x;
+                let canvas_y = (client_y - rect.top()) * scale_y;
+
+                if !point_within_planet(canvas_x, canvas_y) {
+                    context_menu_state.set(None);
+                    return;
+                }
+
+                let offset_x = client_x - rect.left();
+                let offset_y = client_y - rect.top();
+
+                context_menu_state.set(Some(ContextMenuState {
+                    canvas_x,
+                    canvas_y,
+                    offset_x,
+                    offset_y,
+                }));
             }
         })
     };
@@ -586,30 +632,49 @@ fn App() -> Html {
         })
     };
 
-    let build_house = {
+    let build_house_from_menu = {
         let game_state = game_state.clone();
         let alive_count_handle = alive_count.clone();
+        let context_menu_state = context_menu_state.clone();
 
         Callback::from(move |_| {
-            if *alive_count_handle < 1 {
+            let menu_state = (*context_menu_state).clone();
+
+            if menu_state.is_none() {
                 return;
             }
 
-            if let Ok(mut state_ref) = game_state.try_borrow_mut() {
-                let house_id = state_ref.next_house_id;
-                state_ref.next_house_id = state_ref.next_house_id.saturating_add(1);
-                let (x, y) = random_planet_position();
-                let built_at = current_time_ms();
-                state_ref
-                    .houses
-                    .push(HouseState::new(house_id, x, y, built_at));
+            if *alive_count_handle < 1 {
+                context_menu_state.set(None);
+                return;
+            }
 
-                if let Err(error) = LocalStorage::set(STORAGE_KEY, &*state_ref) {
-                    log::warn!(
-                        "Failed to persist game state after building house: {:?}",
-                        error
-                    );
+            if let Some(menu) = menu_state {
+                if !point_within_planet(menu.canvas_x, menu.canvas_y) {
+                    context_menu_state.set(None);
+                    return;
                 }
+
+                if let Ok(mut state_ref) = game_state.try_borrow_mut() {
+                    let house_id = state_ref.next_house_id;
+                    state_ref.next_house_id = state_ref.next_house_id.saturating_add(1);
+                    let built_at = current_time_ms();
+                    state_ref.houses.push(HouseState::new(
+                        house_id,
+                        menu.canvas_x,
+                        menu.canvas_y,
+                        built_at,
+                    ));
+
+                    if let Err(error) = LocalStorage::set(STORAGE_KEY, &*state_ref) {
+                        log::warn!(
+                            "Failed to persist game state after building house: {:?}",
+                            error
+                        );
+                    }
+                }
+
+                context_menu_state.set(None);
             }
         })
     };
@@ -741,22 +806,14 @@ fn App() -> Html {
 
     let alive_now = *alive_count;
     let can_build_house = alive_now >= 1;
-    let build_button_label: &str = if can_build_house {
-        "Build House"
-    } else {
-        "Build House (need settlers)"
-    };
-    let build_button_style = format!(
-        "padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(248,225,200,0.35); background: rgba(0,0,0,0.35); color: {}; font-size: 1rem; letter-spacing: 0.06em; cursor: {}; opacity: {}; transition: opacity 0.2s ease;",
-        ORBIT_03,
-        if can_build_house { "pointer" } else { "not-allowed" },
-        if can_build_house { "1" } else { "0.6" }
-    );
 
     let houses_built = game_state
         .try_borrow()
         .map(|state| state.houses.len())
         .unwrap_or(0);
+
+    let should_show_build_prompt = alive_now >= 1 && houses_built == 0;
+    let current_menu = (*context_menu_state).clone();
 
     let is_modal_active = *is_modal_open;
 
@@ -814,6 +871,22 @@ fn App() -> Html {
 
                     </div>
                 </div>
+                {
+                    if should_show_build_prompt {
+                        html! {
+                            <div
+                                style={format!(
+                                    "padding: 0.6rem 1rem; border-radius: 0.75rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(248,225,200,0.35); color: {}; font-family: 'Trebuchet MS', sans-serif; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;",
+                                    ORBIT_03
+                                )}
+                            >
+                                {"Right click the planet to build a house"}
+                            </div>
+                        }
+                    } else {
+                        Html::default()
+                    }
+                }
                 <div
                     style="position: relative; width: min(80vw, 540px); max-width: 600px;"
                 >
@@ -822,7 +895,8 @@ fn App() -> Html {
                         width={VIEWBOX_WIDTH.to_string()}
                         height={VIEWBOX_HEIGHT.to_string()}
                         style={canvas_style.clone()}
-                        onclick={handle_click}
+                        onclick={handle_click.clone()}
+                        oncontextmenu={handle_context_menu.clone()}
                     >
                         {"Your browser does not support HTML canvas."}
                     </canvas>
@@ -836,6 +910,34 @@ fn App() -> Html {
                                     )}
                                 >
                                     {"Paused"}
+                                </div>
+                            }
+                        } else {
+                            Html::default()
+                        }
+                    }
+                    {
+                        if let Some(menu_state) = current_menu.clone() {
+                            let menu_container_style = format!(
+                                "position: absolute; left: {:.2}px; top: {:.2}px; transform: translate(-50%, 0); min-width: 160px; background: rgba(28, 18, 14, 0.94); border: 1px solid rgba(248, 225, 200, 0.4); border-radius: 0.6rem; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35); padding: 0.35rem; z-index: 10;",
+                                menu_state.offset_x,
+                                menu_state.offset_y
+                            );
+                            let button_style = format!(
+                                "width: 100%; text-align: left; padding: 0.5rem 0.75rem; border: none; background: transparent; color: {}; font-family: 'Trebuchet MS', sans-serif; font-size: 0.95rem; letter-spacing: 0.04em; border-radius: 0.5rem; cursor: {};",
+                                ORBIT_03,
+                                if can_build_house { "pointer" } else { "not-allowed" }
+                            );
+                            html! {
+                                <div style={menu_container_style}>
+                                    <button
+                                        type="button"
+                                        style={button_style}
+                                        onclick={build_house_from_menu.clone()}
+                                        disabled={!can_build_house}
+                                    >
+                                        {"Build House"}
+                                    </button>
                                 </div>
                             }
                         } else {
@@ -909,14 +1011,7 @@ fn App() -> Html {
                                     >
                                         {"Restart Game"}
                                     </button>
-                                    <button
-                                        type="button"
-                                        onclick={build_house.clone()}
-                                        disabled={!can_build_house}
-                                        style={build_button_style.clone()}
-                                    >
-                                        {build_button_label}
-                                    </button>
+                                    
                                     <button
                                         type="button"
                                         onclick={save_game.clone()}

@@ -8,9 +8,7 @@ pub struct GameState {
     pub next_settler_id: u64,
     pub settler_min_lifespan_ms: f64,
     pub settler_max_lifespan_ms: f64,
-    #[serde(default)]
     pub houses: Vec<HouseState>,
-    #[serde(default)]
     pub next_house_id: u64,
 }
 
