@@ -486,12 +486,6 @@ fn App() -> Html {
         })
     };
 
-    let pause_button_label = if *is_paused {
-        "Resume Time"
-    } else {
-        "Pause Time"
-    };
-
     let open_settings = {
         let is_modal_open = is_modal_open.clone();
         Callback::from(move |_| is_modal_open.set(true))
@@ -521,56 +515,6 @@ fn App() -> Html {
             *pause_time.borrow_mut() = None;
             is_paused.set(false);
             is_modal_open.set(false);
-        })
-    };
-
-    let toggle_pause = {
-        let is_paused = is_paused.clone();
-        let pause_time = pause_time.clone();
-        let game_state = game_state.clone();
-
-        Callback::from(move |_| {
-            let currently_paused = *is_paused;
-            info!(
-                "toggle_pause clicked; currently_paused={}",
-                currently_paused
-            );
-
-            if currently_paused {
-                let paused_at_opt = *pause_time.borrow();
-                if let Some(paused_at) = paused_at_opt {
-                    let resume_now = current_time_ms();
-                    let offset = resume_now - paused_at;
-
-                    info!(
-                        "resuming time; paused_at={:.2} resume_now={:.2} offset={:.2}",
-                        paused_at, resume_now, offset
-                    );
-
-                    if offset > 0.0 {
-                        if let Ok(mut state_ref) = game_state.try_borrow_mut() {
-                            // Shift internal timers so animations resume without skipping ahead
-                            for settler in &mut state_ref.settlers {
-                                settler.move_start_ms += offset;
-                                settler.last_direction_change_ms += offset;
-                                settler.birth_ms += offset;
-                                if let SettlerPhase::Fading { started_ms } = &mut settler.phase {
-                                    *started_ms += offset;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                *pause_time.borrow_mut() = None;
-                is_paused.set(false);
-                info!("time resumed");
-            } else {
-                let now = current_time_ms();
-                *pause_time.borrow_mut() = Some(now);
-                is_paused.set(true);
-                info!("time paused");
-            }
         })
     };
 
@@ -964,16 +908,6 @@ fn App() -> Html {
                                         )}
                                     >
                                         {"Restart Game"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onclick={toggle_pause.clone()}
-                                        style={format!(
-                                            "padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(248,225,200,0.35); background: rgba(0,0,0,0.35); color: {}; font-size: 1rem; letter-spacing: 0.06em; cursor: pointer;",
-                                            ORBIT_03
-                                        )}
-                                    >
-                                        {pause_button_label}
                                     </button>
                                     <button
                                         type="button"
