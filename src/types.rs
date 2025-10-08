@@ -20,8 +20,8 @@ impl GameState {
         Self {
             settlers: Vec::new(),
             next_settler_id: 0,
-            settler_min_lifespan_ms: 15_000.0,
-            settler_max_lifespan_ms: 20_000.0,
+            settler_min_lifespan_ms: 5_000.0,
+            settler_max_lifespan_ms: 10_000.0,
             houses: Vec::new(),
             next_house_id: 0,
             settlers_base_capacity: 10,

@@ -438,8 +438,8 @@ fn App() -> Html {
                                     }
                                 }
 
-                                if now - house.last_spawn_ms >= 1_000.0 {
-                                    let (spawn_x, spawn_y) = random_point_within_planet();
+                                if now - house.last_spawn_ms >= 5_000.0 {
+                                    let (spawn_x, spawn_y) = (house.x, house.y);
                                     let id = next_settler_id;
                                     next_settler_id = next_settler_id.saturating_add(1);
                                     let lifespan = random_range(min_lifespan, max_lifespan);
