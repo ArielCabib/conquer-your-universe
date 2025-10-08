@@ -18,7 +18,7 @@ use constants::{
     ORBIT_01, ORBIT_02, ORBIT_03, ORBIT_04, ORBIT_05, PLANET_CENTER_X, PLANET_CENTER_Y,
     PLANET_RADIUS, SETTLER_RADIUS, STORAGE_KEY, VIEWBOX_HEIGHT, VIEWBOX_WIDTH,
 };
-use types::{GameState, SettlerPhase, SettlerState};
+use types::{GameState, HouseState, SettlerPhase, SettlerState};
 
 fn ease_out_quad(t: f64) -> f64 {
     1.0 - (1.0 - t).powi(2)
@@ -70,6 +70,77 @@ fn ensure_settler_lifespans(state: &mut GameState) {
     }
 }
 
+fn ensure_house_registry(state: &mut GameState) {
+    if let Some(highest_id) = state.houses.iter().map(|house| house.id).max() {
+        let next_id = highest_id.saturating_add(1);
+        if state.next_house_id <= highest_id {
+            state.next_house_id = next_id;
+        }
+    }
+}
+
+fn random_planet_position() -> (f64, f64) {
+    let safe_radius = (PLANET_RADIUS - 28.0).max(0.0);
+    if safe_radius <= 0.0 {
+        return (PLANET_CENTER_X, PLANET_CENTER_Y);
+    }
+
+    let angle = random_angle();
+    let radius = safe_radius * js_sys::Math::random().sqrt();
+    let x = PLANET_CENTER_X + radius * angle.cos();
+    let y = PLANET_CENTER_Y + radius * angle.sin();
+    (x, y)
+}
+
+fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
+    let base_width = 28.0;
+    let base_height = 18.0;
+    let roof_height = 14.0;
+
+    let base_x = house.x - base_width / 2.0;
+    let base_y = house.y - base_height / 2.0;
+
+    let _ = context.save();
+    context.set_fill_style_str(ORBIT_01);
+    context.fill_rect(base_x, base_y, base_width, base_height);
+
+    context.set_fill_style_str(ORBIT_02);
+    context.begin_path();
+    context.move_to(base_x - 2.0, base_y);
+    context.line_to(house.x, base_y - roof_height);
+    context.line_to(base_x + base_width + 2.0, base_y);
+    context.close_path();
+    context.fill();
+
+    context.set_fill_style_str(ORBIT_05);
+    let window_size = base_width * 0.22;
+    let window_y = base_y + base_height * 0.28;
+    context.fill_rect(
+        base_x + base_width * 0.16,
+        window_y,
+        window_size,
+        window_size,
+    );
+    context.fill_rect(
+        base_x + base_width - window_size - base_width * 0.16,
+        window_y,
+        window_size,
+        window_size,
+    );
+
+    context.set_fill_style_str(ORBIT_04);
+    let door_width = base_width * 0.28;
+    let door_height = base_height * 0.62;
+    context.fill_rect(
+        house.x - door_width / 2.0,
+        base_y + base_height - door_height,
+        door_width,
+        door_height,
+    );
+
+    let _ = context.restore();
+}
+
 #[function_component]
 fn App() -> Html {
     let game_state = use_mut_ref(GameState::new);
@@ -87,6 +158,7 @@ fn App() -> Html {
             match LocalStorage::get::<GameState>(STORAGE_KEY) {
                 Ok(mut stored_state) => {
                     ensure_settler_lifespans(&mut stored_state);
+                    ensure_house_registry(&mut stored_state);
                     *game_state.borrow_mut() = stored_state;
                 }
                 Err(_) => {
@@ -226,6 +298,10 @@ fn App() -> Html {
                                     }
                                 }
 
+                                for house in &state.houses {
+                                    draw_house(&draw_context, house);
+                                }
+
                                 alive_count_handle.set(alive_total);
                             }
                         } else if let Ok(mut state) = game_state_handle.try_borrow_mut() {
@@ -330,6 +406,10 @@ fn App() -> Html {
                                     }
                                 }
                             });
+
+                            for house in &state.houses {
+                                draw_house(&draw_context, house);
+                            }
 
                             alive_count_handle.set(alive_total);
                         }
@@ -562,6 +642,34 @@ fn App() -> Html {
         })
     };
 
+    let build_house = {
+        let game_state = game_state.clone();
+        let alive_count_handle = alive_count.clone();
+
+        Callback::from(move |_| {
+            if *alive_count_handle < 1 {
+                return;
+            }
+
+            if let Ok(mut state_ref) = game_state.try_borrow_mut() {
+                let house_id = state_ref.next_house_id;
+                state_ref.next_house_id = state_ref.next_house_id.saturating_add(1);
+                let (x, y) = random_planet_position();
+                let built_at = current_time_ms();
+                state_ref
+                    .houses
+                    .push(HouseState::new(house_id, x, y, built_at));
+
+                if let Err(error) = LocalStorage::set(STORAGE_KEY, &*state_ref) {
+                    log::warn!(
+                        "Failed to persist game state after building house: {:?}",
+                        error
+                    );
+                }
+            }
+        })
+    };
+
     let on_file_change = {
         let game_state = game_state.clone();
         let alive_count = alive_count.clone();
@@ -593,6 +701,7 @@ fn App() -> Html {
                                                 match serde_json::from_str::<GameState>(&text) {
                                                     Ok(mut loaded_state) => {
                                                         ensure_settler_lifespans(&mut loaded_state);
+                                                        ensure_house_registry(&mut loaded_state);
 
                                                         let alive_total = loaded_state
                                                             .settlers
@@ -686,6 +795,25 @@ fn App() -> Html {
         canvas_cursor, canvas_pointer_events
     );
 
+    let alive_now = *alive_count;
+    let can_build_house = alive_now >= 1;
+    let build_button_label: &str = if can_build_house {
+        "Build House"
+    } else {
+        "Build House (need settlers)"
+    };
+    let build_button_style = format!(
+        "padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(248,225,200,0.35); background: rgba(0,0,0,0.35); color: {}; font-size: 1rem; letter-spacing: 0.06em; cursor: {}; opacity: {}; transition: opacity 0.2s ease;",
+        ORBIT_03,
+        if can_build_house { "pointer" } else { "not-allowed" },
+        if can_build_house { "1" } else { "0.6" }
+    );
+
+    let houses_built = game_state
+        .try_borrow()
+        .map(|state| state.houses.len())
+        .unwrap_or(0);
+
     let is_modal_active = *is_modal_open;
 
     html! {
@@ -778,7 +906,7 @@ fn App() -> Html {
                         ORBIT_03
                     )}
                 >
-                    {format!("Settlers alive: {}", *alive_count)}
+                    {format!("Settlers alive: {} · Houses built: {}", alive_now, houses_built)}
                 </div>
             </section>
             <input
@@ -846,6 +974,14 @@ fn App() -> Html {
                                         )}
                                     >
                                         {pause_button_label}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onclick={build_house.clone()}
+                                        disabled={!can_build_house}
+                                        style={build_button_style.clone()}
+                                    >
+                                        {build_button_label}
                                     </button>
                                     <button
                                         type="button"

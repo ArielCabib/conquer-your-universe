@@ -8,6 +8,10 @@ pub struct GameState {
     pub next_settler_id: u64,
     pub settler_min_lifespan_ms: f64,
     pub settler_max_lifespan_ms: f64,
+    #[serde(default)]
+    pub houses: Vec<HouseState>,
+    #[serde(default)]
+    pub next_house_id: u64,
 }
 
 impl GameState {
@@ -17,6 +21,8 @@ impl GameState {
             next_settler_id: 0,
             settler_min_lifespan_ms: 15_000.0,
             settler_max_lifespan_ms: 20_000.0,
+            houses: Vec::new(),
+            next_house_id: 0,
         }
     }
 }
@@ -65,5 +71,20 @@ impl SettlerState {
         let x = self.anchor_x + (self.target_x - self.anchor_x) * eased;
         let y = self.anchor_y + (self.target_y - self.anchor_y) * eased;
         (x, y)
+    }
+}
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+pub struct HouseState {
+    pub id: u64,
+    pub x: f64,
+    pub y: f64,
+    #[serde(default)]
+    pub built_ms: f64,
+}
+
+impl HouseState {
+    pub fn new(id: u64, x: f64, y: f64, built_ms: f64) -> Self {
+        Self { id, x, y, built_ms }
     }
 }
