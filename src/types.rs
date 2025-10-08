@@ -85,8 +85,12 @@ pub struct HouseState {
     pub y: f64,
     #[serde(default)]
     pub built_ms: f64,
-    #[serde(default)]
+    #[serde(default = "default_house_last_spawn_ms")]
     pub last_spawn_ms: f64,
+}
+
+fn default_house_last_spawn_ms() -> f64 {
+    f64::NEG_INFINITY
 }
 
 impl HouseState {
@@ -96,7 +100,7 @@ impl HouseState {
             x,
             y,
             built_ms,
-            last_spawn_ms: built_ms,
+            last_spawn_ms: default_house_last_spawn_ms(),
         }
     }
 }

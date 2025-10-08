@@ -14,9 +14,10 @@ mod constants;
 mod types;
 
 use constants::{
-    BIRTH_ANIMATION_MS, FADING_DURATION_MS, MOVE_DISTANCE_MAX, MOVE_DISTANCE_MIN, MOVE_INTERVAL_MS,
-    ORBIT_01, ORBIT_02, ORBIT_03, ORBIT_04, ORBIT_05, PLANET_CENTER_X, PLANET_CENTER_Y,
-    PLANET_RADIUS, SETTLER_RADIUS, STORAGE_KEY, VIEWBOX_HEIGHT, VIEWBOX_WIDTH,
+    BIRTH_ANIMATION_MS, FADING_DURATION_MS, HOUSE_SPAWN_ANIMATION_MS, MOVE_DISTANCE_MAX,
+    MOVE_DISTANCE_MIN, MOVE_INTERVAL_MS, ORBIT_01, ORBIT_02, ORBIT_03, ORBIT_04, ORBIT_05,
+    PLANET_CENTER_X, PLANET_CENTER_Y, PLANET_RADIUS, SETTLER_RADIUS, STORAGE_KEY, VIEWBOX_HEIGHT,
+    VIEWBOX_WIDTH,
 };
 use types::{GameState, HouseState, SettlerPhase, SettlerState};
 
@@ -88,7 +89,30 @@ fn ensure_house_registry(state: &mut GameState) {
     }
 }
 
-fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
+fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState, now_ms: f64) {
+    let spawn_elapsed = (now_ms - house.last_spawn_ms).max(0.0);
+    let highlight_factor = if spawn_elapsed < HOUSE_SPAWN_ANIMATION_MS {
+        1.0 - ease_out_quad((spawn_elapsed / HOUSE_SPAWN_ANIMATION_MS).clamp(0.0, 1.0))
+    } else {
+        0.0
+    };
+
+    if highlight_factor > 0.0 {
+        let halo_radius = 36.0 + 18.0 * highlight_factor;
+        context.set_global_alpha(0.45 * highlight_factor);
+        context.set_fill_style_str(ORBIT_04);
+        context.begin_path();
+        let _ = context.arc(
+            house.x,
+            house.y + 4.0,
+            halo_radius,
+            0.0,
+            std::f64::consts::TAU,
+        );
+        context.fill();
+        context.set_global_alpha(1.0);
+    }
+
     let base_width = 28.0;
     let base_height = 18.0;
     let roof_height = 14.0;
@@ -100,6 +124,13 @@ fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
     context.set_fill_style_str(ORBIT_01);
     context.fill_rect(base_x, base_y, base_width, base_height);
 
+    if highlight_factor > 0.0 {
+        context.set_global_alpha(0.35 * highlight_factor + 0.2);
+        context.set_fill_style_str(ORBIT_05);
+        context.fill_rect(base_x, base_y, base_width, base_height);
+        context.set_global_alpha(1.0);
+    }
+
     context.set_fill_style_str(ORBIT_02);
     context.begin_path();
     context.move_to(base_x - 2.0, base_y);
@@ -107,6 +138,18 @@ fn draw_house(context: &CanvasRenderingContext2d, house: &HouseState) {
     context.line_to(base_x + base_width + 2.0, base_y);
     context.close_path();
     context.fill();
+
+    if highlight_factor > 0.0 {
+        context.set_global_alpha(0.45 * highlight_factor + 0.15);
+        context.begin_path();
+        context.move_to(base_x - 2.0, base_y);
+        context.line_to(house.x, base_y - roof_height - 4.0 * highlight_factor);
+        context.line_to(base_x + base_width + 2.0, base_y);
+        context.close_path();
+        context.set_fill_style_str(ORBIT_03);
+        context.fill();
+        context.set_global_alpha(1.0);
+    }
 
     context.set_fill_style_str(ORBIT_05);
     let window_size = base_width * 0.22;
@@ -304,7 +347,7 @@ fn App() -> Html {
                                 }
 
                                 for house in &state.houses {
-                                    draw_house(&draw_context, house);
+                                    draw_house(&draw_context, house, now);
                                 }
 
                                 alive_count_handle.set(alive_total);
@@ -458,7 +501,7 @@ fn App() -> Html {
                             }
 
                             for house in &state.houses {
-                                draw_house(&draw_context, house);
+                                draw_house(&draw_context, house, now);
                             }
 
                             alive_count_handle.set(alive_total);

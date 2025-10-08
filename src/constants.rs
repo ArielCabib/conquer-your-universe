@@ -15,3 +15,4 @@ pub const MOVE_DISTANCE_MAX: f64 = 45.0;
 pub const FADING_DURATION_MS: f64 = 600.0;
 pub const STORAGE_KEY: &str = "conquer-your-universe::game_state";
 pub const BIRTH_ANIMATION_MS: f64 = 450.0;
+pub const HOUSE_SPAWN_ANIMATION_MS: f64 = 520.0;
