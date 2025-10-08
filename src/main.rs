@@ -443,6 +443,7 @@ fn App() -> Html {
         let canvas_ref = canvas_ref.clone();
         let is_paused_state = is_paused.clone();
         let context_menu_state = context_menu_state.clone();
+        let alive_count_handle = alive_count.clone();
 
         Callback::from(move |event: MouseEvent| {
             if *is_paused_state {
@@ -469,6 +470,20 @@ fn App() -> Html {
 
                 if point_within_planet(canvas_x, canvas_y) {
                     if let Ok(mut state) = game_state.try_borrow_mut() {
+                        let base_capacity = state.settlers_base_capacity as usize;
+                        let settlers_per_house = state.settlers_per_house as usize;
+                        let house_capacity = state
+                            .houses
+                            .len()
+                            .saturating_mul(settlers_per_house);
+                        let settlers_capacity_limit =
+                            base_capacity.saturating_add(house_capacity);
+                        let alive_now = *alive_count_handle;
+
+                        if settlers_capacity_limit > 0 && alive_now >= settlers_capacity_limit {
+                            return;
+                        }
+
                         let id = state.next_settler_id;
                         state.next_settler_id += 1;
                         let now = current_time_ms();
@@ -479,6 +494,7 @@ fn App() -> Html {
                         state
                             .settlers
                             .push(SettlerState::new(id, canvas_x, canvas_y, now, lifespan));
+                        alive_count_handle.set(alive_now.saturating_add(1));
                     }
                 }
             }
