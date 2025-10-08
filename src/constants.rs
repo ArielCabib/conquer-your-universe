@@ -1,0 +1,17 @@
+pub const ORBIT_01: &str = "#2A1A11";
+pub const ORBIT_02: &str = "#5C3A27";
+pub const ORBIT_03: &str = "#F8E1C8";
+pub const ORBIT_04: &str = "#F2A7A0";
+pub const ORBIT_05: &str = "#88AFC6";
+pub const VIEWBOX_WIDTH: f64 = 600.0;
+pub const VIEWBOX_HEIGHT: f64 = 400.0;
+pub const PLANET_RADIUS: f64 = 200.0;
+pub const PLANET_CENTER_X: f64 = 300.0;
+pub const PLANET_CENTER_Y: f64 = 200.0;
+pub const SETTLER_RADIUS: f64 = 10.0;
+pub const MOVE_INTERVAL_MS: f64 = 1_000.0;
+pub const MOVE_DISTANCE_MIN: f64 = 12.0;
+pub const MOVE_DISTANCE_MAX: f64 = 45.0;
+pub const FADING_DURATION_MS: f64 = 600.0;
+pub const STORAGE_KEY: &str = "conquer-your-universe::game_state";
+pub const BIRTH_ANIMATION_MS: f64 = 450.0;

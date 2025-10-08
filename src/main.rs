@@ -2,7 +2,6 @@ use gloo::storage::{LocalStorage, Storage};
 use gloo_timers::callback::Interval;
 use js_sys::Array;
 use log::info;
-use serde::{Deserialize, Serialize};
 use std::{cell::Cell, rc::Rc};
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use web_sys::{
@@ -11,89 +10,15 @@ use web_sys::{
 };
 use yew::{events::MouseEvent, prelude::*};
 
-const ORBIT_01: &str = "#2A1A11";
-const ORBIT_02: &str = "#5C3A27";
-const ORBIT_03: &str = "#F8E1C8";
-const ORBIT_04: &str = "#F2A7A0";
-const ORBIT_05: &str = "#88AFC6";
-const VIEWBOX_WIDTH: f64 = 600.0;
-const VIEWBOX_HEIGHT: f64 = 400.0;
-const PLANET_RADIUS: f64 = 200.0;
-const PLANET_CENTER_X: f64 = 300.0;
-const PLANET_CENTER_Y: f64 = 200.0;
-const SETTLER_RADIUS: f64 = 10.0;
-const MOVE_INTERVAL_MS: f64 = 1_000.0;
-const MOVE_DISTANCE_MIN: f64 = 12.0;
-const MOVE_DISTANCE_MAX: f64 = 45.0;
-const FADING_DURATION_MS: f64 = 600.0;
-const STORAGE_KEY: &str = "conquer-your-universe::game_state";
-const BIRTH_ANIMATION_MS: f64 = 450.0;
+mod constants;
+mod types;
 
-#[derive(Clone, Serialize, Deserialize)]
-struct GameState {
-    settlers: Vec<SettlerState>,
-    next_settler_id: u64,
-    settler_min_lifespan_ms: f64,
-    settler_max_lifespan_ms: f64,
-}
-
-impl GameState {
-    fn new() -> Self {
-        Self {
-            settlers: Vec::new(),
-            next_settler_id: 0,
-            settler_min_lifespan_ms: 15_000.0,
-            settler_max_lifespan_ms: 20_000.0,
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
-enum SettlerPhase {
-    Alive,
-    Fading { started_ms: f64 },
-}
-
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
-struct SettlerState {
-    id: u64,
-    anchor_x: f64,
-    anchor_y: f64,
-    target_x: f64,
-    target_y: f64,
-    move_start_ms: f64,
-    last_direction_change_ms: f64,
-    birth_ms: f64,
-    phase: SettlerPhase,
-    #[serde(default)]
-    lifespan_ms: f64,
-}
-
-impl SettlerState {
-    fn new(id: u64, x: f64, y: f64, now_ms: f64, lifespan_ms: f64) -> Self {
-        Self {
-            id,
-            anchor_x: x,
-            anchor_y: y,
-            target_x: x,
-            target_y: y,
-            move_start_ms: now_ms,
-            last_direction_change_ms: now_ms - MOVE_INTERVAL_MS,
-            birth_ms: now_ms,
-            phase: SettlerPhase::Alive,
-            lifespan_ms,
-        }
-    }
-
-    fn position_at(&self, now_ms: f64) -> (f64, f64) {
-        let elapsed = (now_ms - self.move_start_ms).max(0.0);
-        let progress = (elapsed / MOVE_INTERVAL_MS).clamp(0.0, 1.0);
-        let eased = ease_out_quad(progress);
-        let x = self.anchor_x + (self.target_x - self.anchor_x) * eased;
-        let y = self.anchor_y + (self.target_y - self.anchor_y) * eased;
-        (x, y)
-    }
-}
+use constants::{
+    BIRTH_ANIMATION_MS, FADING_DURATION_MS, MOVE_DISTANCE_MAX, MOVE_DISTANCE_MIN, MOVE_INTERVAL_MS,
+    ORBIT_01, ORBIT_02, ORBIT_03, ORBIT_04, ORBIT_05, PLANET_CENTER_X, PLANET_CENTER_Y,
+    PLANET_RADIUS, SETTLER_RADIUS, STORAGE_KEY, VIEWBOX_HEIGHT, VIEWBOX_WIDTH,
+};
+use types::{GameState, SettlerPhase, SettlerState};
 
 fn ease_out_quad(t: f64) -> f64 {
     1.0 - (1.0 - t).powi(2)
@@ -814,7 +739,7 @@ fn App() -> Html {
                         {"Click around and find out."}
                     </h3>
 
-                    
+
                     </div>
                 </div>
                 <div
