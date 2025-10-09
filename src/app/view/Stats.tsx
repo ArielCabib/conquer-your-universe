@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import { useLayoutEffect, useRef, useState, type JSX } from "react";
 
 interface StatsPanelProps {
   aliveNow: number;
@@ -36,6 +36,67 @@ export function StatsPanel({
   const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
 
   const statCards: JSX.Element[] = [];
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [hasMeasuredHeight, setHasMeasuredHeight] = useState(false);
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    const content = contentRef.current;
+
+    if (!wrapper || !content) {
+      return;
+    }
+
+    const updateHeight = () => {
+      wrapper.style.setProperty(
+        "--stats-panel-height",
+        `${content.offsetHeight}px`,
+      );
+      setHasMeasuredHeight(true);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(content);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof ResizeObserver !== "undefined") {
+      return;
+    }
+
+    const wrapper = wrapperRef.current;
+    const content = contentRef.current;
+
+    if (!wrapper || !content) {
+      return;
+    }
+
+    wrapper.style.setProperty("--stats-panel-height", `${content.offsetHeight}px`);
+    setHasMeasuredHeight(true);
+  }, [
+    aliveNow,
+    settlersCapacityLimit,
+    housesBuilt,
+    housesCapacityLimit,
+    settlerMinLifespanMs,
+    settlerMaxLifespanMs,
+    farmsBuilt,
+    farmCapacityLimit,
+    farmLifespanBonusMs,
+    houseSpawnIntervalMs,
+    houseSpawnAmount,
+  ]);
 
   if (aliveNow > 0) {
     statCards.push(
@@ -90,13 +151,14 @@ export function StatsPanel({
     );
   }
 
-  if (statCards.length === 0) {
-    return null;
-  }
-
   return (
-    <div className="mt-4 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-4">
-      {statCards}
+    <div
+      ref={wrapperRef}
+      className={`stats-panel ${hasMeasuredHeight ? "opacity-100" : "opacity-0"}`}
+    >
+      <div ref={contentRef} className="flex flex-wrap items-center justify-center gap-4">
+        {statCards}
+      </div>
     </div>
   );
 }

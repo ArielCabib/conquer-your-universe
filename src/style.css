@@ -108,3 +108,10 @@
     touch-action: manipulation;
   }
 }
+
+@layer components {
+  .stats-panel {
+    @apply mt-4 w-[min(80vw,540px)] max-w-[600px] overflow-hidden transition-[height,opacity] duration-200 ease-out;
+    height: var(--stats-panel-height, 0px);
+  }
+}
