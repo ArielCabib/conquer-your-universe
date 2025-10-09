@@ -74,7 +74,7 @@ export function HeaderSection({ onOpenSettings, planetName, onPlanetNameChange }
 
   return (
     <div className="flex w-[min(80vw,540px)] max-w-[600px] items-center justify-between gap-4">
-      <div>
+      <div className="m-auto">
         <div className="flex items-center">
           <span />
           <button
