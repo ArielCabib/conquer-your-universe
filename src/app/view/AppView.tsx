@@ -1,11 +1,10 @@
 import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
-import { ContextMenuState, ToastMessage } from "../types";
+import { ContextMenuState } from "../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
 import { ControlModal } from "./Modal";
 import { BuildPrompt } from "./Prompt";
 import { StatsPanel } from "./Stats";
-import { ToastStack } from "./ToastStack";
 
 interface AppViewProps {
   aliveNow: number;
@@ -41,7 +40,6 @@ interface AppViewProps {
   farmLifespanBonusMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
-  toasts: ToastMessage[];
   onPlanetNameChange: (name: string) => void;
 }
 
@@ -79,7 +77,6 @@ export function AppView({
   farmLifespanBonusMs,
   houseSpawnIntervalMs,
   houseSpawnAmount,
-  toasts,
   onPlanetNameChange,
 }: AppViewProps) {
   return (
@@ -133,7 +130,6 @@ export function AppView({
         onSave={onSaveGame}
         onOpenFile={onOpenFileDialog}
       />
-      <ToastStack toasts={toasts} />
     </main>
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState, ToastMessage } from "./app/types";
+import { ContextMenuState } from "./app/types";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -21,6 +21,8 @@ import { createInitialGameState, GameState } from "./types";
 
 type PromptKey = "explore" | "build" | "farm";
 
+const HARVESTER_PROMPT_MESSAGE = "You can build a harvester";
+
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
   build: "Right click the planet to build a house",
@@ -37,10 +39,9 @@ export function App() {
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const toastIdRef = useRef(0);
-  const toastTimersRef = useRef<Map<number, number>>(new Map());
-  const harvesterToastShownRef = useRef(false);
+  const harvesterPromptShownRef = useRef(false);
+  const harvesterPromptTimeoutRef = useRef<number | null>(null);
+  const [promptOverride, setPromptOverride] = useState<string | null>(null);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -53,43 +54,18 @@ export function App() {
   useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
   usePeriodicSave(gameStateRef);
 
-  const removeToast = useCallback((id: number) => {
-    setToasts((current) => current.filter((toast) => toast.id !== id));
-
-    const timeoutId = toastTimersRef.current.get(id);
-    if (typeof timeoutId === "number" && typeof window !== "undefined") {
-      window.clearTimeout(timeoutId);
+  const clearHarvesterPromptTimeout = useCallback(() => {
+    if (typeof window !== "undefined" && harvesterPromptTimeoutRef.current !== null) {
+      window.clearTimeout(harvesterPromptTimeoutRef.current);
     }
-    toastTimersRef.current.delete(id);
+    harvesterPromptTimeoutRef.current = null;
   }, []);
-
-  const showToast = useCallback(
-    (message: string) => {
-      const id = toastIdRef.current;
-      toastIdRef.current += 1;
-
-      setToasts((current) => [...current, { id, message }]);
-
-      if (typeof window !== "undefined") {
-        const timeoutId = window.setTimeout(() => {
-          removeToast(id);
-        }, 4_500);
-        toastTimersRef.current.set(id, timeoutId);
-      }
-    },
-    [removeToast],
-  );
 
   useEffect(() => {
     return () => {
-      if (typeof window !== "undefined") {
-        toastTimersRef.current.forEach((timeoutId) => {
-          window.clearTimeout(timeoutId);
-        });
-      }
-      toastTimersRef.current.clear();
+      clearHarvesterPromptTimeout();
     };
-  }, []);
+  }, [clearHarvesterPromptTimeout]);
 
   const handleClick = useCanvasClickHandler({
     gameStateRef,
@@ -224,16 +200,31 @@ export function App() {
 
   useEffect(() => {
     if (canBuildHarvester) {
-      if (!harvesterToastShownRef.current) {
-        showToast("You can build a harvester");
-        harvesterToastShownRef.current = true;
+      if (!harvesterPromptShownRef.current) {
+        setPromptOverride(HARVESTER_PROMPT_MESSAGE);
+        harvesterPromptShownRef.current = true;
+
+        if (typeof window !== "undefined") {
+          clearHarvesterPromptTimeout();
+          harvesterPromptTimeoutRef.current = window.setTimeout(() => {
+            setPromptOverride((current) =>
+              current === HARVESTER_PROMPT_MESSAGE ? null : current,
+            );
+            harvesterPromptTimeoutRef.current = null;
+          }, 4_500);
+        }
       }
     } else {
-      harvesterToastShownRef.current = false;
+      harvesterPromptShownRef.current = false;
+      setPromptOverride((current) =>
+        current === HARVESTER_PROMPT_MESSAGE ? null : current,
+      );
+      clearHarvesterPromptTimeout();
     }
-  }, [canBuildHarvester, showToast]);
+  }, [canBuildHarvester, clearHarvesterPromptTimeout]);
 
-  const promptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
+  const basePromptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
+  const promptMessage = promptOverride ?? basePromptMessage;
 
   return (
     <AppView
@@ -270,7 +261,6 @@ export function App() {
       farmCapacityLimit={farmCapacityLimit}
       houseSpawnIntervalMs={houseSpawnIntervalMs}
       houseSpawnAmount={houseSpawnAmount}
-      toasts={toasts}
       onPlanetNameChange={handlePlanetNameChange}
     />
   );
