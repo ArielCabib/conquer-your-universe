@@ -116,10 +116,10 @@ export function ensureCropRegistry(state: GameState): void {
   });
 }
 
-const CROP_COLLISION_DISTANCE = 14;
-const FARM_CROP_DISTANCE_MIN = 14;
-const FARM_CROP_DISTANCE_MAX = 52;
-const FARM_CROP_VERTICAL_SQUASH = 0.6;
+const CROP_COLLISION_DISTANCE = 22;
+const FARM_CROP_DISTANCE_MIN = 28;
+const FARM_CROP_DISTANCE_MAX = 78;
+const FARM_CROP_VERTICAL_SQUASH = 0.7;
 
 export function randomCropPositionNearFarm(
   farm: FarmState,
