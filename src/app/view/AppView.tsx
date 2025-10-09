@@ -1,5 +1,4 @@
-import type { CSSProperties, ChangeEventHandler, MouseEventHandler, RefObject } from "react";
-import { ORBIT_01 } from "../../constants";
+import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
 import { ContextMenuState } from "../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
@@ -10,8 +9,8 @@ import { StatsPanel } from "./Stats";
 interface AppViewProps {
   aliveNow: number;
   canBuildHouse: boolean;
+  canBuildFarm: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
-  canvasStyle: CSSProperties;
   onCloseModal: MouseEventHandler<HTMLButtonElement>;
   contextMenuState: ContextMenuState | null;
   fileInputRef: RefObject<HTMLInputElement>;
@@ -19,6 +18,8 @@ interface AppViewProps {
   onContextMenuCanvas: MouseEventHandler<HTMLCanvasElement>;
   housesBuilt: number;
   housesCapacityLimit: number;
+  farmsBuilt: number;
+  farmCapacityLimit: number;
   isModalActive: boolean;
   isPaused: boolean;
   onFileChange: ChangeEventHandler<HTMLInputElement>;
@@ -30,15 +31,20 @@ interface AppViewProps {
   settlersCapacityLimit: number;
   shouldShowBuildPrompt: boolean;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
+  onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
+  farmLifespanBonusMs: number;
+  houseSpawnIntervalMs: number;
+  houseSpawnAmount: number;
+  farmBuildDisabledReason?: string;
 }
 
 export function AppView({
   aliveNow,
   canBuildHouse,
+  canBuildFarm,
   canvasRef,
-  canvasStyle,
   onCloseModal,
   contextMenuState,
   fileInputRef,
@@ -46,6 +52,8 @@ export function AppView({
   onContextMenuCanvas,
   housesBuilt,
   housesCapacityLimit,
+  farmsBuilt,
+  farmCapacityLimit,
   isModalActive,
   isPaused,
   onFileChange,
@@ -57,54 +65,50 @@ export function AppView({
   settlersCapacityLimit,
   shouldShowBuildPrompt,
   onBuildHouseFromMenu,
+  onBuildFarmFromMenu,
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
+  farmLifespanBonusMs,
+  houseSpawnIntervalMs,
+  houseSpawnAmount,
+  farmBuildDisabledReason,
 }: AppViewProps) {
   return (
-    <main
-      style={{
-        backgroundColor: ORBIT_01,
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <section
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "2.5rem",
-          textAlign: "center",
-        }}
-      >
+    <main className="flex min-h-screen items-center justify-center bg-orbit-01">
+      <section className="flex flex-col items-center gap-10 text-center">
         <HeaderSection onOpenSettings={onOpenSettings} />
         <BuildPrompt shouldShow={shouldShowBuildPrompt} />
         <CanvasArea
           canvasRef={canvasRef}
-          canvasStyle={canvasStyle}
           onClick={onClickCanvas}
           onContextMenu={onContextMenuCanvas}
           isPaused={isPaused}
           contextMenuState={contextMenuState}
           onBuildHouse={onBuildHouseFromMenu}
           canBuildHouse={canBuildHouse}
+          onBuildFarm={onBuildFarmFromMenu}
+          canBuildFarm={canBuildFarm}
+          farmBuildDisabledReason={farmBuildDisabledReason}
         />
         <StatsPanel
           aliveNow={aliveNow}
           settlersCapacityLimit={settlersCapacityLimit}
           housesBuilt={housesBuilt}
           housesCapacityLimit={housesCapacityLimit}
+          farmsBuilt={farmsBuilt}
+          farmCapacityLimit={farmCapacityLimit}
           settlerMinLifespanMs={settlerMinLifespanMs}
           settlerMaxLifespanMs={settlerMaxLifespanMs}
+          farmLifespanBonusMs={farmLifespanBonusMs}
+          houseSpawnIntervalMs={houseSpawnIntervalMs}
+          houseSpawnAmount={houseSpawnAmount}
         />
       </section>
       <input
         ref={fileInputRef}
         type="file"
         accept="application/json"
-        style={{ display: "none" }}
+        className="hidden"
         onChange={onFileChange}
       />
       <ControlModal

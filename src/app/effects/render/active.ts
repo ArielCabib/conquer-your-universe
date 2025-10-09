@@ -90,7 +90,7 @@ export function handleActiveState(
   state: GameState,
   now: number,
   setAliveCount: Dispatch<SetStateAction<number>>,
-  renderHouses: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
+  renderStructures: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
 ) {
   let aliveTotal = 0;
   const survivors: SettlerState[] = [];
@@ -144,19 +144,29 @@ export function handleActiveState(
   const maxLifespan = state.settlerMaxLifespanMs;
   const newSettlers: SettlerState[] = [];
   let nextSettlerId = state.nextSettlerId;
+  const houseSpawnIntervalMs = state.houseSpawnIntervalMs;
+  const houseSpawnAmount = state.houseSpawnAmount;
 
   for (const house of state.houses) {
     if (capacityLimit !== null && aliveTotal >= capacityLimit) {
       break;
     }
 
-    if (now - house.lastSpawnMs >= 5_000) {
-      const id = nextSettlerId;
-      nextSettlerId += 1;
-      const lifespan = randomRange(minLifespan, maxLifespan);
-      newSettlers.push(createSettlerState(id, house.x, house.y, now, lifespan));
-      house.lastSpawnMs = now;
-      aliveTotal += 1;
+    if (now - house.lastSpawnMs >= houseSpawnIntervalMs) {
+      const capacityRemaining =
+        capacityLimit !== null ? Math.max(0, capacityLimit - aliveTotal) : Number.POSITIVE_INFINITY;
+      const spawnCount = Math.min(houseSpawnAmount, capacityRemaining);
+
+      if (spawnCount > 0) {
+        for (let index = 0; index < spawnCount; index += 1) {
+          const id = nextSettlerId;
+          nextSettlerId += 1;
+          const lifespan = randomRange(minLifespan, maxLifespan);
+          newSettlers.push(createSettlerState(id, house.x, house.y, now, lifespan));
+          aliveTotal += 1;
+        }
+        house.lastSpawnMs = now;
+      }
     }
   }
 
@@ -166,6 +176,6 @@ export function handleActiveState(
 
   state.nextSettlerId = nextSettlerId;
 
-  renderHouses(context, state, now);
+  renderStructures(context, state, now);
   setAliveCount(aliveTotal);
 }

@@ -11,12 +11,7 @@ import {
   ORBIT_04,
   ORBIT_05,
 } from "../constants";
-import {
-  GameState,
-  HouseState,
-  SettlerState,
-  houseSpawnHighlight,
-} from "../types";
+import { FarmState, GameState, HouseState, SettlerState, houseSpawnHighlight } from "../types";
 import { easeOutQuad } from "../utils/easing";
 
 export { easeOutQuad };
@@ -78,6 +73,22 @@ export function ensureHouseRegistry(state: GameState): void {
     const nextId = highestId + 1;
     if (state.nextHouseId <= highestId) {
       state.nextHouseId = nextId;
+    }
+  }
+}
+
+export function ensureFarmRegistry(state: GameState): void {
+  const highestId = state.farms.reduce<number | undefined>((maxId, farm) => {
+    if (maxId === undefined || farm.id > maxId) {
+      return farm.id;
+    }
+    return maxId;
+  }, undefined);
+
+  if (typeof highestId === "number") {
+    const nextId = highestId + 1;
+    if (state.nextFarmId <= highestId) {
+      state.nextFarmId = nextId;
     }
   }
 }
@@ -152,6 +163,72 @@ export function drawHouse(
   const doorWidth = baseWidth * 0.28;
   const doorHeight = baseHeight * 0.62;
   context.fillRect(house.x - doorWidth / 2, baseY + baseHeight - doorHeight, doorWidth, doorHeight);
+
+  context.restore();
+}
+
+export function drawFarm(
+  context: CanvasRenderingContext2D,
+  farm: FarmState,
+  nowMs: number,
+): void {
+  const elapsed = Math.max(0, nowMs - farm.builtMs);
+  const highlight = Math.max(0, 1 - Math.min(1, elapsed / 1_200));
+  const scale = 0.75;
+  const baseOffsetY = 6 * scale;
+  const highlightRadiusX = 44 * scale;
+  const highlightRadiusY = 24 * scale;
+  const highlightExpandX = 12 * scale;
+  const highlightExpandY = 6 * scale;
+  const soilRadiusX = 38 * scale;
+  const soilRadiusY = 18 * scale;
+  const rowTopY = -6 * scale;
+  const rowMidY = 0;
+  const rowBottomY = 6 * scale;
+  const rowOuterX = 28 * scale;
+  const rowMidX = 22 * scale;
+  const rowInnerX = 18 * scale;
+
+  context.save();
+  context.translate(farm.x, farm.y);
+
+  if (highlight > 0) {
+    context.globalAlpha = 0.2 + 0.35 * highlight;
+    context.fillStyle = ORBIT_04;
+    context.beginPath();
+    context.ellipse(
+      0,
+      baseOffsetY,
+      highlightRadiusX + highlightExpandX * highlight,
+      highlightRadiusY + highlightExpandY * highlight,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+    context.globalAlpha = 1;
+  }
+
+  context.fillStyle = ORBIT_02;
+  context.beginPath();
+  context.ellipse(0, baseOffsetY, highlightRadiusX, highlightRadiusY, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = ORBIT_01;
+  context.beginPath();
+  context.ellipse(0, 0, soilRadiusX, soilRadiusY, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = ORBIT_05;
+  context.lineWidth = 2 * scale;
+  context.beginPath();
+  context.moveTo(-rowOuterX, rowMidY);
+  context.lineTo(rowOuterX, rowMidY);
+  context.moveTo(-rowMidX, rowTopY);
+  context.lineTo(rowMidX, rowTopY);
+  context.moveTo(-rowInnerX, rowBottomY);
+  context.lineTo(rowInnerX, rowBottomY);
+  context.stroke();
 
   context.restore();
 }

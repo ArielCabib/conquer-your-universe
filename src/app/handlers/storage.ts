@@ -9,7 +9,7 @@ import {
 import { STORAGE_KEY } from "../../constants";
 import { serializeGameState, deserializeGameState } from "../../persistence";
 import { GameState } from "../../types";
-import { ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
+import { ensureFarmRegistry, ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
 
 export function useOpenFileDialogHandler(fileInputRef: RefObject<HTMLInputElement>) {
   return useCallback(() => {
@@ -84,6 +84,7 @@ export function useFileChangeHandler({
 
         ensureSettlerLifespans(loadedState);
         ensureHouseRegistry(loadedState);
+        ensureFarmRegistry(loadedState);
 
         gameStateRef.current = loadedState;
 

@@ -1,4 +1,6 @@
 import {
+  BASE_SETTLER_MAX_LIFESPAN_MS,
+  BASE_SETTLER_MIN_LIFESPAN_MS,
   BIRTH_ANIMATION_MS,
   HOUSE_SPAWN_ANIMATION_MS,
   MOVE_INTERVAL_MS,
@@ -34,6 +36,13 @@ export interface HouseState {
   lastSpawnMs: number;
 }
 
+export interface FarmState {
+  id: number;
+  x: number;
+  y: number;
+  builtMs: number;
+}
+
 export interface GameState {
   settlers: SettlerState[];
   nextSettlerId: number;
@@ -41,22 +50,34 @@ export interface GameState {
   settlerMaxLifespanMs: number;
   houses: HouseState[];
   nextHouseId: number;
+  farms: FarmState[];
+  nextFarmId: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
+  farmsBaseCapacity: number;
   settlersPerHouse: number;
+  farmLifespanBonusPerFarmMs: number;
+  houseSpawnIntervalMs: number;
+  houseSpawnAmount: number;
 }
 
 export function createInitialGameState(): GameState {
   return {
     settlers: [],
     nextSettlerId: 0,
-    settlerMinLifespanMs: 5_000,
-    settlerMaxLifespanMs: 10_000,
+    settlerMinLifespanMs: BASE_SETTLER_MIN_LIFESPAN_MS,
+    settlerMaxLifespanMs: BASE_SETTLER_MAX_LIFESPAN_MS,
     houses: [],
     nextHouseId: 0,
+    farms: [],
+    nextFarmId: 0,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
+    farmsBaseCapacity: 5,
     settlersPerHouse: 10,
+    farmLifespanBonusPerFarmMs: 1_000,
+    houseSpawnIntervalMs: 5_000,
+    houseSpawnAmount: 1,
   };
 }
 
@@ -95,6 +116,15 @@ export function createHouseState(
     y,
     builtMs,
     lastSpawnMs: NEGATIVE_INFINITY,
+  };
+}
+
+export function createFarmState(id: number, x: number, y: number, builtMs: number): FarmState {
+  return {
+    id,
+    x,
+    y,
+    builtMs,
   };
 }
 
