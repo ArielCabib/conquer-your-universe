@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
 import { STORAGE_KEY } from "../../constants";
-import { GameState, createFarmState, createHouseState } from "../../types";
+import { GameState, createFarmState, createHarvesterState, createHouseState } from "../../types";
 import { ContextMenuState } from "../types";
 import { pointWithinPlanet, currentTimeMs } from "../helpers";
 import { serializeGameState } from "../../persistence";
@@ -127,5 +127,57 @@ export function useBuildFarmMenuHandler({
       setContextMenuState(null);
     },
     [aliveCount, contextMenuState, gameStateRef, setContextMenuState],
+  );
+}
+
+interface BuildHarvesterOptions {
+  gameStateRef: MutableRefObject<GameState>;
+  contextMenuState: ContextMenuState | null;
+  setContextMenuState: SetContextMenuState;
+}
+
+export function useBuildHarvesterMenuHandler({
+  gameStateRef,
+  contextMenuState,
+  setContextMenuState,
+}: BuildHarvesterOptions) {
+  return useCallback(
+    () => {
+      const menuState = contextMenuState;
+      if (!menuState) {
+        return;
+      }
+
+      if (!pointWithinPlanet(menuState.canvasX, menuState.canvasY)) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const state = gameStateRef.current;
+
+      if (state.harvester) {
+        setContextMenuState(null);
+        return;
+      }
+
+      if (state.crops.length < 5) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const builtAt = currentTimeMs();
+      state.harvester = createHarvesterState(menuState.canvasX, menuState.canvasY, builtAt);
+
+      try {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after building harvester", error);
+      }
+
+      setContextMenuState(null);
+    },
+    [contextMenuState, gameStateRef, setContextMenuState],
   );
 }

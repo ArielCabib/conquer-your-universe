@@ -3,6 +3,7 @@ import { AppView } from "./app/view/AppView";
 import { ContextMenuState } from "./app/types";
 import {
   useBuildFarmMenuHandler,
+  useBuildHarvesterMenuHandler,
   useBuildHouseMenuHandler,
   useCanvasClickHandler,
   useContextMenuHandler,
@@ -18,12 +19,13 @@ import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { createInitialGameState, GameState } from "./types";
 
-type PromptKey = "explore" | "build" | "farm";
+type PromptKey = "explore" | "build" | "farm" | "harvester";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
   build: "Right click the planet to build a house",
   farm: "Right click the planet to build a farm",
+  harvester: "You can build a harvester",
 };
 
 export function App() {
@@ -36,6 +38,8 @@ export function App() {
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
+  const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
+  const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -55,12 +59,6 @@ export function App() {
     setContextMenuState,
     aliveCount,
     setAliveCount,
-  });
-
-  const handleContextMenu = useContextMenuHandler({
-    canvasRef,
-    isPaused,
-    setContextMenuState,
   });
 
   const openSettings = useModalOpenHandler(setIsModalOpen);
@@ -88,6 +86,12 @@ export function App() {
   const buildFarmFromMenu = useBuildFarmMenuHandler({
     gameStateRef,
     aliveCount,
+    contextMenuState,
+    setContextMenuState,
+  });
+
+  const buildHarvesterFromMenu = useBuildHarvesterMenuHandler({
+    gameStateRef,
     contextMenuState,
     setContextMenuState,
   });
@@ -130,13 +134,22 @@ export function App() {
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
   const hasFarmCapacity = farmCapacityLimit === 0 || farmsBuilt < farmCapacityLimit;
   const canBuildFarm = aliveCount >= 10 && hasFarmCapacity;
-  const farmBuildDisabledReason = canBuildFarm
-    ? undefined
-    : aliveCount < 10
-    ? "Requires at least 10 settlers"
-    : hasFarmCapacity
-    ? undefined
-    : `Farm limit reached (${farmCapacityLimit})`;
+  const hasHarvester = Boolean(state.harvester);
+  const totalCrops = state.crops.length;
+  const canBuildHarvester = !hasHarvester && totalCrops >= 5;
+  const hasContextMenuActions = canBuildHouse || canBuildFarm || canBuildHarvester;
+
+  const getHasContextMenuActions = useCallback(
+    () => hasContextMenuActions,
+    [hasContextMenuActions],
+  );
+
+  const handleContextMenu = useContextMenuHandler({
+    canvasRef,
+    isPaused,
+    setContextMenuState,
+    hasContextMenuActions: getHasContextMenuActions,
+  });
 
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
@@ -170,7 +183,39 @@ export function App() {
     });
   }, [shouldShowExplorePrompt, shouldShowBuildPrompt, shouldShowFarmPrompt]);
 
-  const promptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
+  useEffect(() => {
+    if (canBuildHarvester) {
+      if (!hasShownHarvesterPrompt) {
+        setForcedPromptKey("harvester");
+        setHasShownHarvesterPrompt(true);
+      }
+      return;
+    }
+
+    setHasShownHarvesterPrompt(false);
+    setForcedPromptKey((current) => (current === "harvester" ? null : current));
+  }, [canBuildHarvester, hasShownHarvesterPrompt]);
+
+  useEffect(() => {
+    if (forcedPromptKey !== "harvester") {
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setForcedPromptKey((current) => (current === "harvester" ? null : current));
+    }, 4_500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [forcedPromptKey]);
+
+  const promptKey = forcedPromptKey ?? activePromptKey;
+  const promptMessage = promptKey ? PROMPT_MESSAGES[promptKey] : null;
 
   return (
     <AppView
@@ -178,6 +223,7 @@ export function App() {
       planetName={planetName}
       canBuildHouse={canBuildHouse}
       canBuildFarm={canBuildFarm}
+      canBuildHarvester={canBuildHarvester}
       canvasRef={canvasRef}
       onCloseModal={closeModal}
       contextMenuState={contextMenuState}
@@ -199,13 +245,13 @@ export function App() {
       promptMessage={promptMessage}
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
+      onBuildHarvesterFromMenu={buildHarvesterFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
       farmCapacityLimit={farmCapacityLimit}
       houseSpawnIntervalMs={houseSpawnIntervalMs}
       houseSpawnAmount={houseSpawnAmount}
-      farmBuildDisabledReason={farmBuildDisabledReason}
       onPlanetNameChange={handlePlanetNameChange}
     />
   );

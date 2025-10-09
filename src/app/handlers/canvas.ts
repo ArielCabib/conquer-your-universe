@@ -78,12 +78,14 @@ interface ContextMenuHandlerOptions {
   canvasRef: RefObject<HTMLCanvasElement>;
   isPaused: boolean;
   setContextMenuState: Dispatch<SetStateAction<ContextMenuState | null>>;
+  hasContextMenuActions: () => boolean;
 }
 
 export function useContextMenuHandler({
   canvasRef,
   isPaused,
   setContextMenuState,
+  hasContextMenuActions,
 }: ContextMenuHandlerOptions) {
   return useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -119,6 +121,11 @@ export function useContextMenuHandler({
         return;
       }
 
+      if (!hasContextMenuActions()) {
+        setContextMenuState(null);
+        return;
+      }
+
       const offsetX = clientX - rect.left;
       const offsetY = clientY - rect.top;
 
@@ -129,6 +136,6 @@ export function useContextMenuHandler({
         offsetY,
       });
     },
-    [canvasRef, isPaused, setContextMenuState],
+    [canvasRef, hasContextMenuActions, isPaused, setContextMenuState],
   );
 }

@@ -11,6 +11,7 @@ interface AppViewProps {
   planetName: string;
   canBuildHouse: boolean;
   canBuildFarm: boolean;
+  canBuildHarvester: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
   onCloseModal: MouseEventHandler<HTMLButtonElement>;
   contextMenuState: ContextMenuState | null;
@@ -33,12 +34,12 @@ interface AppViewProps {
   promptMessage: string | null;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
+  onBuildHarvesterFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmLifespanBonusMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
-  farmBuildDisabledReason?: string;
   onPlanetNameChange: (name: string) => void;
 }
 
@@ -47,6 +48,7 @@ export function AppView({
   planetName,
   canBuildHouse,
   canBuildFarm,
+  canBuildHarvester,
   canvasRef,
   onCloseModal,
   contextMenuState,
@@ -69,12 +71,12 @@ export function AppView({
   promptMessage,
   onBuildHouseFromMenu,
   onBuildFarmFromMenu,
+  onBuildHarvesterFromMenu,
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmLifespanBonusMs,
   houseSpawnIntervalMs,
   houseSpawnAmount,
-  farmBuildDisabledReason,
   onPlanetNameChange,
 }: AppViewProps) {
   return (
@@ -96,7 +98,8 @@ export function AppView({
           canBuildHouse={canBuildHouse}
           onBuildFarm={onBuildFarmFromMenu}
           canBuildFarm={canBuildFarm}
-          farmBuildDisabledReason={farmBuildDisabledReason}
+          onBuildHarvester={onBuildHarvesterFromMenu}
+          canBuildHarvester={canBuildHarvester}
         />
         <StatsPanel
           aliveNow={aliveNow}

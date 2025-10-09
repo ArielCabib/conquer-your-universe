@@ -18,3 +18,5 @@ export const FADING_DURATION_MS = 600;
 export const STORAGE_KEY = "conquer-your-universe::game_state";
 export const BIRTH_ANIMATION_MS = 450;
 export const HOUSE_SPAWN_ANIMATION_MS = 520;
+export const HARVESTER_SPAWN_ANIMATION_MS = 560;
+export const HARVESTER_ROTATION_INTERVAL_MS = 1_000;

@@ -11,7 +11,8 @@ interface CanvasAreaProps {
   canBuildHouse: boolean;
   onBuildFarm: MouseEventHandler<HTMLButtonElement>;
   canBuildFarm: boolean;
-  farmBuildDisabledReason?: string;
+  onBuildHarvester: MouseEventHandler<HTMLButtonElement>;
+  canBuildHarvester: boolean;
 }
 
 export function CanvasArea({
@@ -24,7 +25,8 @@ export function CanvasArea({
   canBuildHouse,
   onBuildFarm,
   canBuildFarm,
-  farmBuildDisabledReason,
+  onBuildHarvester,
+  canBuildHarvester,
 }: CanvasAreaProps) {
   const pausedOverlay = isPaused ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
@@ -32,7 +34,28 @@ export function CanvasArea({
     </div>
   ) : null;
 
-  const contextMenu = contextMenuState ? (
+  const menuActions: Array<{
+    key: string;
+    label: string;
+    onClick: MouseEventHandler<HTMLButtonElement>;
+  }> = [];
+
+  if (canBuildHouse) {
+    menuActions.push({ key: "house", label: "Build House", onClick: onBuildHouse });
+  }
+
+  if (canBuildFarm) {
+    menuActions.push({ key: "farm", label: "Build Farm", onClick: onBuildFarm });
+  }
+
+  if (canBuildHarvester) {
+    menuActions.push({ key: "harvester", label: "Build Harvester", onClick: onBuildHarvester });
+  }
+
+  const buttonBaseClass =
+    "w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01";
+
+  const contextMenu = contextMenuState && menuActions.length > 0 ? (
     <div
       className="absolute z-10 min-w-[160px] -translate-x-1/2 transform rounded-xl border border-orbit-03/40 bg-menu p-1 shadow-context-menu"
       style={{
@@ -40,31 +63,16 @@ export function CanvasArea({
         top: `${contextMenuState.offsetY.toFixed(2)}px`,
       }}
     >
-      <button
-        type="button"
-        onClick={onBuildHouse}
-        disabled={!canBuildHouse}
-        className={`w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
-          canBuildHouse
-            ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
-            : "cursor-not-allowed bg-transparent text-orbit-03/50 hover:bg-orbit-04/20"
-        }`}
-      >
-        Build House
-      </button>
-      <button
-        type="button"
-        onClick={onBuildFarm}
-        disabled={!canBuildFarm}
-        title={canBuildFarm ? undefined : farmBuildDisabledReason}
-        className={`mt-1 w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
-          canBuildFarm
-            ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
-            : "cursor-not-allowed bg-transparent text-orbit-03/50 hover:bg-orbit-04/20"
-        }`}
-      >
-        Build Farm
-      </button>
+      {menuActions.map((action, index) => (
+        <button
+          key={action.key}
+          type="button"
+          onClick={action.onClick}
+          className={`${index > 0 ? "mt-1 " : ""}${buttonBaseClass}`}
+        >
+          {action.label}
+        </button>
+      ))}
     </div>
   ) : null;
 
