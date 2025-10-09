@@ -94,6 +94,11 @@ export function useBuildFarmMenuHandler({
       }
 
       const state = gameStateRef.current;
+      const farmLimit = state.farmsBaseCapacity;
+      if (farmLimit > 0 && state.farms.length >= farmLimit) {
+        setContextMenuState(null);
+        return;
+      }
       const farmId = state.nextFarmId;
       state.nextFarmId = farmId + 1;
       const builtAt = currentTimeMs();

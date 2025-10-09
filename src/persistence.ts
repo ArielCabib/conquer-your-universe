@@ -46,6 +46,7 @@ type RawGameState = Omit<
   | "nextFarmId"
   | "settlersBaseCapacity"
   | "housesBaseCapacity"
+  | "farmsBaseCapacity"
   | "settlersPerHouse"
 > & {
   settlers: RawSettlerState[];
@@ -58,6 +59,7 @@ type RawGameState = Omit<
   next_farm_id: number;
   settlers_base_capacity: number;
   houses_base_capacity: number;
+  farms_base_capacity: number;
   settlers_per_house: number;
 };
 
@@ -136,6 +138,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextFarmId: data.next_farm_id ?? 0,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
+      farmsBaseCapacity: data.farms_base_capacity ?? 5,
       settlersPerHouse: data.settlers_per_house ?? 10,
     };
   } catch (error) {
@@ -202,6 +205,7 @@ export function serializeGameState(state: GameState): string {
     next_farm_id: state.nextFarmId,
     settlers_base_capacity: state.settlersBaseCapacity,
     houses_base_capacity: state.housesBaseCapacity,
+    farms_base_capacity: state.farmsBaseCapacity,
     settlers_per_house: state.settlersPerHouse,
   };
 

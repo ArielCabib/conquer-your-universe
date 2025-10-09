@@ -90,6 +90,7 @@ export function App() {
   const farmsBuilt = state.farms.length;
   const settlersBaseCapacity = state.settlersBaseCapacity;
   const housesCapacityLimit = state.housesBaseCapacity;
+  const farmCapacityLimit = state.farmsBaseCapacity;
   const settlersPerHouse = state.settlersPerHouse;
   const settlerMinLifespanMs = state.settlerMinLifespanMs;
   const settlerMaxLifespanMs = state.settlerMaxLifespanMs;
@@ -97,7 +98,15 @@ export function App() {
 
   const hasHouseCapacity = housesCapacityLimit === 0 || housesBuilt < housesCapacityLimit;
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
-  const canBuildFarm = aliveCount >= 10;
+  const hasFarmCapacity = farmCapacityLimit === 0 || farmsBuilt < farmCapacityLimit;
+  const canBuildFarm = aliveCount >= 10 && hasFarmCapacity;
+  const farmBuildDisabledReason = canBuildFarm
+    ? undefined
+    : aliveCount < 10
+    ? "Requires at least 10 settlers"
+    : hasFarmCapacity
+    ? undefined
+    : `Farm limit reached (${farmCapacityLimit})`;
 
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
@@ -131,6 +140,8 @@ export function App() {
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
+      farmCapacityLimit={farmCapacityLimit}
+      farmBuildDisabledReason={farmBuildDisabledReason}
     />
   );
 }

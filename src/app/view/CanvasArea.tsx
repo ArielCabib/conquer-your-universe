@@ -11,6 +11,7 @@ interface CanvasAreaProps {
   canBuildHouse: boolean;
   onBuildFarm: MouseEventHandler<HTMLButtonElement>;
   canBuildFarm: boolean;
+  farmBuildDisabledReason?: string;
 }
 
 export function CanvasArea({
@@ -23,6 +24,7 @@ export function CanvasArea({
   canBuildHouse,
   onBuildFarm,
   canBuildFarm,
+  farmBuildDisabledReason,
 }: CanvasAreaProps) {
   const pausedOverlay = isPaused ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
@@ -54,7 +56,7 @@ export function CanvasArea({
         type="button"
         onClick={onBuildFarm}
         disabled={!canBuildFarm}
-        title={canBuildFarm ? undefined : "Requires at least 10 settlers"}
+        title={canBuildFarm ? undefined : farmBuildDisabledReason}
         className={`mt-1 w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
           canBuildFarm
             ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"

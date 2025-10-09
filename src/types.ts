@@ -54,6 +54,7 @@ export interface GameState {
   nextFarmId: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
+  farmsBaseCapacity: number;
   settlersPerHouse: number;
 }
 
@@ -69,6 +70,7 @@ export function createInitialGameState(): GameState {
     nextFarmId: 0,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
+    farmsBaseCapacity: 5,
     settlersPerHouse: 10,
   };
 }

@@ -6,6 +6,7 @@ interface StatsPanelProps {
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmsBuilt: number;
+  farmCapacityLimit: number;
   farmLifespanBonusMs: number;
 }
 
@@ -22,6 +23,7 @@ export function StatsPanel({
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmsBuilt,
+  farmCapacityLimit,
   farmLifespanBonusMs,
 }: StatsPanelProps) {
   return (
@@ -33,7 +35,10 @@ export function StatsPanel({
         Houses built: {housesBuilt}/{housesCapacityLimit}
       </div>
       <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
-        Farms built: {farmsBuilt}
+        Farms built: {farmsBuilt}/{farmCapacityLimit}
+        {farmCapacityLimit > 0 && farmsBuilt >= farmCapacityLimit ? (
+          <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">Farm limit reached</span>
+        ) : null}
       </div>
       <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         {`Settler lifespan: ${formatSeconds(settlerMinLifespanMs)}s – ${formatSeconds(settlerMaxLifespanMs)}s`}

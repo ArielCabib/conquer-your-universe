@@ -19,6 +19,7 @@ interface AppViewProps {
   housesBuilt: number;
   housesCapacityLimit: number;
   farmsBuilt: number;
+  farmCapacityLimit: number;
   isModalActive: boolean;
   isPaused: boolean;
   onFileChange: ChangeEventHandler<HTMLInputElement>;
@@ -34,6 +35,7 @@ interface AppViewProps {
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmLifespanBonusMs: number;
+  farmBuildDisabledReason?: string;
 }
 
 export function AppView({
@@ -49,6 +51,7 @@ export function AppView({
   housesBuilt,
   housesCapacityLimit,
   farmsBuilt,
+  farmCapacityLimit,
   isModalActive,
   isPaused,
   onFileChange,
@@ -64,6 +67,7 @@ export function AppView({
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmLifespanBonusMs,
+  farmBuildDisabledReason,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
@@ -80,6 +84,7 @@ export function AppView({
           canBuildHouse={canBuildHouse}
           onBuildFarm={onBuildFarmFromMenu}
           canBuildFarm={canBuildFarm}
+          farmBuildDisabledReason={farmBuildDisabledReason}
         />
         <StatsPanel
           aliveNow={aliveNow}
@@ -87,6 +92,7 @@ export function AppView({
           housesBuilt={housesBuilt}
           housesCapacityLimit={housesCapacityLimit}
           farmsBuilt={farmsBuilt}
+          farmCapacityLimit={farmCapacityLimit}
           settlerMinLifespanMs={settlerMinLifespanMs}
           settlerMaxLifespanMs={settlerMaxLifespanMs}
           farmLifespanBonusMs={farmLifespanBonusMs}
