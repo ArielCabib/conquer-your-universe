@@ -6,7 +6,6 @@ import { HeaderSection } from "./Header";
 import { ControlModal } from "./Modal";
 import { BuildPrompt } from "./Prompt";
 import { StatsPanel } from "./Stats";
-import { FooterInfo } from "./Footer";
 
 interface AppViewProps {
   aliveNow: number;
@@ -97,10 +96,8 @@ export function AppView({
           settlersCapacityLimit={settlersCapacityLimit}
           housesBuilt={housesBuilt}
           housesCapacityLimit={housesCapacityLimit}
-        />
-        <FooterInfo
-          minLifespanMs={settlerMinLifespanMs}
-          maxLifespanMs={settlerMaxLifespanMs}
+          settlerMinLifespanMs={settlerMinLifespanMs}
+          settlerMaxLifespanMs={settlerMaxLifespanMs}
         />
       </section>
       <input
