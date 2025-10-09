@@ -39,6 +39,7 @@ type RawGameState = Omit<
   | "settlers"
   | "houses"
   | "farms"
+  | "planetName"
   | "nextSettlerId"
   | "settlerMinLifespanMs"
   | "settlerMaxLifespanMs"
@@ -55,6 +56,7 @@ type RawGameState = Omit<
   settlers: RawSettlerState[];
   houses: RawHouseState[];
   farms: RawFarmState[];
+  planet_name?: string;
   next_settler_id: number;
   settler_min_lifespan_ms: number;
   settler_max_lifespan_ms: number;
@@ -137,6 +139,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       settlers,
       houses,
       farms,
+      planetName: data.planet_name ?? "Your Planet",
       nextSettlerId: data.next_settler_id ?? 0,
       settlerMinLifespanMs: data.settler_min_lifespan_ms ?? BASE_SETTLER_MIN_LIFESPAN_MS,
       settlerMaxLifespanMs: data.settler_max_lifespan_ms ?? BASE_SETTLER_MAX_LIFESPAN_MS,
@@ -207,6 +210,7 @@ export function serializeGameState(state: GameState): string {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
     farms: state.farms.map(serializeFarm),
+    planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,
     settler_max_lifespan_ms: state.settlerMaxLifespanMs,
