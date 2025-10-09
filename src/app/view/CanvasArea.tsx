@@ -47,7 +47,7 @@ export function CanvasArea({
         className={`w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
           canBuildHouse
             ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
-            : "cursor-not-allowed bg-transparent text-orbit-03/50"
+            : "cursor-not-allowed bg-transparent text-orbit-03/50 hover:bg-orbit-04/20"
         }`}
       >
         Build House
@@ -60,7 +60,7 @@ export function CanvasArea({
         className={`mt-1 w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
           canBuildFarm
             ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
-            : "cursor-not-allowed bg-transparent text-orbit-03/50"
+            : "cursor-not-allowed bg-transparent text-orbit-03/50 hover:bg-orbit-04/20"
         }`}
       >
         Build Farm
