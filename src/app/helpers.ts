@@ -1,4 +1,5 @@
 import {
+  GRAIN_PILE_CAPACITY,
   MOVE_DISTANCE_MAX,
   MOVE_DISTANCE_MIN,
   PLANET_CENTER_X,
@@ -43,6 +44,14 @@ export function randomTargetNear(x: number, y: number): { x: number; y: number }
   }
 
   return { x: PLANET_CENTER_X, y: PLANET_CENTER_Y };
+}
+
+export function randomPointOnPlanet(): { x: number; y: number } {
+  const radius = randomRange(SETTLER_RADIUS * 2, PLANET_RADIUS - SETTLER_RADIUS * 2);
+  const angle = randomAngle();
+  const x = PLANET_CENTER_X + Math.cos(angle) * radius;
+  const y = PLANET_CENTER_Y + Math.sin(angle) * radius;
+  return { x, y };
 }
 
 export function ensureSettlerLifespans(state: GameState): void {
@@ -114,6 +123,53 @@ export function ensureCropRegistry(state: GameState): void {
       crop.createdMs = 0;
     }
   });
+}
+
+export function ensureHarvesterResources(state: GameState): void {
+  if (state.harvester) {
+    if (
+      typeof state.harvester.lastHarvestMs !== "number" ||
+      !Number.isFinite(state.harvester.lastHarvestMs)
+    ) {
+      state.harvester.lastHarvestMs = state.harvester.builtMs;
+    }
+  }
+
+  if (!Array.isArray(state.grainProjectiles)) {
+    state.grainProjectiles = [];
+  }
+
+  if (
+    typeof state.grainPileCapacity !== "number" ||
+    !Number.isFinite(state.grainPileCapacity) ||
+    state.grainPileCapacity < 0
+  ) {
+    state.grainPileCapacity = Math.max(0, GRAIN_PILE_CAPACITY);
+  }
+
+  if (
+    typeof state.nextGrainProjectileId !== "number" ||
+    !Number.isFinite(state.nextGrainProjectileId) ||
+    state.nextGrainProjectileId < 0
+  ) {
+    state.nextGrainProjectileId = 0;
+  }
+
+  if (state.grainPile) {
+    if (typeof state.grainPile.grains !== "number" || !Number.isFinite(state.grainPile.grains)) {
+      state.grainPile.grains = 0;
+    }
+
+    if (state.grainPile.grains < 0) {
+      state.grainPile.grains = 0;
+    }
+
+    const capacity = state.grainPileCapacity;
+
+    if (state.grainPile.grains > capacity) {
+      state.grainPile.grains = capacity;
+    }
+  }
 }
 
 const CROP_COLLISION_DISTANCE = 22;

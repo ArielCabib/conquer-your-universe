@@ -5,6 +5,7 @@ import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
   useBuildHouseMenuHandler,
+  useBuildMarketMenuHandler,
   useCanvasClickHandler,
   useContextMenuHandler,
   useFileChangeHandler,
@@ -18,14 +19,14 @@ import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { createInitialGameState, GameState } from "./types";
-
-type PromptKey = "explore" | "build" | "farm" | "harvester";
+type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
   build: "Right click the planet to build a house",
   farm: "Right click the planet to build a farm",
   harvester: "You can build a harvester",
+  market: "You can build a market",
 };
 
 export function App() {
@@ -40,6 +41,7 @@ export function App() {
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
+  const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -96,6 +98,12 @@ export function App() {
     setContextMenuState,
   });
 
+  const buildMarketFromMenu = useBuildMarketMenuHandler({
+    gameStateRef,
+    contextMenuState,
+    setContextMenuState,
+  });
+
   const onFileChange = useFileChangeHandler({
     gameStateRef,
     setAliveCount,
@@ -137,7 +145,14 @@ export function App() {
   const hasHarvester = Boolean(state.harvester);
   const totalCrops = state.crops.length;
   const canBuildHarvester = !hasHarvester && totalCrops >= 5;
-  const hasContextMenuActions = canBuildHouse || canBuildFarm || canBuildHarvester;
+  const grainPile = state.grainPile;
+  const grainCount = grainPile?.grains ?? 0;
+  const grainsInFlight = state.grainProjectiles.length;
+  const grainCapacity = state.grainPileCapacity;
+  const hasMarket = Boolean(state.market);
+  const canBuildMarket = Boolean(grainPile && grainPile.grains >= 30 && !hasMarket);
+  const hasContextMenuActions =
+    canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket;
 
   const getHasContextMenuActions = useCallback(
     () => hasContextMenuActions,
@@ -197,7 +212,20 @@ export function App() {
   }, [canBuildHarvester, hasShownHarvesterPrompt]);
 
   useEffect(() => {
-    if (forcedPromptKey !== "harvester") {
+    if (canBuildMarket) {
+      if (!hasShownMarketPrompt) {
+        setForcedPromptKey("market");
+        setHasShownMarketPrompt(true);
+      }
+      return;
+    }
+
+    setHasShownMarketPrompt(false);
+    setForcedPromptKey((current) => (current === "market" ? null : current));
+  }, [canBuildMarket, hasShownMarketPrompt]);
+
+  useEffect(() => {
+    if (forcedPromptKey !== "harvester" && forcedPromptKey !== "market") {
       return;
     }
 
@@ -206,7 +234,9 @@ export function App() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      setForcedPromptKey((current) => (current === "harvester" ? null : current));
+      setForcedPromptKey((current) =>
+        current === "harvester" || current === "market" ? null : current,
+      );
     }, 4_500);
 
     return () => {
@@ -224,6 +254,7 @@ export function App() {
       canBuildHouse={canBuildHouse}
       canBuildFarm={canBuildFarm}
       canBuildHarvester={canBuildHarvester}
+      canBuildMarket={canBuildMarket}
       canvasRef={canvasRef}
       onCloseModal={closeModal}
       contextMenuState={contextMenuState}
@@ -246,6 +277,7 @@ export function App() {
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
       onBuildHarvesterFromMenu={buildHarvesterFromMenu}
+      onBuildMarketFromMenu={buildMarketFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
@@ -253,6 +285,11 @@ export function App() {
       houseSpawnIntervalMs={houseSpawnIntervalMs}
       houseSpawnAmount={houseSpawnAmount}
       onPlanetNameChange={handlePlanetNameChange}
+      grainCount={grainCount}
+      grainCapacity={grainCapacity}
+      grainsInFlight={grainsInFlight}
+      hasHarvester={hasHarvester}
+      hasMarket={hasMarket}
     />
   );
 }

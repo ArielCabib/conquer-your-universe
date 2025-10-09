@@ -2,6 +2,7 @@ import {
   BASE_SETTLER_MAX_LIFESPAN_MS,
   BASE_SETTLER_MIN_LIFESPAN_MS,
   BIRTH_ANIMATION_MS,
+  GRAIN_PILE_CAPACITY,
   HOUSE_SPAWN_ANIMATION_MS,
   MOVE_INTERVAL_MS,
   PLANET_CENTER_X,
@@ -56,6 +57,30 @@ export interface HarvesterState {
   x: number;
   y: number;
   builtMs: number;
+  lastHarvestMs: number;
+}
+
+export interface GrainPileState {
+  x: number;
+  y: number;
+  grains: number;
+  createdMs: number;
+}
+
+export interface GrainProjectileState {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  launchedMs: number;
+  durationMs: number;
+}
+
+export interface MarketState {
+  x: number;
+  y: number;
+  builtMs: number;
 }
 
 export interface GameState {
@@ -71,6 +96,11 @@ export interface GameState {
   crops: CropState[];
   nextCropId: number;
   harvester: HarvesterState | null;
+  grainPile: GrainPileState | null;
+  grainProjectiles: GrainProjectileState[];
+  nextGrainProjectileId: number;
+  market: MarketState | null;
+  grainPileCapacity: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
   farmsBaseCapacity: number;
@@ -96,6 +126,11 @@ export function createInitialGameState(): GameState {
     crops: [],
     nextCropId: 0,
     harvester: null,
+    grainPile: null,
+    grainProjectiles: [],
+    nextGrainProjectileId: 0,
+    market: null,
+    grainPileCapacity: GRAIN_PILE_CAPACITY,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
     farmsBaseCapacity: 5,
@@ -179,6 +214,49 @@ export function createCropState(
 }
 
 export function createHarvesterState(x: number, y: number, builtMs: number): HarvesterState {
+  return {
+    x,
+    y,
+    builtMs,
+    lastHarvestMs: builtMs,
+  };
+}
+
+export function createGrainPileState(
+  x: number,
+  y: number,
+  createdMs: number,
+  grains: number = 0,
+): GrainPileState {
+  return {
+    x,
+    y,
+    createdMs,
+    grains,
+  };
+}
+
+export function createGrainProjectileState(
+  id: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  launchedMs: number,
+  durationMs: number,
+): GrainProjectileState {
+  return {
+    id,
+    startX,
+    startY,
+    endX,
+    endY,
+    launchedMs,
+    durationMs,
+  };
+}
+
+export function createMarketState(x: number, y: number, builtMs: number): MarketState {
   return {
     x,
     y,

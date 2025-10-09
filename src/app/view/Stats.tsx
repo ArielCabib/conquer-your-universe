@@ -12,6 +12,11 @@ interface StatsPanelProps {
   farmLifespanBonusMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
+  grainCount: number;
+  grainCapacity: number;
+  grainsInFlight: number;
+  hasHarvester: boolean;
+  hasMarket: boolean;
 }
 
 function formatSeconds(ms: number): string {
@@ -31,6 +36,11 @@ export function StatsPanel({
   farmLifespanBonusMs,
   houseSpawnIntervalMs,
   houseSpawnAmount,
+  grainCount,
+  grainCapacity,
+  grainsInFlight,
+  hasHarvester,
+  hasMarket,
 }: StatsPanelProps) {
   const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
   const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
@@ -96,6 +106,11 @@ export function StatsPanel({
     farmLifespanBonusMs,
     houseSpawnIntervalMs,
     houseSpawnAmount,
+    grainCount,
+    grainCapacity,
+    grainsInFlight,
+    hasHarvester,
+    hasMarket,
   ]);
 
   if (aliveNow > 0) {
@@ -147,6 +162,33 @@ export function StatsPanel({
         <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
           +{formatSeconds(farmLifespanBonusMs)}s from farms
         </span>
+      </div>,
+    );
+  }
+
+  if (hasHarvester || grainCount > 0 || grainsInFlight > 0) {
+    statCards.push(
+      <div
+        key="grain"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
+        Grain pile: {grainCount}/{grainCapacity}
+        {grainsInFlight > 0 ? (
+          <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
+            +{grainsInFlight} in flight
+          </span>
+        ) : null}
+      </div>,
+    );
+  }
+
+  if (hasMarket) {
+    statCards.push(
+      <div
+        key="market"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
+        Market established
       </div>,
     );
   }
