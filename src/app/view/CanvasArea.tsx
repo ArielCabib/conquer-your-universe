@@ -1,6 +1,6 @@
-import type { CSSProperties, MouseEventHandler, RefObject } from "react";
+import { useState, type CSSProperties, type MouseEventHandler, type RefObject } from "react";
 import { ContextMenuState } from "../types";
-import { ORBIT_03 } from "../../constants";
+import { ORBIT_01, ORBIT_03, ORBIT_04 } from "../../constants";
 
 interface CanvasAreaProps {
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -23,6 +23,7 @@ export function CanvasArea({
   onBuildHouse,
   canBuildHouse,
 }: CanvasAreaProps) {
+  const [isBuildActionHovered, setIsBuildActionHovered] = useState(false);
   const pausedOverlay = isPaused ? (
     <div
       style={{
@@ -69,14 +70,17 @@ export function CanvasArea({
           textAlign: "left",
           padding: "0.5rem 0.75rem",
           border: "none",
-          background: "transparent",
-          color: ORBIT_03,
+          background: isBuildActionHovered ? ORBIT_04 : "transparent",
+          color: isBuildActionHovered ? ORBIT_01 : ORBIT_03,
           fontFamily: "'Trebuchet MS', sans-serif",
           fontSize: "0.95rem",
           letterSpacing: "0.04em",
           borderRadius: "0.5rem",
           cursor: canBuildHouse ? "pointer" : "not-allowed",
+          transition: "background 120ms ease, color 120ms ease",
         }}
+        onMouseEnter={() => setIsBuildActionHovered(true)}
+        onMouseLeave={() => setIsBuildActionHovered(false)}
       >
         Build House
       </button>
