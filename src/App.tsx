@@ -21,7 +21,7 @@ import { createInitialGameState, GameState } from "./types";
 type PromptKey = "explore" | "build" | "farm";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
-  explore: "Click around and find out.",
+  explore: "Click around and find out",
   build: "Right click the planet to build a house",
   farm: "Right click the planet to build a farm",
 };
