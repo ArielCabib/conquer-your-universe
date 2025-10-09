@@ -1,6 +1,3 @@
-import type { CSSProperties } from "react";
-import { ORBIT_02, ORBIT_03 } from "../../constants";
-
 interface StatsPanelProps {
   aliveNow: number;
   settlersCapacityLimit: number;
@@ -8,6 +5,8 @@ interface StatsPanelProps {
   housesCapacityLimit: number;
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
+  farmsBuilt: number;
+  farmLifespanBonusMs: number;
 }
 
 function formatSeconds(ms: number): string {
@@ -22,35 +21,27 @@ export function StatsPanel({
   housesCapacityLimit,
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
+  farmsBuilt,
+  farmLifespanBonusMs,
 }: StatsPanelProps) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: "1.5rem",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    maxWidth: "600px",
-    width: "min(80vw, 540px)",
-  };
-
-  const cardStyle: CSSProperties = {
-    marginTop: "1.5rem",
-    padding: "0.75rem 1.25rem",
-    border: `1px solid ${ORBIT_02}`,
-    borderRadius: "0.75rem",
-    backgroundColor: "rgba(0,0,0,0.25)",
-    color: ORBIT_03,
-    fontSize: "clamp(1rem, 2vw, 1.15rem)",
-    letterSpacing: "0.05em",
-  };
-
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>Settlers alive: {aliveNow}/{settlersCapacityLimit}</div>
-      <div style={cardStyle}>Houses built: {housesBuilt}/{housesCapacityLimit}</div>
-      <div style={cardStyle}>
+    <div className="mt-6 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-6">
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+        Settlers alive: {aliveNow}/{settlersCapacityLimit}
+      </div>
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+        Houses built: {housesBuilt}/{housesCapacityLimit}
+      </div>
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+        Farms built: {farmsBuilt}
+      </div>
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         {`Settler lifespan: ${formatSeconds(settlerMinLifespanMs)}s – ${formatSeconds(settlerMaxLifespanMs)}s`}
+        {farmLifespanBonusMs > 0 ? (
+          <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
+            +{formatSeconds(farmLifespanBonusMs)}s from farms
+          </span>
+        ) : null}
       </div>
     </div>
   );

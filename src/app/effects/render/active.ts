@@ -90,7 +90,7 @@ export function handleActiveState(
   state: GameState,
   now: number,
   setAliveCount: Dispatch<SetStateAction<number>>,
-  renderHouses: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
+  renderStructures: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
 ) {
   let aliveTotal = 0;
   const survivors: SettlerState[] = [];
@@ -166,6 +166,6 @@ export function handleActiveState(
 
   state.nextSettlerId = nextSettlerId;
 
-  renderHouses(context, state, now);
+  renderStructures(context, state, now);
   setAliveCount(aliveTotal);
 }

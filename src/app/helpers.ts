@@ -11,12 +11,7 @@ import {
   ORBIT_04,
   ORBIT_05,
 } from "../constants";
-import {
-  GameState,
-  HouseState,
-  SettlerState,
-  houseSpawnHighlight,
-} from "../types";
+import { FarmState, GameState, HouseState, SettlerState, houseSpawnHighlight } from "../types";
 import { easeOutQuad } from "../utils/easing";
 
 export { easeOutQuad };
@@ -78,6 +73,22 @@ export function ensureHouseRegistry(state: GameState): void {
     const nextId = highestId + 1;
     if (state.nextHouseId <= highestId) {
       state.nextHouseId = nextId;
+    }
+  }
+}
+
+export function ensureFarmRegistry(state: GameState): void {
+  const highestId = state.farms.reduce<number | undefined>((maxId, farm) => {
+    if (maxId === undefined || farm.id > maxId) {
+      return farm.id;
+    }
+    return maxId;
+  }, undefined);
+
+  if (typeof highestId === "number") {
+    const nextId = highestId + 1;
+    if (state.nextFarmId <= highestId) {
+      state.nextFarmId = nextId;
     }
   }
 }
@@ -152,6 +163,50 @@ export function drawHouse(
   const doorWidth = baseWidth * 0.28;
   const doorHeight = baseHeight * 0.62;
   context.fillRect(house.x - doorWidth / 2, baseY + baseHeight - doorHeight, doorWidth, doorHeight);
+
+  context.restore();
+}
+
+export function drawFarm(
+  context: CanvasRenderingContext2D,
+  farm: FarmState,
+  nowMs: number,
+): void {
+  const elapsed = Math.max(0, nowMs - farm.builtMs);
+  const highlight = Math.max(0, 1 - Math.min(1, elapsed / 1_200));
+
+  context.save();
+  context.translate(farm.x, farm.y);
+
+  if (highlight > 0) {
+    context.globalAlpha = 0.2 + 0.35 * highlight;
+    context.fillStyle = ORBIT_04;
+    context.beginPath();
+    context.ellipse(0, 6, 44 + 12 * highlight, 24 + 6 * highlight, 0, 0, Math.PI * 2);
+    context.fill();
+    context.globalAlpha = 1;
+  }
+
+  context.fillStyle = ORBIT_02;
+  context.beginPath();
+  context.ellipse(0, 6, 44, 24, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = ORBIT_01;
+  context.beginPath();
+  context.ellipse(0, 0, 38, 18, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = ORBIT_05;
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-28, 0);
+  context.lineTo(28, 0);
+  context.moveTo(-22, -6);
+  context.lineTo(22, -6);
+  context.moveTo(-18, 6);
+  context.lineTo(18, 6);
+  context.stroke();
 
   context.restore();
 }

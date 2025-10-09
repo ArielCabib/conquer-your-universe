@@ -13,7 +13,7 @@ import {
   VIEWBOX_WIDTH,
 } from "../../../constants";
 import { GameState } from "../../../types";
-import { drawHouse, currentTimeMs } from "../../helpers";
+import { drawFarm, drawHouse, currentTimeMs } from "../../helpers";
 import { handleActiveState } from "./active";
 import { renderPausedState } from "./paused";
 
@@ -24,11 +24,14 @@ function renderPlanet(context: CanvasRenderingContext2D) {
   context.fill();
 }
 
-function renderHouses(
+function renderStructures(
   context: CanvasRenderingContext2D,
   state: GameState,
   now: number,
 ) {
+  for (const farm of state.farms) {
+    drawFarm(context, farm, now);
+  }
   for (const house of state.houses) {
     drawHouse(context, house, now);
   }
@@ -65,9 +68,9 @@ export function useCanvasRenderer(
       renderPlanet(context);
 
       if (isPaused) {
-        renderPausedState(context, gameStateRef.current, now, setAliveCount, renderHouses);
+        renderPausedState(context, gameStateRef.current, now, setAliveCount, renderStructures);
       } else {
-        handleActiveState(context, gameStateRef.current, now, setAliveCount, renderHouses);
+        handleActiveState(context, gameStateRef.current, now, setAliveCount, renderStructures);
       }
 
       animationFrame = window.requestAnimationFrame(drawFrame);

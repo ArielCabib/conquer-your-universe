@@ -14,7 +14,7 @@ export function renderPausedState(
   state: GameState,
   now: number,
   setAliveCount: Dispatch<SetStateAction<number>>,
-  renderHouses: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
+  renderStructures: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
 ) {
   let aliveTotal = 0;
 
@@ -66,6 +66,6 @@ export function renderPausedState(
     }
   }
 
-  renderHouses(context, state, now);
+  renderStructures(context, state, now);
   setAliveCount(aliveTotal);
 }

@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
-import { STORAGE_KEY } from "../../constants";
-import { GameState, createHouseState } from "../../types";
+import { FARM_LIFESPAN_BONUS_MS, STORAGE_KEY } from "../../constants";
+import { GameState, createFarmState, createHouseState } from "../../types";
 import { ContextMenuState } from "../types";
 import { pointWithinPlanet, currentTimeMs } from "../helpers";
 import { serializeGameState } from "../../persistence";
@@ -55,6 +55,64 @@ export function useBuildHouseMenuHandler({
         }
       } catch (error) {
         console.warn("Failed to persist game state after building house", error);
+      }
+
+      setContextMenuState(null);
+    },
+    [aliveCount, contextMenuState, gameStateRef, setContextMenuState],
+  );
+}
+
+interface BuildFarmOptions {
+  gameStateRef: MutableRefObject<GameState>;
+  aliveCount: number;
+  contextMenuState: ContextMenuState | null;
+  setContextMenuState: SetContextMenuState;
+}
+
+export function useBuildFarmMenuHandler({
+  gameStateRef,
+  aliveCount,
+  contextMenuState,
+  setContextMenuState,
+}: BuildFarmOptions) {
+  return useCallback(
+    () => {
+      const menuState = contextMenuState;
+      if (!menuState) {
+        return;
+      }
+
+      if (aliveCount < 10) {
+        setContextMenuState(null);
+        return;
+      }
+
+      if (!pointWithinPlanet(menuState.canvasX, menuState.canvasY)) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const state = gameStateRef.current;
+      const farmId = state.nextFarmId;
+      state.nextFarmId = farmId + 1;
+      const builtAt = currentTimeMs();
+      state.farms.push(createFarmState(farmId, menuState.canvasX, menuState.canvasY, builtAt));
+
+      state.settlerMinLifespanMs += FARM_LIFESPAN_BONUS_MS;
+      state.settlerMaxLifespanMs += FARM_LIFESPAN_BONUS_MS;
+      state.settlers.forEach((settler) => {
+        if (settler.phase.kind === "Alive") {
+          settler.lifespanMs += FARM_LIFESPAN_BONUS_MS;
+        }
+      });
+
+      try {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after building farm", error);
       }
 
       setContextMenuState(null);

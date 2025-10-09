@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
 import { ContextMenuState } from "./app/types";
 import {
+  useBuildFarmMenuHandler,
   useBuildHouseMenuHandler,
   useCanvasClickHandler,
   useContextMenuHandler,
@@ -15,6 +16,7 @@ import {
 import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
+import { FARM_LIFESPAN_BONUS_MS } from "./constants";
 import { createInitialGameState, GameState } from "./types";
 
 export function App() {
@@ -67,6 +69,13 @@ export function App() {
     setContextMenuState,
   });
 
+  const buildFarmFromMenu = useBuildFarmMenuHandler({
+    gameStateRef,
+    aliveCount,
+    contextMenuState,
+    setContextMenuState,
+  });
+
   const onFileChange = useFileChangeHandler({
     gameStateRef,
     setAliveCount,
@@ -76,28 +85,19 @@ export function App() {
   });
 
   const pauseStatusText = isPaused ? "Time is currently paused." : "Time is currently running.";
-  const canvasStyle = useMemo(
-    () => ({
-      width: "min(80vw, 540px)",
-      height: "auto",
-      maxWidth: "600px",
-      cursor: isPaused ? "not-allowed" : "pointer",
-      touchAction: "manipulation" as const,
-      pointerEvents: isPaused ? "none" : "auto",
-    }),
-    [isPaused],
-  );
-
   const state = gameStateRef.current;
   const housesBuilt = state.houses.length;
+  const farmsBuilt = state.farms.length;
   const settlersBaseCapacity = state.settlersBaseCapacity;
   const housesCapacityLimit = state.housesBaseCapacity;
   const settlersPerHouse = state.settlersPerHouse;
   const settlerMinLifespanMs = state.settlerMinLifespanMs;
   const settlerMaxLifespanMs = state.settlerMaxLifespanMs;
+  const farmLifespanBonusMs = farmsBuilt * FARM_LIFESPAN_BONUS_MS;
 
   const hasHouseCapacity = housesCapacityLimit === 0 || housesBuilt < housesCapacityLimit;
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
+  const canBuildFarm = aliveCount >= 10;
 
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
@@ -106,8 +106,8 @@ export function App() {
     <AppView
       aliveNow={aliveCount}
       canBuildHouse={canBuildHouse}
+      canBuildFarm={canBuildFarm}
       canvasRef={canvasRef}
-      canvasStyle={canvasStyle}
       onCloseModal={closeModal}
       contextMenuState={contextMenuState}
       fileInputRef={fileInputRef}
@@ -115,6 +115,7 @@ export function App() {
       onContextMenuCanvas={handleContextMenu}
       housesBuilt={housesBuilt}
       housesCapacityLimit={housesCapacityLimit}
+      farmsBuilt={farmsBuilt}
       isModalActive={isModalOpen}
       isPaused={isPaused}
       onFileChange={onFileChange}
@@ -126,8 +127,10 @@ export function App() {
       settlersCapacityLimit={settlersCapacityLimit}
       shouldShowBuildPrompt={shouldShowBuildPrompt}
       onBuildHouseFromMenu={buildHouseFromMenu}
+      onBuildFarmFromMenu={buildFarmFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
+      farmLifespanBonusMs={farmLifespanBonusMs}
     />
   );
 }

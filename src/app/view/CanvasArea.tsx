@@ -1,99 +1,80 @@
-import { useState, type CSSProperties, type MouseEventHandler, type RefObject } from "react";
+import type { MouseEventHandler, RefObject } from "react";
 import { ContextMenuState } from "../types";
-import { ORBIT_01, ORBIT_03, ORBIT_04 } from "../../constants";
 
 interface CanvasAreaProps {
   canvasRef: RefObject<HTMLCanvasElement>;
-  canvasStyle: CSSProperties;
   onClick: MouseEventHandler<HTMLCanvasElement>;
   onContextMenu: MouseEventHandler<HTMLCanvasElement>;
   isPaused: boolean;
   contextMenuState: ContextMenuState | null;
   onBuildHouse: MouseEventHandler<HTMLButtonElement>;
   canBuildHouse: boolean;
+  onBuildFarm: MouseEventHandler<HTMLButtonElement>;
+  canBuildFarm: boolean;
 }
 
 export function CanvasArea({
   canvasRef,
-  canvasStyle,
   onClick,
   onContextMenu,
   isPaused,
   contextMenuState,
   onBuildHouse,
   canBuildHouse,
+  onBuildFarm,
+  canBuildFarm,
 }: CanvasAreaProps) {
-  const [isBuildActionHovered, setIsBuildActionHovered] = useState(false);
   const pausedOverlay = isPaused ? (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(18, 11, 8, 0.55)",
-        color: ORBIT_03,
-        fontFamily: "Orbitron, 'Trebuchet MS', sans-serif",
-        letterSpacing: "0.08em",
-        textTransform: "uppercase",
-        fontSize: "1.1rem",
-        pointerEvents: "none",
-      }}
-    >
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
       Paused
     </div>
   ) : null;
 
   const contextMenu = contextMenuState ? (
     <div
+      className="absolute z-10 min-w-[160px] -translate-x-1/2 transform rounded-xl border border-orbit-03/40 bg-menu p-1 shadow-context-menu"
       style={{
-        position: "absolute",
         left: `${contextMenuState.offsetX.toFixed(2)}px`,
         top: `${contextMenuState.offsetY.toFixed(2)}px`,
-        transform: "translate(-50%, 0)",
-        minWidth: "160px",
-        background: "rgba(28, 18, 14, 0.94)",
-        border: "1px solid rgba(248, 225, 200, 0.4)",
-        borderRadius: "0.6rem",
-        boxShadow: "0 12px 24px rgba(0, 0, 0, 0.35)",
-        padding: "0.35rem",
-        zIndex: 10,
       }}
     >
       <button
         type="button"
         onClick={onBuildHouse}
         disabled={!canBuildHouse}
-        style={{
-          width: "100%",
-          textAlign: "left",
-          padding: "0.5rem 0.75rem",
-          border: "none",
-          background: isBuildActionHovered ? ORBIT_04 : "transparent",
-          color: isBuildActionHovered ? ORBIT_01 : ORBIT_03,
-          fontFamily: "'Trebuchet MS', sans-serif",
-          fontSize: "0.95rem",
-          letterSpacing: "0.04em",
-          borderRadius: "0.5rem",
-          cursor: canBuildHouse ? "pointer" : "not-allowed",
-          transition: "background 120ms ease, color 120ms ease",
-        }}
-        onMouseEnter={() => setIsBuildActionHovered(true)}
-        onMouseLeave={() => setIsBuildActionHovered(false)}
+        className={`w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
+          canBuildHouse
+            ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
+            : "cursor-not-allowed bg-transparent text-orbit-03/50"
+        }`}
       >
         Build House
+      </button>
+      <button
+        type="button"
+        onClick={onBuildFarm}
+        disabled={!canBuildFarm}
+        title={canBuildFarm ? undefined : "Requires at least 10 settlers"}
+        className={`mt-1 w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${
+          canBuildFarm
+            ? "cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01"
+            : "cursor-not-allowed bg-transparent text-orbit-03/50"
+        }`}
+      >
+        Build Farm
       </button>
     </div>
   ) : null;
 
   return (
-    <div style={{ position: "relative", width: "min(80vw, 540px)", maxWidth: "600px" }}>
+    <div className="relative w-[min(80vw,540px)] max-w-[600px]">
       <canvas
         ref={canvasRef}
         width={600}
         height={400}
-        style={canvasStyle}
+        className={`h-auto w-full max-w-[600px] touch-manipulation ${
+          isPaused ? "cursor-not-allowed pointer-events-none" : "cursor-pointer"
+        }`}
         onClick={onClick}
         onContextMenu={onContextMenu}
       >

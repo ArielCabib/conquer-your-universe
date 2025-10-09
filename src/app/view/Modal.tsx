@@ -1,5 +1,4 @@
 import type { MouseEventHandler } from "react";
-import { ORBIT_03 } from "../../constants";
 
 interface ControlModalProps {
   isActive: boolean;
@@ -23,131 +22,38 @@ export function ControlModal({
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.65)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem",
-        zIndex: 100,
-      }}
-    >
-      <div
-        style={{
-          background: "rgba(28, 18, 14, 0.96)",
-          border: "1px solid rgba(248, 225, 200, 0.35)",
-          borderRadius: "1rem",
-          padding: "1.5rem",
-          width: "min(90vw, 420px)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.25rem",
-          color: ORBIT_03,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "0.75rem",
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "1.35rem",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              fontFamily: "Orbitron, 'Trebuchet MS', sans-serif",
-              color: ORBIT_03,
-            }}
-          >
-            Command Center
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6">
+      <div className="flex w-[min(90vw,420px)] flex-col gap-5 rounded-3xl border border-orbit-03/35 bg-panel p-6 text-orbit-03">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="m-0 font-orbitron text-[1.35rem] uppercase tracking-[0.08em]">Command Center</h2>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              border: "none",
-              background: "rgba(0,0,0,0.25)",
-              color: "inherit",
-              padding: "0.35rem 0.75rem",
-              borderRadius: "0.5rem",
-              cursor: "pointer",
-              fontSize: "0.9rem",
-              letterSpacing: "0.06em",
-            }}
+            className="rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Close
           </button>
         </div>
-        <p
-          style={{
-            margin: 0,
-            textAlign: "left",
-            fontSize: "0.95rem",
-            letterSpacing: "0.04em",
-            color: "rgba(248, 225, 200, 0.85)",
-          }}
-        >
-          {pauseStatusText}
-        </p>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
+        <p className="m-0 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03/85">{pauseStatusText}</p>
+        <div className="flex flex-col gap-3">
           <button
             type="button"
             onClick={onRestart}
-            style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              border: "1px solid rgba(248,225,200,0.35)",
-              background: "rgba(0,0,0,0.35)",
-              color: ORBIT_03,
-              fontSize: "1rem",
-              letterSpacing: "0.06em",
-              cursor: "pointer",
-            }}
+            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Restart Game
           </button>
           <button
             type="button"
             onClick={onSave}
-            style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              border: "1px solid rgba(248,225,200,0.35)",
-              background: "rgba(0,0,0,0.35)",
-              color: ORBIT_03,
-              fontSize: "1rem",
-              letterSpacing: "0.06em",
-              cursor: "pointer",
-            }}
+            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Save Game
           </button>
           <button
             type="button"
             onClick={onOpenFile}
-            style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              border: "1px solid rgba(248,225,200,0.35)",
-              background: "rgba(0,0,0,0.35)",
-              color: ORBIT_03,
-              fontSize: "1rem",
-              letterSpacing: "0.06em",
-              cursor: "pointer",
-            }}
+            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Load Game
           </button>

@@ -1,1 +1,93 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --orbit-01: #2a1a11;
+    --orbit-02: #5c3a27;
+    --orbit-03: #f8e1c8;
+    --orbit-04: #f2a7a0;
+    --orbit-05: #88afc6;
+  }
+}
+
+@layer utilities {
+  .bg-orbit-01 {
+    background-color: var(--orbit-01);
+  }
+
+  .bg-orbit-04 {
+    background-color: var(--orbit-04);
+  }
+
+  .bg-orbit-04\/20 {
+    background-color: rgba(242, 167, 160, 0.2);
+  }
+
+  .bg-panel-soft {
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  .bg-panel {
+    background-color: rgba(28, 18, 14, 0.96);
+  }
+
+  .bg-menu {
+    background-color: rgba(28, 18, 14, 0.94);
+  }
+
+  .bg-overlay {
+    background-color: rgba(42, 26, 17, 0.55);
+  }
+
+  .bg-backdrop {
+    background-color: rgba(0, 0, 0, 0.65);
+  }
+
+  .text-orbit-01 {
+    color: var(--orbit-01);
+  }
+
+  .text-orbit-03 {
+    color: var(--orbit-03);
+  }
+
+  .text-orbit-03\/50 {
+    color: rgba(248, 225, 200, 0.5);
+  }
+
+  .text-orbit-03\/85 {
+    color: rgba(248, 225, 200, 0.85);
+  }
+
+  .text-orbit-05 {
+    color: var(--orbit-05);
+  }
+
+  .border-orbit-02 {
+    border-color: var(--orbit-02);
+  }
+
+  .border-orbit-03\/35 {
+    border-color: rgba(248, 225, 200, 0.35);
+  }
+
+  .border-orbit-03\/40 {
+    border-color: rgba(248, 225, 200, 0.4);
+  }
+
+  .font-orbitron {
+    font-family: Orbitron, "Trebuchet MS", sans-serif;
+  }
+
+  .font-trebuchet {
+    font-family: "Trebuchet MS", sans-serif;
+  }
+
+  .shadow-context-menu {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}

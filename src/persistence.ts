@@ -1,4 +1,5 @@
-import { GameState, HouseState, SettlerPhase, SettlerState } from "./types";
+import { BASE_SETTLER_MAX_LIFESPAN_MS, BASE_SETTLER_MIN_LIFESPAN_MS } from "./constants";
+import { FarmState, GameState, HouseState, SettlerPhase, SettlerState } from "./types";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -29,24 +30,32 @@ type RawHouseState = Omit<HouseState, "builtMs" | "lastSpawnMs"> & {
   last_spawn_ms?: number;
 };
 
+type RawFarmState = Omit<FarmState, "builtMs"> & {
+  built_ms?: number;
+};
+
 type RawGameState = Omit<
   GameState,
   | "settlers"
   | "houses"
+  | "farms"
   | "nextSettlerId"
   | "settlerMinLifespanMs"
   | "settlerMaxLifespanMs"
   | "nextHouseId"
+  | "nextFarmId"
   | "settlersBaseCapacity"
   | "housesBaseCapacity"
   | "settlersPerHouse"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
+  farms: RawFarmState[];
   next_settler_id: number;
   settler_min_lifespan_ms: number;
   settler_max_lifespan_ms: number;
   next_house_id: number;
+  next_farm_id: number;
   settlers_base_capacity: number;
   houses_base_capacity: number;
   settlers_per_house: number;
@@ -94,6 +103,15 @@ function deserializeHouse(raw: RawHouseState): HouseState {
   };
 }
 
+function deserializeFarm(raw: RawFarmState): FarmState {
+  return {
+    id: raw.id,
+    x: raw.x,
+    y: raw.y,
+    builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+  };
+}
+
 export function deserializeGameState(serialized: string): GameState | null {
   try {
     const data = JSON.parse(serialized) as RawGameState;
@@ -105,14 +123,17 @@ export function deserializeGameState(serialized: string): GameState | null {
       ? data.settlers.map(deserializeSettler)
       : [];
     const houses = Array.isArray(data.houses) ? data.houses.map(deserializeHouse) : [];
+    const farms = Array.isArray(data.farms) ? data.farms.map(deserializeFarm) : [];
 
     return {
       settlers,
       houses,
+      farms,
       nextSettlerId: data.next_settler_id ?? 0,
-      settlerMinLifespanMs: data.settler_min_lifespan_ms ?? 5_000,
-      settlerMaxLifespanMs: data.settler_max_lifespan_ms ?? 10_000,
+      settlerMinLifespanMs: data.settler_min_lifespan_ms ?? BASE_SETTLER_MIN_LIFESPAN_MS,
+      settlerMaxLifespanMs: data.settler_max_lifespan_ms ?? BASE_SETTLER_MAX_LIFESPAN_MS,
       nextHouseId: data.next_house_id ?? 0,
+      nextFarmId: data.next_farm_id ?? 0,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       settlersPerHouse: data.settlers_per_house ?? 10,
@@ -160,14 +181,25 @@ function serializeHouse(house: HouseState): RawHouseState {
   };
 }
 
+function serializeFarm(farm: FarmState): RawFarmState {
+  return {
+    id: farm.id,
+    x: farm.x,
+    y: farm.y,
+    built_ms: farm.builtMs,
+  };
+}
+
 export function serializeGameState(state: GameState): string {
   const payload: RawGameState = {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
+    farms: state.farms.map(serializeFarm),
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,
     settler_max_lifespan_ms: state.settlerMaxLifespanMs,
     next_house_id: state.nextHouseId,
+    next_farm_id: state.nextFarmId,
     settlers_base_capacity: state.settlersBaseCapacity,
     houses_base_capacity: state.housesBaseCapacity,
     settlers_per_house: state.settlersPerHouse,
