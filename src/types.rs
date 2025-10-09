@@ -71,7 +71,7 @@ impl SettlerState {
     pub fn position_at(&self, now_ms: f64) -> (f64, f64) {
         let elapsed = (now_ms - self.move_start_ms).max(0.0);
         let progress = (elapsed / MOVE_INTERVAL_MS).clamp(0.0, 1.0);
-        let eased = crate::ease_out_quad(progress);
+        let eased = crate::app::ease_out_quad(progress);
         let x = self.anchor_x + (self.target_x - self.anchor_x) * eased;
         let y = self.anchor_y + (self.target_y - self.anchor_y) * eased;
         (x, y)
