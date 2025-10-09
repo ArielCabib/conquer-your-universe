@@ -7,6 +7,11 @@
     --orbit-03: #f8e1c8;
     --orbit-04: #f2a7a0;
     --orbit-05: #88afc6;
+    --orbit-01-rgb: 42 26 17;
+    --orbit-02-rgb: 92 58 39;
+    --orbit-03-rgb: 248 225 200;
+    --orbit-04-rgb: 242 167 160;
+    --orbit-05-rgb: 136 175 198;
   }
 }
 
@@ -20,7 +25,7 @@
   }
 
   .bg-orbit-04\/20 {
-    background-color: rgba(242, 167, 160, 0.2);
+    background-color: rgb(var(--orbit-04-rgb) / 0.2);
   }
 
   .hover\:bg-orbit-04:hover {
@@ -28,7 +33,7 @@
   }
 
   .hover\:bg-orbit-04\/20:hover {
-    background-color: rgba(242, 167, 160, 0.2);
+    background-color: rgb(var(--orbit-04-rgb) / 0.2);
   }
 
   .focus-visible\:outline-orbit-04:focus-visible {
@@ -36,23 +41,23 @@
   }
 
   .bg-panel-soft {
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgb(var(--orbit-01-rgb) / 0.35);
   }
 
   .bg-panel {
-    background-color: rgba(28, 18, 14, 0.96);
+    background-color: rgb(var(--orbit-01-rgb) / 0.96);
   }
 
   .bg-menu {
-    background-color: rgba(28, 18, 14, 0.94);
+    background-color: rgb(var(--orbit-01-rgb) / 0.94);
   }
 
   .bg-overlay {
-    background-color: rgba(42, 26, 17, 0.55);
+    background-color: rgb(var(--orbit-01-rgb) / 0.55);
   }
 
   .bg-backdrop {
-    background-color: rgba(0, 0, 0, 0.65);
+    background-color: rgb(var(--orbit-01-rgb) / 0.65);
   }
 
   .text-orbit-01 {
@@ -64,11 +69,11 @@
   }
 
   .text-orbit-03\/50 {
-    color: rgba(248, 225, 200, 0.5);
+    color: rgb(var(--orbit-03-rgb) / 0.5);
   }
 
   .text-orbit-03\/85 {
-    color: rgba(248, 225, 200, 0.85);
+    color: rgb(var(--orbit-03-rgb) / 0.85);
   }
 
   .text-orbit-05 {
@@ -80,11 +85,11 @@
   }
 
   .border-orbit-03\/35 {
-    border-color: rgba(248, 225, 200, 0.35);
+    border-color: rgb(var(--orbit-03-rgb) / 0.35);
   }
 
   .border-orbit-03\/40 {
-    border-color: rgba(248, 225, 200, 0.4);
+    border-color: rgb(var(--orbit-03-rgb) / 0.4);
   }
 
   .font-orbitron {
@@ -96,7 +101,7 @@
   }
 
   .shadow-context-menu {
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 12px 24px rgb(var(--orbit-01-rgb) / 0.35);
   }
 
   .touch-manipulation {
