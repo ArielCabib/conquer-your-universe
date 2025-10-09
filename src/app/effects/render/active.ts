@@ -7,12 +7,19 @@ import {
   SETTLER_RADIUS,
 } from "../../../constants";
 import {
+  CropState,
   GameState,
   SettlerState,
+  createCropState,
   createSettlerState,
   settlerPositionAt,
 } from "../../../types";
-import { easeOutQuad, randomRange, randomTargetForSettler } from "../../helpers";
+import {
+  easeOutQuad,
+  randomCropPositionNearFarm,
+  randomRange,
+  randomTargetForSettler,
+} from "../../helpers";
 import { Dispatch, SetStateAction } from "react";
 
 function drawBirthHalo(
@@ -94,6 +101,7 @@ export function handleActiveState(
 ) {
   let aliveTotal = 0;
   const survivors: SettlerState[] = [];
+  const newCrops: CropState[] = [];
 
   for (const settler of state.settlers) {
     const { x, y } = settlerPositionAt(settler, now);
@@ -146,6 +154,48 @@ export function handleActiveState(
   let nextSettlerId = state.nextSettlerId;
   const houseSpawnIntervalMs = state.houseSpawnIntervalMs;
   const houseSpawnAmount = state.houseSpawnAmount;
+  let nextCropId = state.nextCropId;
+
+  const cropsPerFarmLimit = state.farmCropCapacity <= 0 ? Number.POSITIVE_INFINITY : state.farmCropCapacity;
+  const cropSpawnIntervalMs = state.farmCropSpawnIntervalMs;
+  const cropsByFarm = new Map<number, CropState[]>();
+
+  for (const crop of state.crops) {
+    let list = cropsByFarm.get(crop.farmId);
+    if (!list) {
+      list = [];
+      cropsByFarm.set(crop.farmId, list);
+    }
+    list.push(crop);
+  }
+
+  for (const farm of state.farms) {
+    let farmCrops = cropsByFarm.get(farm.id);
+    if (!farmCrops) {
+      farmCrops = [];
+      cropsByFarm.set(farm.id, farmCrops);
+    }
+
+    const capacityRemaining =
+      cropsPerFarmLimit === Number.POSITIVE_INFINITY
+        ? Number.POSITIVE_INFINITY
+        : Math.max(0, cropsPerFarmLimit - farmCrops.length);
+
+    if (capacityRemaining <= 0) {
+      continue;
+    }
+
+    if (now - farm.lastProducedMs < cropSpawnIntervalMs) {
+      continue;
+    }
+
+    const position = randomCropPositionNearFarm(farm, farmCrops);
+    const crop = createCropState(nextCropId, farm.id, position.x, position.y, now);
+    nextCropId += 1;
+    newCrops.push(crop);
+    farmCrops.push(crop);
+    farm.lastProducedMs = now;
+  }
 
   for (const house of state.houses) {
     if (capacityLimit !== null && aliveTotal >= capacityLimit) {
@@ -175,6 +225,10 @@ export function handleActiveState(
   }
 
   state.nextSettlerId = nextSettlerId;
+  if (newCrops.length > 0) {
+    state.crops = state.crops.concat(newCrops);
+  }
+  state.nextCropId = nextCropId;
 
   renderStructures(context, state, now);
   setAliveCount(aliveTotal);

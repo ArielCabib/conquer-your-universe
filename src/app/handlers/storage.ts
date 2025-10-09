@@ -9,7 +9,12 @@ import {
 import { STORAGE_KEY } from "../../constants";
 import { serializeGameState, deserializeGameState } from "../../persistence";
 import { GameState } from "../../types";
-import { ensureFarmRegistry, ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
+import {
+  ensureCropRegistry,
+  ensureFarmRegistry,
+  ensureHouseRegistry,
+  ensureSettlerLifespans,
+} from "../helpers";
 
 export function useOpenFileDialogHandler(fileInputRef: RefObject<HTMLInputElement>) {
   return useCallback(() => {
@@ -87,6 +92,7 @@ export function useFileChangeHandler({
         ensureSettlerLifespans(loadedState);
         ensureHouseRegistry(loadedState);
         ensureFarmRegistry(loadedState);
+        ensureCropRegistry(loadedState);
 
         gameStateRef.current = loadedState;
         setPlanetName(loadedState.planetName);

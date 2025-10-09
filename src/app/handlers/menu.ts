@@ -102,7 +102,10 @@ export function useBuildFarmMenuHandler({
       const farmId = state.nextFarmId;
       state.nextFarmId = farmId + 1;
       const builtAt = currentTimeMs();
-      state.farms.push(createFarmState(farmId, menuState.canvasX, menuState.canvasY, builtAt));
+      const lastProducedMs = builtAt - state.farmCropSpawnIntervalMs;
+      state.farms.push(
+        createFarmState(farmId, menuState.canvasX, menuState.canvasY, builtAt, lastProducedMs),
+      );
 
       const farmBonus = state.farmLifespanBonusPerFarmMs;
       state.settlerMinLifespanMs += farmBonus;

@@ -5,13 +5,8 @@ import {
   PLANET_CENTER_Y,
   PLANET_RADIUS,
   SETTLER_RADIUS,
-  ORBIT_01,
-  ORBIT_02,
-  ORBIT_03,
-  ORBIT_04,
-  ORBIT_05,
 } from "../constants";
-import { FarmState, GameState, HouseState, SettlerState, houseSpawnHighlight } from "../types";
+import { CropState, FarmState, GameState } from "../types";
 import { easeOutQuad } from "../utils/easing";
 
 export { easeOutQuad };
@@ -91,146 +86,72 @@ export function ensureFarmRegistry(state: GameState): void {
       state.nextFarmId = nextId;
     }
   }
+
+  state.farms.forEach((farm) => {
+    if (typeof farm.lastProducedMs !== "number" || !Number.isFinite(farm.lastProducedMs)) {
+      farm.lastProducedMs = farm.builtMs;
+    }
+  });
 }
 
-export function drawHouse(
-  context: CanvasRenderingContext2D,
-  house: HouseState,
-  nowMs: number,
-): void {
-  const highlightFactor = houseSpawnHighlight(nowMs, house);
+export function ensureCropRegistry(state: GameState): void {
+  const highestId = state.crops.reduce<number | undefined>((maxId, crop) => {
+    if (maxId === undefined || crop.id > maxId) {
+      return crop.id;
+    }
+    return maxId;
+  }, undefined);
 
-  if (highlightFactor > 0) {
-    const haloRadius = 36 + 18 * highlightFactor;
-    context.globalAlpha = 0.45 * highlightFactor;
-    context.fillStyle = ORBIT_04;
-    context.beginPath();
-    context.arc(house.x, house.y + 4, haloRadius, 0, Math.PI * 2);
-    context.fill();
-    context.globalAlpha = 1;
+  if (typeof highestId === "number") {
+    const nextId = highestId + 1;
+    if (state.nextCropId <= highestId) {
+      state.nextCropId = nextId;
+    }
   }
 
-  const baseWidth = 28;
-  const baseHeight = 18;
-  const roofHeight = 14;
-
-  const baseX = house.x - baseWidth / 2;
-  const baseY = house.y - baseHeight / 2;
-
-  context.save();
-  context.fillStyle = ORBIT_01;
-  context.fillRect(baseX, baseY, baseWidth, baseHeight);
-
-  if (highlightFactor > 0) {
-    context.globalAlpha = 0.35 * highlightFactor + 0.2;
-    context.fillStyle = ORBIT_05;
-    context.fillRect(baseX, baseY, baseWidth, baseHeight);
-    context.globalAlpha = 1;
-  }
-
-  context.fillStyle = ORBIT_02;
-  context.beginPath();
-  context.moveTo(baseX - 2, baseY);
-  context.lineTo(house.x, baseY - roofHeight);
-  context.lineTo(baseX + baseWidth + 2, baseY);
-  context.closePath();
-  context.fill();
-
-  if (highlightFactor > 0) {
-    context.globalAlpha = 0.45 * highlightFactor + 0.15;
-    context.beginPath();
-    context.moveTo(baseX - 2, baseY);
-    context.lineTo(house.x, baseY - roofHeight - 4 * highlightFactor);
-    context.lineTo(baseX + baseWidth + 2, baseY);
-    context.closePath();
-    context.fillStyle = ORBIT_03;
-    context.fill();
-    context.globalAlpha = 1;
-  }
-
-  context.fillStyle = ORBIT_05;
-  const windowSize = baseWidth * 0.22;
-  const windowY = baseY + baseHeight * 0.28;
-  context.fillRect(baseX + baseWidth * 0.16, windowY, windowSize, windowSize);
-  context.fillRect(
-    baseX + baseWidth - windowSize - baseWidth * 0.16,
-    windowY,
-    windowSize,
-    windowSize,
-  );
-
-  context.fillStyle = ORBIT_04;
-  const doorWidth = baseWidth * 0.28;
-  const doorHeight = baseHeight * 0.62;
-  context.fillRect(house.x - doorWidth / 2, baseY + baseHeight - doorHeight, doorWidth, doorHeight);
-
-  context.restore();
+  state.crops.forEach((crop) => {
+    if (typeof crop.createdMs !== "number" || !Number.isFinite(crop.createdMs)) {
+      crop.createdMs = 0;
+    }
+  });
 }
 
-export function drawFarm(
-  context: CanvasRenderingContext2D,
+const CROP_COLLISION_DISTANCE = 22;
+const FARM_CROP_DISTANCE_MIN = 28;
+const FARM_CROP_DISTANCE_MAX = 78;
+const FARM_CROP_VERTICAL_SQUASH = 0.7;
+
+export function randomCropPositionNearFarm(
   farm: FarmState,
-  nowMs: number,
-): void {
-  const elapsed = Math.max(0, nowMs - farm.builtMs);
-  const highlight = Math.max(0, 1 - Math.min(1, elapsed / 1_200));
-  const scale = 0.75;
-  const baseOffsetY = 6 * scale;
-  const highlightRadiusX = 44 * scale;
-  const highlightRadiusY = 24 * scale;
-  const highlightExpandX = 12 * scale;
-  const highlightExpandY = 6 * scale;
-  const soilRadiusX = 38 * scale;
-  const soilRadiusY = 18 * scale;
-  const rowTopY = -6 * scale;
-  const rowMidY = 0;
-  const rowBottomY = 6 * scale;
-  const rowOuterX = 28 * scale;
-  const rowMidX = 22 * scale;
-  const rowInnerX = 18 * scale;
+  existingCrops: CropState[],
+): { x: number; y: number } {
+  const ATTEMPTS = 12;
 
-  context.save();
-  context.translate(farm.x, farm.y);
+  for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
+    const angle = randomAngle();
+    const distance = randomRange(FARM_CROP_DISTANCE_MIN, FARM_CROP_DISTANCE_MAX);
+    const x = farm.x + Math.cos(angle) * distance;
+    const y = farm.y + Math.sin(angle) * distance * FARM_CROP_VERTICAL_SQUASH;
 
-  if (highlight > 0) {
-    context.globalAlpha = 0.2 + 0.35 * highlight;
-    context.fillStyle = ORBIT_04;
-    context.beginPath();
-    context.ellipse(
-      0,
-      baseOffsetY,
-      highlightRadiusX + highlightExpandX * highlight,
-      highlightRadiusY + highlightExpandY * highlight,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    context.fill();
-    context.globalAlpha = 1;
+    if (!pointWithinPlanet(x, y)) {
+      continue;
+    }
+
+    const collides = existingCrops.some((crop) => {
+      const dx = crop.x - x;
+      const dy = crop.y - y;
+      return Math.hypot(dx, dy) < CROP_COLLISION_DISTANCE;
+    });
+
+    if (!collides) {
+      return { x, y };
+    }
   }
 
-  context.fillStyle = ORBIT_02;
-  context.beginPath();
-  context.ellipse(0, baseOffsetY, highlightRadiusX, highlightRadiusY, 0, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = ORBIT_01;
-  context.beginPath();
-  context.ellipse(0, 0, soilRadiusX, soilRadiusY, 0, 0, Math.PI * 2);
-  context.fill();
-
-  context.strokeStyle = ORBIT_05;
-  context.lineWidth = 2 * scale;
-  context.beginPath();
-  context.moveTo(-rowOuterX, rowMidY);
-  context.lineTo(rowOuterX, rowMidY);
-  context.moveTo(-rowMidX, rowTopY);
-  context.lineTo(rowMidX, rowTopY);
-  context.moveTo(-rowInnerX, rowBottomY);
-  context.lineTo(rowInnerX, rowBottomY);
-  context.stroke();
-
-  context.restore();
+  return {
+    x: farm.x + randomRange(-FARM_CROP_DISTANCE_MIN, FARM_CROP_DISTANCE_MIN),
+    y: farm.y + randomRange(-FARM_CROP_DISTANCE_MIN * FARM_CROP_VERTICAL_SQUASH, FARM_CROP_DISTANCE_MIN * FARM_CROP_VERTICAL_SQUASH),
+  };
 }
 
 export function randomTargetForSettler(x: number, y: number): { x: number; y: number } {
