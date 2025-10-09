@@ -4,3 +4,4 @@
 - if new styles are added, say so explicitly so it could be monitored by the code reviewer.
 - dont run pnpm commands if you are running without network access. also, there are no tests in this project.
 - if a file exceeds 200 lines, try to split it to 2 or more files that have less than 150 lines of code, maintaining logical structure of course.
+- please don't waste time on running the server and capturing screenshots or running the server for any other reason.
