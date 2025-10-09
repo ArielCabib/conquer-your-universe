@@ -8,6 +8,8 @@ interface StatsPanelProps {
   farmsBuilt: number;
   farmCapacityLimit: number;
   farmLifespanBonusMs: number;
+  houseSpawnIntervalMs: number;
+  houseSpawnAmount: number;
 }
 
 function formatSeconds(ms: number): string {
@@ -25,7 +27,12 @@ export function StatsPanel({
   farmsBuilt,
   farmCapacityLimit,
   farmLifespanBonusMs,
+  houseSpawnIntervalMs,
+  houseSpawnAmount,
 }: StatsPanelProps) {
+  const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
+  const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
+
   return (
     <div className="mt-6 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-6">
       <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
@@ -33,6 +40,9 @@ export function StatsPanel({
       </div>
       <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         Houses built: {housesBuilt}/{housesCapacityLimit}
+        <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
+          +{houseSpawnAmount} {spawnLabel} per {spawnIntervalSeconds}s
+        </span>
       </div>
       <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         Farms built: {farmsBuilt}/{farmCapacityLimit}

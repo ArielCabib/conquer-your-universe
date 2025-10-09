@@ -16,7 +16,6 @@ import {
 import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
-import { FARM_LIFESPAN_BONUS_MS } from "./constants";
 import { createInitialGameState, GameState } from "./types";
 
 export function App() {
@@ -92,9 +91,12 @@ export function App() {
   const housesCapacityLimit = state.housesBaseCapacity;
   const farmCapacityLimit = state.farmsBaseCapacity;
   const settlersPerHouse = state.settlersPerHouse;
+  const farmLifespanBonusPerFarmMs = state.farmLifespanBonusPerFarmMs;
+  const houseSpawnIntervalMs = state.houseSpawnIntervalMs;
+  const houseSpawnAmount = state.houseSpawnAmount;
   const settlerMinLifespanMs = state.settlerMinLifespanMs;
   const settlerMaxLifespanMs = state.settlerMaxLifespanMs;
-  const farmLifespanBonusMs = farmsBuilt * FARM_LIFESPAN_BONUS_MS;
+  const farmLifespanBonusMs = farmsBuilt * farmLifespanBonusPerFarmMs;
 
   const hasHouseCapacity = housesCapacityLimit === 0 || housesBuilt < housesCapacityLimit;
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
@@ -141,6 +143,8 @@ export function App() {
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
       farmCapacityLimit={farmCapacityLimit}
+      houseSpawnIntervalMs={houseSpawnIntervalMs}
+      houseSpawnAmount={houseSpawnAmount}
       farmBuildDisabledReason={farmBuildDisabledReason}
     />
   );

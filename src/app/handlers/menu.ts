@@ -1,5 +1,5 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
-import { FARM_LIFESPAN_BONUS_MS, STORAGE_KEY } from "../../constants";
+import { STORAGE_KEY } from "../../constants";
 import { GameState, createFarmState, createHouseState } from "../../types";
 import { ContextMenuState } from "../types";
 import { pointWithinPlanet, currentTimeMs } from "../helpers";
@@ -104,11 +104,12 @@ export function useBuildFarmMenuHandler({
       const builtAt = currentTimeMs();
       state.farms.push(createFarmState(farmId, menuState.canvasX, menuState.canvasY, builtAt));
 
-      state.settlerMinLifespanMs += FARM_LIFESPAN_BONUS_MS;
-      state.settlerMaxLifespanMs += FARM_LIFESPAN_BONUS_MS;
+      const farmBonus = state.farmLifespanBonusPerFarmMs;
+      state.settlerMinLifespanMs += farmBonus;
+      state.settlerMaxLifespanMs += farmBonus;
       state.settlers.forEach((settler) => {
         if (settler.phase.kind === "Alive") {
-          settler.lifespanMs += FARM_LIFESPAN_BONUS_MS;
+          settler.lifespanMs += farmBonus;
         }
       });
 

@@ -35,6 +35,8 @@ interface AppViewProps {
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmLifespanBonusMs: number;
+  houseSpawnIntervalMs: number;
+  houseSpawnAmount: number;
   farmBuildDisabledReason?: string;
 }
 
@@ -67,6 +69,8 @@ export function AppView({
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmLifespanBonusMs,
+  houseSpawnIntervalMs,
+  houseSpawnAmount,
   farmBuildDisabledReason,
 }: AppViewProps) {
   return (
@@ -96,6 +100,8 @@ export function AppView({
           settlerMinLifespanMs={settlerMinLifespanMs}
           settlerMaxLifespanMs={settlerMaxLifespanMs}
           farmLifespanBonusMs={farmLifespanBonusMs}
+          houseSpawnIntervalMs={houseSpawnIntervalMs}
+          houseSpawnAmount={houseSpawnAmount}
         />
       </section>
       <input

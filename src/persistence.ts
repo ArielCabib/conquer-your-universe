@@ -48,6 +48,9 @@ type RawGameState = Omit<
   | "housesBaseCapacity"
   | "farmsBaseCapacity"
   | "settlersPerHouse"
+  | "farmLifespanBonusPerFarmMs"
+  | "houseSpawnIntervalMs"
+  | "houseSpawnAmount"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -61,6 +64,9 @@ type RawGameState = Omit<
   houses_base_capacity: number;
   farms_base_capacity: number;
   settlers_per_house: number;
+  farm_lifespan_bonus_per_farm_ms: number;
+  house_spawn_interval_ms: number;
+  house_spawn_amount: number;
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -140,6 +146,9 @@ export function deserializeGameState(serialized: string): GameState | null {
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
       settlersPerHouse: data.settlers_per_house ?? 10,
+      farmLifespanBonusPerFarmMs: data.farm_lifespan_bonus_per_farm_ms ?? 1_000,
+      houseSpawnIntervalMs: data.house_spawn_interval_ms ?? 5_000,
+      houseSpawnAmount: data.house_spawn_amount ?? 1,
     };
   } catch (error) {
     console.warn("Failed to deserialize game state", error);
@@ -207,6 +216,9 @@ export function serializeGameState(state: GameState): string {
     houses_base_capacity: state.housesBaseCapacity,
     farms_base_capacity: state.farmsBaseCapacity,
     settlers_per_house: state.settlersPerHouse,
+    farm_lifespan_bonus_per_farm_ms: state.farmLifespanBonusPerFarmMs,
+    house_spawn_interval_ms: state.houseSpawnIntervalMs,
+    house_spawn_amount: state.houseSpawnAmount,
   };
 
   return JSON.stringify(payload);

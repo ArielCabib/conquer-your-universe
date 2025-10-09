@@ -56,6 +56,9 @@ export interface GameState {
   housesBaseCapacity: number;
   farmsBaseCapacity: number;
   settlersPerHouse: number;
+  farmLifespanBonusPerFarmMs: number;
+  houseSpawnIntervalMs: number;
+  houseSpawnAmount: number;
 }
 
 export function createInitialGameState(): GameState {
@@ -72,6 +75,9 @@ export function createInitialGameState(): GameState {
     housesBaseCapacity: 5,
     farmsBaseCapacity: 5,
     settlersPerHouse: 10,
+    farmLifespanBonusPerFarmMs: 1_000,
+    houseSpawnIntervalMs: 5_000,
+    houseSpawnAmount: 1,
   };
 }
 

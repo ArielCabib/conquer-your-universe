@@ -174,6 +174,20 @@ export function drawFarm(
 ): void {
   const elapsed = Math.max(0, nowMs - farm.builtMs);
   const highlight = Math.max(0, 1 - Math.min(1, elapsed / 1_200));
+  const scale = 0.75;
+  const baseOffsetY = 6 * scale;
+  const highlightRadiusX = 44 * scale;
+  const highlightRadiusY = 24 * scale;
+  const highlightExpandX = 12 * scale;
+  const highlightExpandY = 6 * scale;
+  const soilRadiusX = 38 * scale;
+  const soilRadiusY = 18 * scale;
+  const rowTopY = -6 * scale;
+  const rowMidY = 0;
+  const rowBottomY = 6 * scale;
+  const rowOuterX = 28 * scale;
+  const rowMidX = 22 * scale;
+  const rowInnerX = 18 * scale;
 
   context.save();
   context.translate(farm.x, farm.y);
@@ -182,30 +196,38 @@ export function drawFarm(
     context.globalAlpha = 0.2 + 0.35 * highlight;
     context.fillStyle = ORBIT_04;
     context.beginPath();
-    context.ellipse(0, 6, 44 + 12 * highlight, 24 + 6 * highlight, 0, 0, Math.PI * 2);
+    context.ellipse(
+      0,
+      baseOffsetY,
+      highlightRadiusX + highlightExpandX * highlight,
+      highlightRadiusY + highlightExpandY * highlight,
+      0,
+      0,
+      Math.PI * 2,
+    );
     context.fill();
     context.globalAlpha = 1;
   }
 
   context.fillStyle = ORBIT_02;
   context.beginPath();
-  context.ellipse(0, 6, 44, 24, 0, 0, Math.PI * 2);
+  context.ellipse(0, baseOffsetY, highlightRadiusX, highlightRadiusY, 0, 0, Math.PI * 2);
   context.fill();
 
   context.fillStyle = ORBIT_01;
   context.beginPath();
-  context.ellipse(0, 0, 38, 18, 0, 0, Math.PI * 2);
+  context.ellipse(0, 0, soilRadiusX, soilRadiusY, 0, 0, Math.PI * 2);
   context.fill();
 
   context.strokeStyle = ORBIT_05;
-  context.lineWidth = 2;
+  context.lineWidth = 2 * scale;
   context.beginPath();
-  context.moveTo(-28, 0);
-  context.lineTo(28, 0);
-  context.moveTo(-22, -6);
-  context.lineTo(22, -6);
-  context.moveTo(-18, 6);
-  context.lineTo(18, 6);
+  context.moveTo(-rowOuterX, rowMidY);
+  context.lineTo(rowOuterX, rowMidY);
+  context.moveTo(-rowMidX, rowTopY);
+  context.lineTo(rowMidX, rowTopY);
+  context.moveTo(-rowInnerX, rowBottomY);
+  context.lineTo(rowInnerX, rowBottomY);
   context.stroke();
 
   context.restore();
