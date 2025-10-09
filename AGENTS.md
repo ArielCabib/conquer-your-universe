@@ -1,4 +1,4 @@
-- use only colors from the constants.
+- use only the five colors from the palette. transparency variations are allowed.
 - use only fonts from the set of fonts already widely used. don't add more.
 - use only font sizes that are already used, don't add new ones.
 - if new styles are added, say so explicitly so it could be monitored by the code reviewer.
