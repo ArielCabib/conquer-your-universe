@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type MouseEventHandler, type RefObject } from "react";
 import { ContextMenuState } from "../types";
-import { ORBIT_03 } from "../../constants";
+import { ORBIT_01, ORBIT_03, ORBIT_04 } from "../../constants";
 
 interface CanvasAreaProps {
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -70,8 +70,8 @@ export function CanvasArea({
           textAlign: "left",
           padding: "0.5rem 0.75rem",
           border: "none",
-          background: isBuildActionHovered ? "rgba(248, 225, 200, 0.12)" : "transparent",
-          color: ORBIT_03,
+          background: isBuildActionHovered ? ORBIT_04 : "transparent",
+          color: isBuildActionHovered ? ORBIT_01 : ORBIT_03,
           fontFamily: "'Trebuchet MS', sans-serif",
           fontSize: "0.95rem",
           letterSpacing: "0.04em",
