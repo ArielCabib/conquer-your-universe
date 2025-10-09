@@ -8,6 +8,7 @@ import { StatsPanel } from "./Stats";
 
 interface AppViewProps {
   aliveNow: number;
+  planetName: string;
   canBuildHouse: boolean;
   canBuildFarm: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -30,6 +31,7 @@ interface AppViewProps {
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;
   shouldShowBuildPrompt: boolean;
+  shouldShowFarmPrompt: boolean;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
@@ -38,10 +40,12 @@ interface AppViewProps {
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
   farmBuildDisabledReason?: string;
+  onPlanetNameChange: (name: string) => void;
 }
 
 export function AppView({
   aliveNow,
+  planetName,
   canBuildHouse,
   canBuildFarm,
   canvasRef,
@@ -64,6 +68,7 @@ export function AppView({
   onSaveGame,
   settlersCapacityLimit,
   shouldShowBuildPrompt,
+  shouldShowFarmPrompt,
   onBuildHouseFromMenu,
   onBuildFarmFromMenu,
   settlerMinLifespanMs,
@@ -72,12 +77,20 @@ export function AppView({
   houseSpawnIntervalMs,
   houseSpawnAmount,
   farmBuildDisabledReason,
+  onPlanetNameChange,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
       <section className="flex flex-col items-center gap-10 text-center">
-        <HeaderSection onOpenSettings={onOpenSettings} />
-        <BuildPrompt shouldShow={shouldShowBuildPrompt} />
+        <HeaderSection
+          onOpenSettings={onOpenSettings}
+          planetName={planetName}
+          onPlanetNameChange={onPlanetNameChange}
+        />
+        <div className="flex flex-col items-center gap-3">
+          <BuildPrompt shouldShow={shouldShowBuildPrompt} message="Right click the planet to build a house" />
+          <BuildPrompt shouldShow={shouldShowFarmPrompt} message="Right click the planet to build a farm" />
+        </div>
         <CanvasArea
           canvasRef={canvasRef}
           onClick={onClickCanvas}

@@ -47,6 +47,7 @@ interface FileChangeOptions {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsPaused: Dispatch<SetStateAction<boolean>>;
   pauseTimeRef: MutableRefObject<number | null>;
+  setPlanetName: Dispatch<SetStateAction<string>>;
 }
 
 export function useFileChangeHandler({
@@ -55,6 +56,7 @@ export function useFileChangeHandler({
   setIsModalOpen,
   setIsPaused,
   pauseTimeRef,
+  setPlanetName,
 }: FileChangeOptions) {
   return useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -87,6 +89,7 @@ export function useFileChangeHandler({
         ensureFarmRegistry(loadedState);
 
         gameStateRef.current = loadedState;
+        setPlanetName(loadedState.planetName);
 
         try {
           if (typeof localStorage !== "undefined") {
@@ -116,6 +119,6 @@ export function useFileChangeHandler({
 
       input.value = "";
     },
-    [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused],
+    [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused, setPlanetName],
   );
 }

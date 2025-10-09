@@ -44,6 +44,7 @@ export interface FarmState {
 }
 
 export interface GameState {
+  planetName: string;
   settlers: SettlerState[];
   nextSettlerId: number;
   settlerMinLifespanMs: number;
@@ -63,6 +64,7 @@ export interface GameState {
 
 export function createInitialGameState(): GameState {
   return {
+    planetName: "Your Planet",
     settlers: [],
     nextSettlerId: 0,
     settlerMinLifespanMs: BASE_SETTLER_MIN_LIFESPAN_MS,

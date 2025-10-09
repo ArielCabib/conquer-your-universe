@@ -34,23 +34,23 @@ export function StatsPanel({
   const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
 
   return (
-    <div className="mt-6 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-6">
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+    <div className="mt-4 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-4">
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         Settlers alive: {aliveNow}/{settlersCapacityLimit}
       </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         Houses built: {housesBuilt}/{housesCapacityLimit}
         <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
           +{houseSpawnAmount} {spawnLabel} per {spawnIntervalSeconds}s
         </span>
       </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         Farms built: {farmsBuilt}/{farmCapacityLimit}
         {farmCapacityLimit > 0 && farmsBuilt >= farmCapacityLimit ? (
           <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">Farm limit reached</span>
         ) : null}
       </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-5 py-3 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
         {`Settler lifespan: ${formatSeconds(settlerMinLifespanMs)}s – ${formatSeconds(settlerMaxLifespanMs)}s`}
         {farmLifespanBonusMs > 0 ? (
           <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">

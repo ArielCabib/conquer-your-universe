@@ -73,7 +73,7 @@ export function CanvasArea({
       <canvas
         ref={canvasRef}
         width={600}
-        height={400}
+        height={480}
         className={`h-auto w-full max-w-[600px] touch-manipulation ${
           isPaused ? "cursor-not-allowed pointer-events-none" : "cursor-pointer"
         }`}
