@@ -1,2 +1,5 @@
-/target
-/dist
+node_modules
+pnpm-lock.yaml
+dist
+.vite
+.DS_Store

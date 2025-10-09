@@ -1,0 +1,30 @@
+import { MutableRefObject, useEffect } from "react";
+import { STORAGE_KEY } from "../../constants";
+import { deserializeGameState, serializeGameState } from "../../persistence";
+import { GameState } from "../../types";
+import { ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
+
+export function useRestoreState(gameStateRef: MutableRefObject<GameState>) {
+  useEffect(() => {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const restored = deserializeGameState(stored);
+        if (restored) {
+          ensureSettlerLifespans(restored);
+          ensureHouseRegistry(restored);
+          gameStateRef.current = restored;
+          return;
+        }
+      }
+
+      localStorage.setItem(STORAGE_KEY, serializeGameState(gameStateRef.current));
+    } catch (error) {
+      console.warn("Failed to restore game state", error);
+    }
+  }, [gameStateRef]);
+}

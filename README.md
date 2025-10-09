@@ -1,5 +1,36 @@
+# Conquer Your Universe
+
+A client-side React + Vite recreation of the original "Conquer Your Universe" planet simulation game.
+
+## Prerequisites
+
+- Node.js 24 or newer
+- [pnpm](https://pnpm.io/) 8.x
+
+## Getting started
+
+Install dependencies with pnpm:
+
 ```bash
-rustup target add wasm32-unknown-unknown
-cargo install --locked trunk
-trunk serve --open
+pnpm install
 ```
+
+Start a development server with hot reloading:
+
+```bash
+pnpm dev
+```
+
+Create a production build:
+
+```bash
+pnpm build
+```
+
+Preview the production build locally:
+
+```bash
+pnpm preview
+```
+
+All gameplay data is stored in `localStorage`, and you can export/import saves through the in-app command center.
