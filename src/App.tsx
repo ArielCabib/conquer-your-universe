@@ -19,14 +19,13 @@ import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { createInitialGameState, GameState } from "./types";
 
-type PromptKey = "explore" | "build" | "farm";
-
-const HARVESTER_PROMPT_MESSAGE = "You can build a harvester";
+type PromptKey = "explore" | "build" | "farm" | "harvester";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
   build: "Right click the planet to build a house",
   farm: "Right click the planet to build a farm",
+  harvester: "You can build a harvester",
 };
 
 export function App() {
@@ -39,9 +38,8 @@ export function App() {
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
-  const harvesterPromptShownRef = useRef(false);
-  const harvesterPromptTimeoutRef = useRef<number | null>(null);
-  const [promptOverride, setPromptOverride] = useState<string | null>(null);
+  const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
+  const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -53,19 +51,6 @@ export function App() {
   useRestoreState(gameStateRef, handleStateRestore);
   useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
   usePeriodicSave(gameStateRef);
-
-  const clearHarvesterPromptTimeout = useCallback(() => {
-    if (typeof window !== "undefined" && harvesterPromptTimeoutRef.current !== null) {
-      window.clearTimeout(harvesterPromptTimeoutRef.current);
-    }
-    harvesterPromptTimeoutRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      clearHarvesterPromptTimeout();
-    };
-  }, [clearHarvesterPromptTimeout]);
 
   const handleClick = useCanvasClickHandler({
     gameStateRef,
@@ -200,31 +185,37 @@ export function App() {
 
   useEffect(() => {
     if (canBuildHarvester) {
-      if (!harvesterPromptShownRef.current) {
-        setPromptOverride(HARVESTER_PROMPT_MESSAGE);
-        harvesterPromptShownRef.current = true;
-
-        if (typeof window !== "undefined") {
-          clearHarvesterPromptTimeout();
-          harvesterPromptTimeoutRef.current = window.setTimeout(() => {
-            setPromptOverride((current) =>
-              current === HARVESTER_PROMPT_MESSAGE ? null : current,
-            );
-            harvesterPromptTimeoutRef.current = null;
-          }, 4_500);
-        }
+      if (!hasShownHarvesterPrompt) {
+        setForcedPromptKey("harvester");
+        setHasShownHarvesterPrompt(true);
       }
-    } else {
-      harvesterPromptShownRef.current = false;
-      setPromptOverride((current) =>
-        current === HARVESTER_PROMPT_MESSAGE ? null : current,
-      );
-      clearHarvesterPromptTimeout();
+      return;
     }
-  }, [canBuildHarvester, clearHarvesterPromptTimeout]);
 
-  const basePromptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
-  const promptMessage = promptOverride ?? basePromptMessage;
+    setHasShownHarvesterPrompt(false);
+    setForcedPromptKey((current) => (current === "harvester" ? null : current));
+  }, [canBuildHarvester, hasShownHarvesterPrompt]);
+
+  useEffect(() => {
+    if (forcedPromptKey !== "harvester") {
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setForcedPromptKey((current) => (current === "harvester" ? null : current));
+    }, 4_500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [forcedPromptKey]);
+
+  const promptKey = forcedPromptKey ?? activePromptKey;
+  const promptMessage = promptKey ? PROMPT_MESSAGES[promptKey] : null;
 
   return (
     <AppView
