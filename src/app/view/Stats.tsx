@@ -1,3 +1,5 @@
+import type { JSX } from "react";
+
 interface StatsPanelProps {
   aliveNow: number;
   settlersCapacityLimit: number;
@@ -33,31 +35,68 @@ export function StatsPanel({
   const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
   const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
 
-  return (
-    <div className="mt-4 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-4">
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+  const statCards: JSX.Element[] = [];
+
+  if (aliveNow > 0) {
+    statCards.push(
+      <div
+        key="settlers"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
         Settlers alive: {aliveNow}/{settlersCapacityLimit}
-      </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      </div>,
+    );
+  }
+
+  if (housesBuilt > 0) {
+    statCards.push(
+      <div
+        key="houses"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
         Houses built: {housesBuilt}/{housesCapacityLimit}
         <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
           +{houseSpawnAmount} {spawnLabel} per {spawnIntervalSeconds}s
         </span>
-      </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      </div>,
+    );
+  }
+
+  if (farmsBuilt > 0) {
+    statCards.push(
+      <div
+        key="farms"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
         Farms built: {farmsBuilt}/{farmCapacityLimit}
         {farmCapacityLimit > 0 && farmsBuilt >= farmCapacityLimit ? (
           <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">Farm limit reached</span>
         ) : null}
-      </div>
-      <div className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03">
+      </div>,
+    );
+  }
+
+  if (farmLifespanBonusMs > 0) {
+    statCards.push(
+      <div
+        key="lifespan"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
         {`Settler lifespan: ${formatSeconds(settlerMinLifespanMs)}s – ${formatSeconds(settlerMaxLifespanMs)}s`}
-        {farmLifespanBonusMs > 0 ? (
-          <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
-            +{formatSeconds(farmLifespanBonusMs)}s from farms
-          </span>
-        ) : null}
-      </div>
+        <span className="mt-1 block text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
+          +{formatSeconds(farmLifespanBonusMs)}s from farms
+        </span>
+      </div>,
+    );
+  }
+
+  if (statCards.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 flex w-[min(80vw,540px)] max-w-[600px] flex-wrap items-center justify-center gap-4">
+      {statCards}
     </div>
   );
 }

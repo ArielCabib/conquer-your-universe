@@ -32,6 +32,7 @@ interface AppViewProps {
   settlersCapacityLimit: number;
   shouldShowBuildPrompt: boolean;
   shouldShowFarmPrompt: boolean;
+  shouldShowExplorePrompt: boolean;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
@@ -69,6 +70,7 @@ export function AppView({
   settlersCapacityLimit,
   shouldShowBuildPrompt,
   shouldShowFarmPrompt,
+  shouldShowExplorePrompt,
   onBuildHouseFromMenu,
   onBuildFarmFromMenu,
   settlerMinLifespanMs,
@@ -88,6 +90,7 @@ export function AppView({
           onPlanetNameChange={onPlanetNameChange}
         />
         <div className="flex flex-col items-center gap-3">
+          <BuildPrompt shouldShow={shouldShowExplorePrompt} message="Click around and find out." />
           <BuildPrompt shouldShow={shouldShowBuildPrompt} message="Right click the planet to build a house" />
           <BuildPrompt shouldShow={shouldShowFarmPrompt} message="Right click the planet to build a farm" />
         </div>

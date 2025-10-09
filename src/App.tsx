@@ -131,6 +131,7 @@ export function App() {
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
   const shouldShowFarmPrompt = aliveCount >= 10 && farmsBuilt === 0;
+  const shouldShowExplorePrompt = aliveCount === 0;
 
   return (
     <AppView
@@ -158,6 +159,7 @@ export function App() {
       settlersCapacityLimit={settlersCapacityLimit}
       shouldShowBuildPrompt={shouldShowBuildPrompt}
       shouldShowFarmPrompt={shouldShowFarmPrompt}
+      shouldShowExplorePrompt={shouldShowExplorePrompt}
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
