@@ -6,6 +6,13 @@ interface StatsPanelProps {
   settlersCapacityLimit: number;
   housesBuilt: number;
   housesCapacityLimit: number;
+  settlerMinLifespanMs: number;
+  settlerMaxLifespanMs: number;
+}
+
+function formatSeconds(ms: number): string {
+  const seconds = ms / 1000;
+  return Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
 }
 
 export function StatsPanel({
@@ -13,12 +20,16 @@ export function StatsPanel({
   settlersCapacityLimit,
   housesBuilt,
   housesCapacityLimit,
+  settlerMinLifespanMs,
+  settlerMaxLifespanMs,
 }: StatsPanelProps) {
   const containerStyle: CSSProperties = {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     gap: "1.5rem",
+    justifyContent: "center",
+    flexWrap: "wrap",
     maxWidth: "600px",
     width: "min(80vw, 540px)",
   };
@@ -38,6 +49,9 @@ export function StatsPanel({
     <div style={containerStyle}>
       <div style={cardStyle}>Settlers alive: {aliveNow}/{settlersCapacityLimit}</div>
       <div style={cardStyle}>Houses built: {housesBuilt}/{housesCapacityLimit}</div>
+      <div style={cardStyle}>
+        {`Settler lifespan: ${formatSeconds(settlerMinLifespanMs)}s – ${formatSeconds(settlerMaxLifespanMs)}s`}
+      </div>
     </div>
   );
 }
