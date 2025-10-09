@@ -41,6 +41,15 @@ export interface FarmState {
   x: number;
   y: number;
   builtMs: number;
+  lastProducedMs: number;
+}
+
+export interface CropState {
+  id: number;
+  farmId: number;
+  x: number;
+  y: number;
+  createdMs: number;
 }
 
 export interface GameState {
@@ -53,11 +62,15 @@ export interface GameState {
   nextHouseId: number;
   farms: FarmState[];
   nextFarmId: number;
+  crops: CropState[];
+  nextCropId: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
   farmsBaseCapacity: number;
   settlersPerHouse: number;
   farmLifespanBonusPerFarmMs: number;
+  farmCropCapacity: number;
+  farmCropSpawnIntervalMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
 }
@@ -73,11 +86,15 @@ export function createInitialGameState(): GameState {
     nextHouseId: 0,
     farms: [],
     nextFarmId: 0,
+    crops: [],
+    nextCropId: 0,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
     farmsBaseCapacity: 5,
     settlersPerHouse: 10,
     farmLifespanBonusPerFarmMs: 1_000,
+    farmCropCapacity: 5,
+    farmCropSpawnIntervalMs: 4_500,
     houseSpawnIntervalMs: 5_000,
     houseSpawnAmount: 1,
   };
@@ -121,12 +138,35 @@ export function createHouseState(
   };
 }
 
-export function createFarmState(id: number, x: number, y: number, builtMs: number): FarmState {
+export function createFarmState(
+  id: number,
+  x: number,
+  y: number,
+  builtMs: number,
+  lastProducedMs: number = builtMs,
+): FarmState {
   return {
     id,
     x,
     y,
     builtMs,
+    lastProducedMs,
+  };
+}
+
+export function createCropState(
+  id: number,
+  farmId: number,
+  x: number,
+  y: number,
+  createdMs: number,
+): CropState {
+  return {
+    id,
+    farmId,
+    x,
+    y,
+    createdMs,
   };
 }
 

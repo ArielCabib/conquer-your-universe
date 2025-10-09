@@ -13,7 +13,8 @@ import {
   VIEWBOX_WIDTH,
 } from "../../../constants";
 import { GameState } from "../../../types";
-import { drawFarm, drawHouse, currentTimeMs } from "../../helpers";
+import { currentTimeMs } from "../../helpers";
+import { drawCrop, drawFarm, drawHouse } from "../../drawing";
 import { handleActiveState } from "./active";
 import { renderPausedState } from "./paused";
 
@@ -31,6 +32,9 @@ function renderStructures(
 ) {
   for (const farm of state.farms) {
     drawFarm(context, farm, now);
+  }
+  for (const crop of state.crops) {
+    drawCrop(context, crop, now);
   }
   for (const house of state.houses) {
     drawHouse(context, house, now);

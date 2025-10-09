@@ -1,5 +1,5 @@
 import { BASE_SETTLER_MAX_LIFESPAN_MS, BASE_SETTLER_MIN_LIFESPAN_MS } from "./constants";
-import { FarmState, GameState, HouseState, SettlerPhase, SettlerState } from "./types";
+import { CropState, FarmState, GameState, HouseState, SettlerPhase, SettlerState } from "./types";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -30,8 +30,14 @@ type RawHouseState = Omit<HouseState, "builtMs" | "lastSpawnMs"> & {
   last_spawn_ms?: number;
 };
 
-type RawFarmState = Omit<FarmState, "builtMs"> & {
+type RawFarmState = Omit<FarmState, "builtMs" | "lastProducedMs"> & {
   built_ms?: number;
+  last_produced_ms?: number;
+  lastProducedMs?: number;
+};
+
+type RawCropState = Omit<CropState, "createdMs"> & {
+  created_ms?: number;
 };
 
 type RawGameState = Omit<
@@ -39,34 +45,42 @@ type RawGameState = Omit<
   | "settlers"
   | "houses"
   | "farms"
+  | "crops"
   | "planetName"
   | "nextSettlerId"
   | "settlerMinLifespanMs"
   | "settlerMaxLifespanMs"
   | "nextHouseId"
   | "nextFarmId"
+  | "nextCropId"
   | "settlersBaseCapacity"
   | "housesBaseCapacity"
   | "farmsBaseCapacity"
   | "settlersPerHouse"
   | "farmLifespanBonusPerFarmMs"
+  | "farmCropCapacity"
+  | "farmCropSpawnIntervalMs"
   | "houseSpawnIntervalMs"
   | "houseSpawnAmount"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
   farms: RawFarmState[];
+  crops: RawCropState[];
   planet_name?: string;
   next_settler_id: number;
   settler_min_lifespan_ms: number;
   settler_max_lifespan_ms: number;
   next_house_id: number;
   next_farm_id: number;
+  next_crop_id: number;
   settlers_base_capacity: number;
   houses_base_capacity: number;
   farms_base_capacity: number;
   settlers_per_house: number;
   farm_lifespan_bonus_per_farm_ms: number;
+  farm_crop_capacity: number;
+  farm_crop_spawn_interval_ms: number;
   house_spawn_interval_ms: number;
   house_spawn_amount: number;
 };
@@ -114,11 +128,24 @@ function deserializeHouse(raw: RawHouseState): HouseState {
 }
 
 function deserializeFarm(raw: RawFarmState): FarmState {
+  const builtMs = raw.built_ms ?? raw.builtMs ?? 0;
+  const lastProducedMs = raw.last_produced_ms ?? raw.lastProducedMs ?? builtMs;
   return {
     id: raw.id,
     x: raw.x,
     y: raw.y,
-    builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+    builtMs,
+    lastProducedMs,
+  };
+}
+
+function deserializeCrop(raw: RawCropState): CropState {
+  return {
+    id: raw.id,
+    farmId: raw.farmId,
+    x: raw.x,
+    y: raw.y,
+    createdMs: raw.created_ms ?? raw.createdMs ?? 0,
   };
 }
 
@@ -134,6 +161,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       : [];
     const houses = Array.isArray(data.houses) ? data.houses.map(deserializeHouse) : [];
     const farms = Array.isArray(data.farms) ? data.farms.map(deserializeFarm) : [];
+    const crops = Array.isArray(data.crops) ? data.crops.map(deserializeCrop) : [];
 
     return {
       settlers,
@@ -145,11 +173,15 @@ export function deserializeGameState(serialized: string): GameState | null {
       settlerMaxLifespanMs: data.settler_max_lifespan_ms ?? BASE_SETTLER_MAX_LIFESPAN_MS,
       nextHouseId: data.next_house_id ?? 0,
       nextFarmId: data.next_farm_id ?? 0,
+      crops,
+      nextCropId: data.next_crop_id ?? 0,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
       settlersPerHouse: data.settlers_per_house ?? 10,
       farmLifespanBonusPerFarmMs: data.farm_lifespan_bonus_per_farm_ms ?? 1_000,
+      farmCropCapacity: data.farm_crop_capacity ?? 5,
+      farmCropSpawnIntervalMs: data.farm_crop_spawn_interval_ms ?? 4_500,
       houseSpawnIntervalMs: data.house_spawn_interval_ms ?? 5_000,
       houseSpawnAmount: data.house_spawn_amount ?? 1,
     };
@@ -202,6 +234,17 @@ function serializeFarm(farm: FarmState): RawFarmState {
     x: farm.x,
     y: farm.y,
     built_ms: farm.builtMs,
+    last_produced_ms: farm.lastProducedMs,
+  };
+}
+
+function serializeCrop(crop: CropState): RawCropState {
+  return {
+    id: crop.id,
+    farmId: crop.farmId,
+    x: crop.x,
+    y: crop.y,
+    created_ms: crop.createdMs,
   };
 }
 
@@ -210,17 +253,21 @@ export function serializeGameState(state: GameState): string {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
     farms: state.farms.map(serializeFarm),
+    crops: state.crops.map(serializeCrop),
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,
     settler_max_lifespan_ms: state.settlerMaxLifespanMs,
     next_house_id: state.nextHouseId,
     next_farm_id: state.nextFarmId,
+    next_crop_id: state.nextCropId,
     settlers_base_capacity: state.settlersBaseCapacity,
     houses_base_capacity: state.housesBaseCapacity,
     farms_base_capacity: state.farmsBaseCapacity,
     settlers_per_house: state.settlersPerHouse,
     farm_lifespan_bonus_per_farm_ms: state.farmLifespanBonusPerFarmMs,
+    farm_crop_capacity: state.farmCropCapacity,
+    farm_crop_spawn_interval_ms: state.farmCropSpawnIntervalMs,
     house_spawn_interval_ms: state.houseSpawnIntervalMs,
     house_spawn_amount: state.houseSpawnAmount,
   };

@@ -2,7 +2,12 @@ import { MutableRefObject, useEffect } from "react";
 import { STORAGE_KEY } from "../../constants";
 import { deserializeGameState, serializeGameState } from "../../persistence";
 import { GameState } from "../../types";
-import { ensureFarmRegistry, ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
+import {
+  ensureCropRegistry,
+  ensureFarmRegistry,
+  ensureHouseRegistry,
+  ensureSettlerLifespans,
+} from "../helpers";
 
 export function useRestoreState(
   gameStateRef: MutableRefObject<GameState>,
@@ -21,6 +26,7 @@ export function useRestoreState(
           ensureSettlerLifespans(restored);
           ensureHouseRegistry(restored);
           ensureFarmRegistry(restored);
+          ensureCropRegistry(restored);
           gameStateRef.current = restored;
           onRestore?.(restored);
           return;
