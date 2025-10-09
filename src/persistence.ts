@@ -1,5 +1,13 @@
 import { BASE_SETTLER_MAX_LIFESPAN_MS, BASE_SETTLER_MIN_LIFESPAN_MS } from "./constants";
-import { CropState, FarmState, GameState, HouseState, SettlerPhase, SettlerState } from "./types";
+import {
+  CropState,
+  FarmState,
+  GameState,
+  HarvesterState,
+  HouseState,
+  SettlerPhase,
+  SettlerState,
+} from "./types";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -40,6 +48,11 @@ type RawCropState = Omit<CropState, "createdMs"> & {
   created_ms?: number;
 };
 
+type RawHarvesterState = Omit<HarvesterState, "builtMs"> & {
+  built_ms?: number;
+  builtMs?: number;
+};
+
 type RawGameState = Omit<
   GameState,
   | "settlers"
@@ -67,6 +80,7 @@ type RawGameState = Omit<
   houses: RawHouseState[];
   farms: RawFarmState[];
   crops: RawCropState[];
+  harvester?: RawHarvesterState | null;
   planet_name?: string;
   next_settler_id: number;
   settler_min_lifespan_ms: number;
@@ -149,6 +163,18 @@ function deserializeCrop(raw: RawCropState): CropState {
   };
 }
 
+function deserializeHarvester(raw: RawHarvesterState | null | undefined): HarvesterState | null {
+  if (!raw) {
+    return null;
+  }
+
+  return {
+    x: raw.x,
+    y: raw.y,
+    builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+  };
+}
+
 export function deserializeGameState(serialized: string): GameState | null {
   try {
     const data = JSON.parse(serialized) as RawGameState;
@@ -162,6 +188,7 @@ export function deserializeGameState(serialized: string): GameState | null {
     const houses = Array.isArray(data.houses) ? data.houses.map(deserializeHouse) : [];
     const farms = Array.isArray(data.farms) ? data.farms.map(deserializeFarm) : [];
     const crops = Array.isArray(data.crops) ? data.crops.map(deserializeCrop) : [];
+    const harvester = deserializeHarvester(data.harvester);
 
     return {
       settlers,
@@ -175,6 +202,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextFarmId: data.next_farm_id ?? 0,
       crops,
       nextCropId: data.next_crop_id ?? 0,
+      harvester,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
@@ -248,12 +276,25 @@ function serializeCrop(crop: CropState): RawCropState {
   };
 }
 
+function serializeHarvester(harvester: HarvesterState | null): RawHarvesterState | null {
+  if (!harvester) {
+    return null;
+  }
+
+  return {
+    x: harvester.x,
+    y: harvester.y,
+    built_ms: harvester.builtMs,
+  };
+}
+
 export function serializeGameState(state: GameState): string {
   const payload: RawGameState = {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
     farms: state.farms.map(serializeFarm),
     crops: state.crops.map(serializeCrop),
+    harvester: serializeHarvester(state.harvester),
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,

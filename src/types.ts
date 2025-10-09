@@ -52,6 +52,12 @@ export interface CropState {
   createdMs: number;
 }
 
+export interface HarvesterState {
+  x: number;
+  y: number;
+  builtMs: number;
+}
+
 export interface GameState {
   planetName: string;
   settlers: SettlerState[];
@@ -64,6 +70,7 @@ export interface GameState {
   nextFarmId: number;
   crops: CropState[];
   nextCropId: number;
+  harvester: HarvesterState | null;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
   farmsBaseCapacity: number;
@@ -88,6 +95,7 @@ export function createInitialGameState(): GameState {
     nextFarmId: 0,
     crops: [],
     nextCropId: 0,
+    harvester: null,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
     farmsBaseCapacity: 5,
@@ -167,6 +175,14 @@ export function createCropState(
     x,
     y,
     createdMs,
+  };
+}
+
+export function createHarvesterState(x: number, y: number, builtMs: number): HarvesterState {
+  return {
+    x,
+    y,
+    builtMs,
   };
 }
 

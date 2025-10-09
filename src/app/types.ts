@@ -4,3 +4,8 @@ export interface ContextMenuState {
   offsetX: number;
   offsetY: number;
 }
+
+export interface ToastMessage {
+  id: number;
+  message: string;
+}

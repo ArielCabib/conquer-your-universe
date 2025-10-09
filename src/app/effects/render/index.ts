@@ -14,7 +14,7 @@ import {
 } from "../../../constants";
 import { GameState } from "../../../types";
 import { currentTimeMs } from "../../helpers";
-import { drawCrop, drawFarm, drawHouse } from "../../drawing";
+import { drawCrop, drawFarm, drawHarvester, drawHouse } from "../../drawing";
 import { handleActiveState } from "./active";
 import { renderPausedState } from "./paused";
 
@@ -35,6 +35,9 @@ function renderStructures(
   }
   for (const crop of state.crops) {
     drawCrop(context, crop, now);
+  }
+  if (state.harvester) {
+    drawHarvester(context, state.harvester, now);
   }
   for (const house of state.houses) {
     drawHouse(context, house, now);

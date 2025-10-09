@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState } from "./app/types";
+import { ContextMenuState, ToastMessage } from "./app/types";
 import {
   useBuildFarmMenuHandler,
+  useBuildHarvesterMenuHandler,
   useBuildHouseMenuHandler,
   useCanvasClickHandler,
   useContextMenuHandler,
@@ -36,6 +37,10 @@ export function App() {
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toastIdRef = useRef(0);
+  const toastTimersRef = useRef<Map<number, number>>(new Map());
+  const harvesterToastShownRef = useRef(false);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -48,6 +53,44 @@ export function App() {
   useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
   usePeriodicSave(gameStateRef);
 
+  const removeToast = useCallback((id: number) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+
+    const timeoutId = toastTimersRef.current.get(id);
+    if (typeof timeoutId === "number" && typeof window !== "undefined") {
+      window.clearTimeout(timeoutId);
+    }
+    toastTimersRef.current.delete(id);
+  }, []);
+
+  const showToast = useCallback(
+    (message: string) => {
+      const id = toastIdRef.current;
+      toastIdRef.current += 1;
+
+      setToasts((current) => [...current, { id, message }]);
+
+      if (typeof window !== "undefined") {
+        const timeoutId = window.setTimeout(() => {
+          removeToast(id);
+        }, 4_500);
+        toastTimersRef.current.set(id, timeoutId);
+      }
+    },
+    [removeToast],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined") {
+        toastTimersRef.current.forEach((timeoutId) => {
+          window.clearTimeout(timeoutId);
+        });
+      }
+      toastTimersRef.current.clear();
+    };
+  }, []);
+
   const handleClick = useCanvasClickHandler({
     gameStateRef,
     canvasRef,
@@ -55,12 +98,6 @@ export function App() {
     setContextMenuState,
     aliveCount,
     setAliveCount,
-  });
-
-  const handleContextMenu = useContextMenuHandler({
-    canvasRef,
-    isPaused,
-    setContextMenuState,
   });
 
   const openSettings = useModalOpenHandler(setIsModalOpen);
@@ -88,6 +125,12 @@ export function App() {
   const buildFarmFromMenu = useBuildFarmMenuHandler({
     gameStateRef,
     aliveCount,
+    contextMenuState,
+    setContextMenuState,
+  });
+
+  const buildHarvesterFromMenu = useBuildHarvesterMenuHandler({
+    gameStateRef,
     contextMenuState,
     setContextMenuState,
   });
@@ -130,13 +173,22 @@ export function App() {
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
   const hasFarmCapacity = farmCapacityLimit === 0 || farmsBuilt < farmCapacityLimit;
   const canBuildFarm = aliveCount >= 10 && hasFarmCapacity;
-  const farmBuildDisabledReason = canBuildFarm
-    ? undefined
-    : aliveCount < 10
-    ? "Requires at least 10 settlers"
-    : hasFarmCapacity
-    ? undefined
-    : `Farm limit reached (${farmCapacityLimit})`;
+  const hasHarvester = Boolean(state.harvester);
+  const totalCrops = state.crops.length;
+  const canBuildHarvester = !hasHarvester && totalCrops >= 5;
+  const hasContextMenuActions = canBuildHouse || canBuildFarm || canBuildHarvester;
+
+  const getHasContextMenuActions = useCallback(
+    () => hasContextMenuActions,
+    [hasContextMenuActions],
+  );
+
+  const handleContextMenu = useContextMenuHandler({
+    canvasRef,
+    isPaused,
+    setContextMenuState,
+    hasContextMenuActions: getHasContextMenuActions,
+  });
 
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
@@ -170,6 +222,17 @@ export function App() {
     });
   }, [shouldShowExplorePrompt, shouldShowBuildPrompt, shouldShowFarmPrompt]);
 
+  useEffect(() => {
+    if (canBuildHarvester) {
+      if (!harvesterToastShownRef.current) {
+        showToast("You can build a harvester");
+        harvesterToastShownRef.current = true;
+      }
+    } else {
+      harvesterToastShownRef.current = false;
+    }
+  }, [canBuildHarvester, showToast]);
+
   const promptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
 
   return (
@@ -178,6 +241,7 @@ export function App() {
       planetName={planetName}
       canBuildHouse={canBuildHouse}
       canBuildFarm={canBuildFarm}
+      canBuildHarvester={canBuildHarvester}
       canvasRef={canvasRef}
       onCloseModal={closeModal}
       contextMenuState={contextMenuState}
@@ -199,13 +263,14 @@ export function App() {
       promptMessage={promptMessage}
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
+      onBuildHarvesterFromMenu={buildHarvesterFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
       farmCapacityLimit={farmCapacityLimit}
       houseSpawnIntervalMs={houseSpawnIntervalMs}
       houseSpawnAmount={houseSpawnAmount}
-      farmBuildDisabledReason={farmBuildDisabledReason}
+      toasts={toasts}
       onPlanetNameChange={handlePlanetNameChange}
     />
   );
