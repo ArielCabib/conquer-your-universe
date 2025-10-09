@@ -30,8 +30,7 @@ interface AppViewProps {
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;
-  shouldShowBuildPrompt: boolean;
-  shouldShowFarmPrompt: boolean;
+  promptMessage: string | null;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
@@ -67,8 +66,7 @@ export function AppView({
   onRestartGame,
   onSaveGame,
   settlersCapacityLimit,
-  shouldShowBuildPrompt,
-  shouldShowFarmPrompt,
+  promptMessage,
   onBuildHouseFromMenu,
   onBuildFarmFromMenu,
   settlerMinLifespanMs,
@@ -87,10 +85,7 @@ export function AppView({
           planetName={planetName}
           onPlanetNameChange={onPlanetNameChange}
         />
-        <div className="flex flex-col items-center gap-3">
-          <BuildPrompt shouldShow={shouldShowBuildPrompt} message="Right click the planet to build a house" />
-          <BuildPrompt shouldShow={shouldShowFarmPrompt} message="Right click the planet to build a farm" />
-        </div>
+        <BuildPrompt message={promptMessage} />
         <CanvasArea
           canvasRef={canvasRef}
           onClick={onClickCanvas}

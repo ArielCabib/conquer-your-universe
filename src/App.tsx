@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
 import { ContextMenuState } from "./app/types";
 import {
@@ -17,6 +17,14 @@ import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { createInitialGameState, GameState } from "./types";
+
+type PromptKey = "explore" | "build" | "farm";
+
+const PROMPT_MESSAGES: Record<PromptKey, string> = {
+  explore: "Click around and find out.",
+  build: "Right click the planet to build a house",
+  farm: "Right click the planet to build a farm",
+};
 
 export function App() {
   const gameStateRef = useRef<GameState>(createInitialGameState());
@@ -116,6 +124,8 @@ export function App() {
   const settlerMaxLifespanMs = state.settlerMaxLifespanMs;
   const farmLifespanBonusMs = farmsBuilt * farmLifespanBonusPerFarmMs;
 
+  const [activePromptKey, setActivePromptKey] = useState<PromptKey | null>(null);
+
   const hasHouseCapacity = housesCapacityLimit === 0 || housesBuilt < housesCapacityLimit;
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
   const hasFarmCapacity = farmCapacityLimit === 0 || farmsBuilt < farmCapacityLimit;
@@ -131,6 +141,36 @@ export function App() {
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
   const shouldShowFarmPrompt = aliveCount >= 10 && farmsBuilt === 0;
+  const shouldShowExplorePrompt = aliveCount === 0;
+
+  useEffect(() => {
+    setActivePromptKey((current) => {
+      const isCurrentVisible =
+        (current === "explore" && shouldShowExplorePrompt) ||
+        (current === "build" && shouldShowBuildPrompt) ||
+        (current === "farm" && shouldShowFarmPrompt);
+
+      if (isCurrentVisible) {
+        return current;
+      }
+
+      if (shouldShowExplorePrompt) {
+        return "explore";
+      }
+
+      if (shouldShowBuildPrompt) {
+        return "build";
+      }
+
+      if (shouldShowFarmPrompt) {
+        return "farm";
+      }
+
+      return null;
+    });
+  }, [shouldShowExplorePrompt, shouldShowBuildPrompt, shouldShowFarmPrompt]);
+
+  const promptMessage = activePromptKey ? PROMPT_MESSAGES[activePromptKey] : null;
 
   return (
     <AppView
@@ -156,8 +196,7 @@ export function App() {
       onRestartGame={restartGame}
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
-      shouldShowBuildPrompt={shouldShowBuildPrompt}
-      shouldShowFarmPrompt={shouldShowFarmPrompt}
+      promptMessage={promptMessage}
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
