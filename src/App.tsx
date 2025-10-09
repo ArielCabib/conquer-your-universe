@@ -93,6 +93,8 @@ export function App() {
   const settlersBaseCapacity = state.settlersBaseCapacity;
   const housesCapacityLimit = state.housesBaseCapacity;
   const settlersPerHouse = state.settlersPerHouse;
+  const settlerMinLifespanMs = state.settlerMinLifespanMs;
+  const settlerMaxLifespanMs = state.settlerMaxLifespanMs;
 
   const hasHouseCapacity = housesCapacityLimit === 0 || housesBuilt < housesCapacityLimit;
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
@@ -124,6 +126,8 @@ export function App() {
       settlersCapacityLimit={settlersCapacityLimit}
       shouldShowBuildPrompt={shouldShowBuildPrompt}
       onBuildHouseFromMenu={buildHouseFromMenu}
+      settlerMinLifespanMs={settlerMinLifespanMs}
+      settlerMaxLifespanMs={settlerMaxLifespanMs}
     />
   );
 }

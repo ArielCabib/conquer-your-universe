@@ -6,6 +6,7 @@ import { HeaderSection } from "./Header";
 import { ControlModal } from "./Modal";
 import { BuildPrompt } from "./Prompt";
 import { StatsPanel } from "./Stats";
+import { FooterInfo } from "./Footer";
 
 interface AppViewProps {
   aliveNow: number;
@@ -30,6 +31,8 @@ interface AppViewProps {
   settlersCapacityLimit: number;
   shouldShowBuildPrompt: boolean;
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
+  settlerMinLifespanMs: number;
+  settlerMaxLifespanMs: number;
 }
 
 export function AppView({
@@ -55,6 +58,8 @@ export function AppView({
   settlersCapacityLimit,
   shouldShowBuildPrompt,
   onBuildHouseFromMenu,
+  settlerMinLifespanMs,
+  settlerMaxLifespanMs,
 }: AppViewProps) {
   return (
     <main
@@ -92,6 +97,10 @@ export function AppView({
           settlersCapacityLimit={settlersCapacityLimit}
           housesBuilt={housesBuilt}
           housesCapacityLimit={housesCapacityLimit}
+        />
+        <FooterInfo
+          minLifespanMs={settlerMinLifespanMs}
+          maxLifespanMs={settlerMaxLifespanMs}
         />
       </section>
       <input
