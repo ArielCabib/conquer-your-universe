@@ -23,6 +23,18 @@
     background-color: rgba(242, 167, 160, 0.2);
   }
 
+  .hover\:bg-orbit-04:hover {
+    background-color: var(--orbit-04);
+  }
+
+  .hover\:bg-orbit-04\/20:hover {
+    background-color: rgba(242, 167, 160, 0.2);
+  }
+
+  .focus-visible\:outline-orbit-04:focus-visible {
+    outline-color: var(--orbit-04);
+  }
+
   .bg-panel-soft {
     background-color: rgba(0, 0, 0, 0.35);
   }
