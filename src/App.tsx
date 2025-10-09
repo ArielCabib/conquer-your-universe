@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
 import { ContextMenuState } from "./app/types";
 import {
@@ -21,6 +21,7 @@ import { createInitialGameState, GameState } from "./types";
 export function App() {
   const gameStateRef = useRef<GameState>(createInitialGameState());
   const [aliveCount, setAliveCount] = useState(0);
+  const [planetName, setPlanetName] = useState(() => gameStateRef.current.planetName);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +29,14 @@ export function App() {
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
 
-  useRestoreState(gameStateRef);
+  const handleStateRestore = useCallback(
+    (state: GameState) => {
+      setPlanetName(state.planetName);
+    },
+    [],
+  );
+
+  useRestoreState(gameStateRef, handleStateRestore);
   useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
   usePeriodicSave(gameStateRef);
 
@@ -56,6 +64,7 @@ export function App() {
     setIsModalOpen,
     setIsPaused,
     pauseTimeRef,
+    setPlanetName,
   });
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
@@ -81,7 +90,16 @@ export function App() {
     setIsModalOpen,
     setIsPaused,
     pauseTimeRef,
+    setPlanetName,
   });
+
+  const handlePlanetNameChange = useCallback(
+    (name: string) => {
+      gameStateRef.current.planetName = name;
+      setPlanetName(name);
+    },
+    [gameStateRef],
+  );
 
   const pauseStatusText = isPaused ? "Time is currently paused." : "Time is currently running.";
   const state = gameStateRef.current;
@@ -112,10 +130,12 @@ export function App() {
 
   const settlersCapacityLimit = settlersBaseCapacity + housesBuilt * settlersPerHouse;
   const shouldShowBuildPrompt = aliveCount >= 1 && housesBuilt === 0;
+  const shouldShowFarmPrompt = aliveCount >= 10 && farmsBuilt === 0;
 
   return (
     <AppView
       aliveNow={aliveCount}
+      planetName={planetName}
       canBuildHouse={canBuildHouse}
       canBuildFarm={canBuildFarm}
       canvasRef={canvasRef}
@@ -137,6 +157,7 @@ export function App() {
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
       shouldShowBuildPrompt={shouldShowBuildPrompt}
+      shouldShowFarmPrompt={shouldShowFarmPrompt}
       onBuildHouseFromMenu={buildHouseFromMenu}
       onBuildFarmFromMenu={buildFarmFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
@@ -146,6 +167,7 @@ export function App() {
       houseSpawnIntervalMs={houseSpawnIntervalMs}
       houseSpawnAmount={houseSpawnAmount}
       farmBuildDisabledReason={farmBuildDisabledReason}
+      onPlanetNameChange={handlePlanetNameChange}
     />
   );
 }

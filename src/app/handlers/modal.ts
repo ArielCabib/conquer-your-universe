@@ -21,6 +21,7 @@ interface RestartOptions {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsPaused: Dispatch<SetStateAction<boolean>>;
   pauseTimeRef: MutableRefObject<number | null>;
+  setPlanetName: Dispatch<SetStateAction<string>>;
 }
 
 export function useRestartGameHandler({
@@ -29,6 +30,7 @@ export function useRestartGameHandler({
   setIsModalOpen,
   setIsPaused,
   pauseTimeRef,
+  setPlanetName,
 }: RestartOptions) {
   return useCallback(() => {
     gameStateRef.current = createInitialGameState();
@@ -42,8 +44,9 @@ export function useRestartGameHandler({
     }
 
     setAliveCount(0);
+    setPlanetName(gameStateRef.current.planetName);
     pauseTimeRef.current = null;
     setIsPaused(false);
     setIsModalOpen(false);
-  }, [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused]);
+  }, [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused, setPlanetName]);
 }

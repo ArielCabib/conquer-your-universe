@@ -4,7 +4,10 @@ import { deserializeGameState, serializeGameState } from "../../persistence";
 import { GameState } from "../../types";
 import { ensureFarmRegistry, ensureHouseRegistry, ensureSettlerLifespans } from "../helpers";
 
-export function useRestoreState(gameStateRef: MutableRefObject<GameState>) {
+export function useRestoreState(
+  gameStateRef: MutableRefObject<GameState>,
+  onRestore?: (state: GameState) => void,
+) {
   useEffect(() => {
     if (typeof localStorage === "undefined") {
       return;
@@ -19,6 +22,7 @@ export function useRestoreState(gameStateRef: MutableRefObject<GameState>) {
           ensureHouseRegistry(restored);
           ensureFarmRegistry(restored);
           gameStateRef.current = restored;
+          onRestore?.(restored);
           return;
         }
       }
@@ -27,5 +31,5 @@ export function useRestoreState(gameStateRef: MutableRefObject<GameState>) {
     } catch (error) {
       console.warn("Failed to restore game state", error);
     }
-  }, [gameStateRef]);
+  }, [gameStateRef, onRestore]);
 }
