@@ -1,4 +1,4 @@
-import { GRAIN_DRAW_LIMIT, ORBIT_02, ORBIT_03, ORBIT_04, ORBIT_05 } from "../../constants";
+import { GRAIN_DRAW_LIMIT, ORBIT_02, ORBIT_03, ORBIT_01, ORBIT_05 } from "../../constants";
 import { GrainPileState } from "../../types";
 
 const GRAIN_OFFSETS = [
@@ -46,11 +46,11 @@ export function drawGrainPile(context: CanvasRenderingContext2D, pile: GrainPile
   }
 
   context.globalAlpha = 1;
-  context.fillStyle = ORBIT_04;
+  context.fillStyle = ORBIT_01;
   context.font = '1rem "Trebuchet MS", sans-serif';
   context.textAlign = "left";
   context.textBaseline = "bottom";
-  context.fillText(`${pile.grains}`, baseRadiusX + 6, baseRadiusY + 4);
+  context.fillText(`${pile.grains}`, baseRadiusX + 2, baseRadiusY);
 
   context.restore();
 }
