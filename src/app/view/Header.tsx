@@ -50,8 +50,9 @@ export function HeaderSection({ onOpenSettings }: HeaderSectionProps) {
             fontSize: "clamp(2.5rem, 3vw, 3.5rem)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            margin: 0,
           }}
+
+          className="m-0"
         >
           Your Planet
         </h1>
