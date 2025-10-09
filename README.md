@@ -1,11 +1,11 @@
 # Conquer Your Universe
 
-A client-side React + Vite recreation of the original "Conquer Your Universe" planet simulation game.
+A client-side React + Vite "Conquer Your Universe" planet simulation game.
 
 ## Prerequisites
 
 - Node.js 24 or newer
-- [pnpm](https://pnpm.io/) 8.x
+- [pnpm](https://pnpm.io/) 10.x
 
 ## Getting started
 
