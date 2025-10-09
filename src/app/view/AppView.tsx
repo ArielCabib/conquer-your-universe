@@ -12,6 +12,7 @@ interface AppViewProps {
   canBuildHouse: boolean;
   canBuildFarm: boolean;
   canBuildHarvester: boolean;
+  canBuildMarket: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
   onCloseModal: MouseEventHandler<HTMLButtonElement>;
   contextMenuState: ContextMenuState | null;
@@ -35,12 +36,18 @@ interface AppViewProps {
   onBuildHouseFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildHarvesterFromMenu: MouseEventHandler<HTMLButtonElement>;
+  onBuildMarketFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmLifespanBonusMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
   onPlanetNameChange: (name: string) => void;
+  grainCount: number;
+  grainCapacity: number;
+  grainsInFlight: number;
+  hasHarvester: boolean;
+  hasMarket: boolean;
 }
 
 export function AppView({
@@ -49,6 +56,7 @@ export function AppView({
   canBuildHouse,
   canBuildFarm,
   canBuildHarvester,
+  canBuildMarket,
   canvasRef,
   onCloseModal,
   contextMenuState,
@@ -72,12 +80,18 @@ export function AppView({
   onBuildHouseFromMenu,
   onBuildFarmFromMenu,
   onBuildHarvesterFromMenu,
+  onBuildMarketFromMenu,
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmLifespanBonusMs,
   houseSpawnIntervalMs,
   houseSpawnAmount,
   onPlanetNameChange,
+  grainCount,
+  grainCapacity,
+  grainsInFlight,
+  hasHarvester,
+  hasMarket,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
@@ -100,6 +114,8 @@ export function AppView({
           canBuildFarm={canBuildFarm}
           onBuildHarvester={onBuildHarvesterFromMenu}
           canBuildHarvester={canBuildHarvester}
+          onBuildMarket={onBuildMarketFromMenu}
+          canBuildMarket={canBuildMarket}
         />
         <StatsPanel
           aliveNow={aliveNow}
@@ -113,6 +129,11 @@ export function AppView({
           farmLifespanBonusMs={farmLifespanBonusMs}
           houseSpawnIntervalMs={houseSpawnIntervalMs}
           houseSpawnAmount={houseSpawnAmount}
+          grainCount={grainCount}
+          grainCapacity={grainCapacity}
+          grainsInFlight={grainsInFlight}
+          hasHarvester={hasHarvester}
+          hasMarket={hasMarket}
         />
       </section>
       <input

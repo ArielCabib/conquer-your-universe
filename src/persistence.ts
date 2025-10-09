@@ -1,10 +1,17 @@
-import { BASE_SETTLER_MAX_LIFESPAN_MS, BASE_SETTLER_MIN_LIFESPAN_MS } from "./constants";
+import {
+  BASE_SETTLER_MAX_LIFESPAN_MS,
+  BASE_SETTLER_MIN_LIFESPAN_MS,
+  GRAIN_PILE_CAPACITY,
+} from "./constants";
 import {
   CropState,
   FarmState,
   GameState,
+  GrainPileState,
+  GrainProjectileState,
   HarvesterState,
   HouseState,
+  MarketState,
   SettlerPhase,
   SettlerState,
 } from "./types";
@@ -51,6 +58,19 @@ type RawCropState = Omit<CropState, "createdMs"> & {
 type RawHarvesterState = Omit<HarvesterState, "builtMs"> & {
   built_ms?: number;
   builtMs?: number;
+  last_harvest_ms?: number;
+  lastHarvestMs?: number;
+};
+
+type RawGrainPileState = Omit<GrainPileState, "createdMs"> & {
+  created_ms?: number;
+};
+
+type RawGrainProjectileState = GrainProjectileState;
+
+type RawMarketState = Omit<MarketState, "builtMs"> & {
+  built_ms?: number;
+  builtMs?: number;
 };
 
 type RawGameState = Omit<
@@ -75,12 +95,20 @@ type RawGameState = Omit<
   | "farmCropSpawnIntervalMs"
   | "houseSpawnIntervalMs"
   | "houseSpawnAmount"
+  | "grainPileCapacity"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
   farms: RawFarmState[];
   crops: RawCropState[];
   harvester?: RawHarvesterState | null;
+  grain_pile?: RawGrainPileState | null;
+  grainPile?: RawGrainPileState | null;
+  grain_projectiles?: RawGrainProjectileState[];
+  grainProjectiles?: RawGrainProjectileState[];
+  next_grain_projectile_id?: number;
+  nextGrainProjectileId?: number;
+  market?: RawMarketState | null;
   planet_name?: string;
   next_settler_id: number;
   settler_min_lifespan_ms: number;
@@ -97,6 +125,8 @@ type RawGameState = Omit<
   farm_crop_spawn_interval_ms: number;
   house_spawn_interval_ms: number;
   house_spawn_amount: number;
+  grain_pile_capacity?: number;
+  grainPileCapacity?: number;
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -172,6 +202,42 @@ function deserializeHarvester(raw: RawHarvesterState | null | undefined): Harves
     x: raw.x,
     y: raw.y,
     builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+    lastHarvestMs: raw.last_harvest_ms ?? raw.lastHarvestMs ?? raw.built_ms ?? raw.builtMs ?? 0,
+  };
+}
+
+function deserializeGrainPile(raw: RawGrainPileState | null | undefined): GrainPileState | null {
+  if (!raw) {
+    return null;
+  }
+
+  return {
+    x: raw.x,
+    y: raw.y,
+    grains: raw.grains ?? 0,
+    createdMs: raw.created_ms ?? raw.createdMs ?? 0,
+  };
+}
+
+function deserializeGrainProjectiles(
+  rawProjectiles: RawGrainProjectileState[] | null | undefined,
+): GrainProjectileState[] {
+  if (!Array.isArray(rawProjectiles)) {
+    return [];
+  }
+
+  return rawProjectiles.map((projectile) => ({ ...projectile }));
+}
+
+function deserializeMarket(raw: RawMarketState | null | undefined): MarketState | null {
+  if (!raw) {
+    return null;
+  }
+
+  return {
+    x: raw.x,
+    y: raw.y,
+    builtMs: raw.built_ms ?? raw.builtMs ?? 0,
   };
 }
 
@@ -189,6 +255,12 @@ export function deserializeGameState(serialized: string): GameState | null {
     const farms = Array.isArray(data.farms) ? data.farms.map(deserializeFarm) : [];
     const crops = Array.isArray(data.crops) ? data.crops.map(deserializeCrop) : [];
     const harvester = deserializeHarvester(data.harvester);
+    const grainPile = deserializeGrainPile(data.grain_pile ?? data.grainPile);
+    const grainProjectiles = deserializeGrainProjectiles(
+      data.grain_projectiles ?? data.grainProjectiles,
+    );
+    const nextGrainProjectileId = data.next_grain_projectile_id ?? data.nextGrainProjectileId ?? 0;
+    const market = deserializeMarket(data.market);
 
     return {
       settlers,
@@ -203,6 +275,10 @@ export function deserializeGameState(serialized: string): GameState | null {
       crops,
       nextCropId: data.next_crop_id ?? 0,
       harvester,
+      grainPile,
+      grainProjectiles,
+      nextGrainProjectileId,
+      market,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
@@ -212,6 +288,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       farmCropSpawnIntervalMs: data.farm_crop_spawn_interval_ms ?? 4_500,
       houseSpawnIntervalMs: data.house_spawn_interval_ms ?? 5_000,
       houseSpawnAmount: data.house_spawn_amount ?? 1,
+      grainPileCapacity: data.grain_pile_capacity ?? data.grainPileCapacity ?? GRAIN_PILE_CAPACITY,
     };
   } catch (error) {
     console.warn("Failed to deserialize game state", error);
@@ -285,6 +362,38 @@ function serializeHarvester(harvester: HarvesterState | null): RawHarvesterState
     x: harvester.x,
     y: harvester.y,
     built_ms: harvester.builtMs,
+    last_harvest_ms: harvester.lastHarvestMs,
+  };
+}
+
+function serializeGrainPile(pile: GrainPileState | null): RawGrainPileState | null {
+  if (!pile) {
+    return null;
+  }
+
+  return {
+    x: pile.x,
+    y: pile.y,
+    grains: pile.grains,
+    created_ms: pile.createdMs,
+  };
+}
+
+function serializeGrainProjectiles(
+  projectiles: GrainProjectileState[],
+): RawGrainProjectileState[] {
+  return projectiles.map((projectile) => ({ ...projectile }));
+}
+
+function serializeMarket(market: MarketState | null): RawMarketState | null {
+  if (!market) {
+    return null;
+  }
+
+  return {
+    x: market.x,
+    y: market.y,
+    built_ms: market.builtMs,
   };
 }
 
@@ -295,6 +404,10 @@ export function serializeGameState(state: GameState): string {
     farms: state.farms.map(serializeFarm),
     crops: state.crops.map(serializeCrop),
     harvester: serializeHarvester(state.harvester),
+    grain_pile: serializeGrainPile(state.grainPile),
+    grain_projectiles: serializeGrainProjectiles(state.grainProjectiles),
+    next_grain_projectile_id: state.nextGrainProjectileId,
+    market: serializeMarket(state.market),
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,
@@ -311,6 +424,7 @@ export function serializeGameState(state: GameState): string {
     farm_crop_spawn_interval_ms: state.farmCropSpawnIntervalMs,
     house_spawn_interval_ms: state.houseSpawnIntervalMs,
     house_spawn_amount: state.houseSpawnAmount,
+    grain_pile_capacity: state.grainPileCapacity,
   };
 
   return JSON.stringify(payload);

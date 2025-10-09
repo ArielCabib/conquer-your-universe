@@ -5,6 +5,7 @@ import { GameState } from "../../types";
 import {
   ensureCropRegistry,
   ensureFarmRegistry,
+  ensureHarvesterResources,
   ensureHouseRegistry,
   ensureSettlerLifespans,
 } from "../helpers";
@@ -27,6 +28,7 @@ export function useRestoreState(
           ensureHouseRegistry(restored);
           ensureFarmRegistry(restored);
           ensureCropRegistry(restored);
+          ensureHarvesterResources(restored);
           gameStateRef.current = restored;
           onRestore?.(restored);
           return;

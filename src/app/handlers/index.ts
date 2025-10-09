@@ -3,6 +3,7 @@ export {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
   useBuildHouseMenuHandler,
+  useBuildMarketMenuHandler,
 } from "./menu";
 export { useModalCloseHandler, useModalOpenHandler, useRestartGameHandler } from "./modal";
 export {

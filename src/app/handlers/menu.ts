@@ -1,6 +1,12 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
 import { STORAGE_KEY } from "../../constants";
-import { GameState, createFarmState, createHarvesterState, createHouseState } from "../../types";
+import {
+  GameState,
+  createFarmState,
+  createHarvesterState,
+  createHouseState,
+  createMarketState,
+} from "../../types";
 import { ContextMenuState } from "../types";
 import { pointWithinPlanet, currentTimeMs } from "../helpers";
 import { serializeGameState } from "../../persistence";
@@ -174,6 +180,58 @@ export function useBuildHarvesterMenuHandler({
         }
       } catch (error) {
         console.warn("Failed to persist game state after building harvester", error);
+      }
+
+      setContextMenuState(null);
+    },
+    [contextMenuState, gameStateRef, setContextMenuState],
+  );
+}
+
+interface BuildMarketOptions {
+  gameStateRef: MutableRefObject<GameState>;
+  contextMenuState: ContextMenuState | null;
+  setContextMenuState: SetContextMenuState;
+}
+
+export function useBuildMarketMenuHandler({
+  gameStateRef,
+  contextMenuState,
+  setContextMenuState,
+}: BuildMarketOptions) {
+  return useCallback(
+    () => {
+      const menuState = contextMenuState;
+      if (!menuState) {
+        return;
+      }
+
+      if (!pointWithinPlanet(menuState.canvasX, menuState.canvasY)) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const state = gameStateRef.current;
+
+      if (state.market) {
+        setContextMenuState(null);
+        return;
+      }
+
+      if (!state.grainPile || state.grainPile.grains < 30) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const builtAt = currentTimeMs();
+      state.market = createMarketState(menuState.canvasX, menuState.canvasY, builtAt);
+
+      try {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after building market", error);
       }
 
       setContextMenuState(null);

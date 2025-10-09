@@ -13,6 +13,8 @@ interface CanvasAreaProps {
   canBuildFarm: boolean;
   onBuildHarvester: MouseEventHandler<HTMLButtonElement>;
   canBuildHarvester: boolean;
+  onBuildMarket: MouseEventHandler<HTMLButtonElement>;
+  canBuildMarket: boolean;
 }
 
 export function CanvasArea({
@@ -27,6 +29,8 @@ export function CanvasArea({
   canBuildFarm,
   onBuildHarvester,
   canBuildHarvester,
+  onBuildMarket,
+  canBuildMarket,
 }: CanvasAreaProps) {
   const pausedOverlay = isPaused ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
@@ -50,6 +54,10 @@ export function CanvasArea({
 
   if (canBuildHarvester) {
     menuActions.push({ key: "harvester", label: "Build Harvester", onClick: onBuildHarvester });
+  }
+
+  if (canBuildMarket) {
+    menuActions.push({ key: "market", label: "Build Market", onClick: onBuildMarket });
   }
 
   const buttonBaseClass =
