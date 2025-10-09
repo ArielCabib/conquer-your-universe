@@ -1,0 +1,6 @@
+- use only colors from the constants.
+- use only fonts from the set of fonts already widely used. don't add more.
+- use only font sizes that are already used, don't add new ones.
+- if new styles are added, say so explicitly so it could be monitored by the code reviewer.
+- dont run pnpm commands if you are running without network access.
+- if a file exceeds 200 lines, try to split it to 2 or more files that have less than 150 lines of code, maintaining logical structure of course.
