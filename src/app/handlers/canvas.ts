@@ -81,17 +81,21 @@ interface ContextMenuHandlerOptions {
   hasContextMenuActions: () => boolean;
 }
 
+interface ContextMenuHandlerResult {
+  handleContextMenuEvent: (event: React.MouseEvent<HTMLCanvasElement>) => void;
+  openContextMenuAtPoint: (clientX: number, clientY: number) => void;
+}
+
 export function useContextMenuHandler({
   canvasRef,
   isPaused,
   setContextMenuState,
   hasContextMenuActions,
-}: ContextMenuHandlerOptions) {
-  return useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      event.preventDefault();
-
+}: ContextMenuHandlerOptions): ContextMenuHandlerResult {
+  const openContextMenuAtPoint = useCallback(
+    (clientX: number, clientY: number) => {
       if (isPaused) {
+        setContextMenuState(null);
         return;
       }
 
@@ -109,8 +113,6 @@ export function useContextMenuHandler({
         return;
       }
 
-      const clientX = event.clientX;
-      const clientY = event.clientY;
       const scaleX = canvas.width / width;
       const scaleY = canvas.height / height;
       const canvasX = (clientX - rect.left) * scaleX;
@@ -138,4 +140,17 @@ export function useContextMenuHandler({
     },
     [canvasRef, hasContextMenuActions, isPaused, setContextMenuState],
   );
+
+  const handleContextMenuEvent = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      event.preventDefault();
+      openContextMenuAtPoint(event.clientX, event.clientY);
+    },
+    [openContextMenuAtPoint],
+  );
+
+  return {
+    handleContextMenuEvent,
+    openContextMenuAtPoint,
+  };
 }

@@ -19,6 +19,7 @@ interface AppViewProps {
   fileInputRef: RefObject<HTMLInputElement>;
   onClickCanvas: MouseEventHandler<HTMLCanvasElement>;
   onContextMenuCanvas: MouseEventHandler<HTMLCanvasElement>;
+  onLongPressCanvas: (clientX: number, clientY: number) => void;
   housesBuilt: number;
   housesCapacityLimit: number;
   farmsBuilt: number;
@@ -63,6 +64,7 @@ export function AppView({
   fileInputRef,
   onClickCanvas,
   onContextMenuCanvas,
+  onLongPressCanvas,
   housesBuilt,
   housesCapacityLimit,
   farmsBuilt,
@@ -106,6 +108,7 @@ export function AppView({
           canvasRef={canvasRef}
           onClick={onClickCanvas}
           onContextMenu={onContextMenuCanvas}
+          onLongPress={onLongPressCanvas}
           isPaused={isPaused}
           contextMenuState={contextMenuState}
           onBuildHouse={onBuildHouseFromMenu}
