@@ -82,7 +82,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenSettings}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <span aria-hidden="true" className="icon-glyph icon-glyph--settings" />
+          <span aria-hidden="true" className="icon-glyph icon-glyph--settings cursor-pointer" />
         </button>
         <button
           type="button"
@@ -90,7 +90,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenInfo}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <span aria-hidden="true" className="icon-glyph icon-glyph--info" />
+          <span aria-hidden="true" className="icon-glyph icon-glyph--info cursor-pointer" />
         </button>
       </div>
       {isEditingName ? (
@@ -111,7 +111,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           tabIndex={0}
           onClick={startEditing}
           onKeyDown={handleHeadingKeyDown}
-          className="m-0 text-center font-orbitron text-[clamp(2.5rem,3vw,3.5rem)] uppercase tracking-[0.12em] text-orbit-03"
+          className="m-0 text-center font-orbitron text-[clamp(2.5rem,3vw,3.5rem)] uppercase tracking-[0.12em] text-orbit-0 cursor-pointer"
         >
           {planetName}
         </h1>
