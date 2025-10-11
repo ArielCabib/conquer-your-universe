@@ -1,4 +1,4 @@
-import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
+import type { ChangeEventHandler, MouseEventHandler, ReactNode, RefObject } from "react";
 import { ContextMenuState, InfoEntry } from "../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
@@ -29,7 +29,7 @@ interface AppViewProps {
   onOpenFileDialog: MouseEventHandler<HTMLButtonElement>;
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
-  pauseStatusText: string;
+  pauseStatusText: ReactNode;
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;

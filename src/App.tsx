@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
 import { ContextMenuState, InfoEntry } from "./app/types";
 import {
@@ -153,7 +153,18 @@ export function App() {
     [gameStateRef],
   );
 
-  const pauseStatusText = isPaused ? "Time is currently paused." : "Time is currently running.";
+  const pauseStatusText: ReactNode = isPaused ? (
+    "Time is currently paused."
+  ) : (
+    <a
+      href="https://www.patreon.com/cw/ArielCabib"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-orbit-03 underline"
+    >
+      Support ArielCabib on Patreon
+    </a>
+  );
   const state = gameStateRef.current;
   const housesBuilt = state.houses.length;
   const farmsBuilt = state.farms.length;

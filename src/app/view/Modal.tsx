@@ -1,10 +1,10 @@
-import type { MouseEventHandler } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import type { InfoEntry } from "../types";
 
 interface ControlModalProps {
   isActive: boolean;
   onClose: () => void;
-  pauseStatusText: string;
+  pauseStatusText: ReactNode;
   onRestart: MouseEventHandler<HTMLButtonElement>;
   onSave: MouseEventHandler<HTMLButtonElement>;
   onOpenFile: MouseEventHandler<HTMLButtonElement>;
