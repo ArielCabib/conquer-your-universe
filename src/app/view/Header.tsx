@@ -9,9 +9,6 @@ import {
   useState,
 } from "react";
 
-import infoIcon from "../../../assets/question-mark-circle-outline-svgrepo-com.svg";
-import settingsIcon from "../../../assets/cogwheel-svgrepo-com.svg";
-
 interface HeaderSectionProps {
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
@@ -85,11 +82,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenSettings}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <span
-            aria-hidden="true"
-            className="block h-[22px] w-[22px] bg-orbit-03 [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
-            style={{ maskImage: `url(${settingsIcon})`, WebkitMaskImage: `url(${settingsIcon})` }}
-          />
+          <span aria-hidden="true" className="icon-glyph icon-glyph--settings" />
         </button>
         <button
           type="button"
@@ -97,11 +90,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenInfo}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <span
-            aria-hidden="true"
-            className="block h-[22px] w-[22px] bg-orbit-03 [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
-            style={{ maskImage: `url(${infoIcon})`, WebkitMaskImage: `url(${infoIcon})` }}
-          />
+          <span aria-hidden="true" className="icon-glyph icon-glyph--info" />
         </button>
       </div>
       {isEditingName ? (
