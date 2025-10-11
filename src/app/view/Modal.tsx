@@ -39,16 +39,16 @@ export function ControlModal({
             Close
           </button>
         </div>
-        <p className="m-0 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03/85">
+        <div className="flex justify-center">
           <a
             href="https://www.patreon.com/cw/ArielCabib"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-orbit-03 underline"
+            className="font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03 underline"
           >
-            Support ArielCabib on Patreon
+            Support me on Patreon
           </a>
-        </p>
+        </div>
         <div className="flex flex-col gap-3">
           <button
             type="button"
