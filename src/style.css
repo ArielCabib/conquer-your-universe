@@ -141,4 +141,53 @@
     mask-image: url("../assets/question-mark-circle-outline-svgrepo-com.svg");
     -webkit-mask-image: url("../assets/question-mark-circle-outline-svgrepo-com.svg");
   }
+
+  .prompt-badge {
+    position: relative;
+    opacity: 0;
+    transform: translateY(-64%);
+    will-change: opacity, transform;
+  }
+
+  .prompt-badge--enter {
+    animation: prompt-arrival 420ms ease-out forwards;
+  }
+
+  .prompt-badge--idle {
+    opacity: 1;
+    transform: translateY(-34%);
+  }
+
+  .prompt-badge--exit {
+    animation: prompt-depart 260ms ease-in forwards;
+  }
+
+  @keyframes prompt-arrival {
+    0% {
+      transform: translateY(-180%) scale(0.85);
+      opacity: 0;
+    }
+
+    60% {
+      transform: translateY(-6%) scale(1.05);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(-34%) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes prompt-depart {
+    0% {
+      transform: translateY(-34%) scale(1);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(16%) scale(0.9);
+      opacity: 0;
+    }
+  }
 }
