@@ -1,5 +1,8 @@
-import type { MouseEventHandler, RefObject } from "react";
+import { useEffect, useRef } from "react";
+import type { MouseEventHandler, RefObject, TouchEventHandler } from "react";
 import { ContextMenuState } from "../types";
+
+const LONG_PRESS_DURATION_MS = 500;
 
 interface CanvasAreaProps {
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -32,6 +35,93 @@ export function CanvasArea({
   onBuildMarket,
   canBuildMarket,
 }: CanvasAreaProps) {
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const lastTouchRef = useRef<{ identifier: number; clientX: number; clientY: number } | null>(
+    null,
+  );
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+    lastTouchRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearLongPress();
+    };
+  }, []);
+
+  const scheduleLongPress = (touch: Touch) => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    lastTouchRef.current = {
+      identifier: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current);
+    }
+
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      if (!lastTouchRef.current) {
+        return;
+      }
+
+      canvas.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: lastTouchRef.current.clientX,
+          clientY: lastTouchRef.current.clientY,
+        }),
+      );
+
+      clearLongPress();
+    }, LONG_PRESS_DURATION_MS);
+  };
+
+  const handleTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    if (event.touches.length !== 1) {
+      clearLongPress();
+      return;
+    }
+
+    scheduleLongPress(event.touches[0]);
+  };
+
+  const handleTouchMove: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    if (!lastTouchRef.current) {
+      return;
+    }
+
+    const touch = Array.from(event.touches).find(
+      (t) => t.identifier === lastTouchRef.current?.identifier,
+    );
+
+    if (!touch) {
+      clearLongPress();
+      return;
+    }
+
+    lastTouchRef.current = {
+      identifier: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+  };
+
+  const handleTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
+    clearLongPress();
+  };
+
   const pausedOverlay = isPaused ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
       Paused
@@ -95,6 +185,10 @@ export function CanvasArea({
         }`}
         onClick={onClick}
         onContextMenu={onContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         Your browser does not support HTML canvas.
       </canvas>
