@@ -145,7 +145,7 @@
   .prompt-badge {
     position: relative;
     opacity: 0;
-    transform: translateY(-28%);
+    transform: translateY(-36%);
     will-change: opacity, transform;
   }
 
@@ -155,7 +155,7 @@
 
   .prompt-badge--idle {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-12%);
   }
 
   .prompt-badge--exit {
@@ -169,19 +169,19 @@
     }
 
     60% {
-      transform: translateY(8%) scale(1.05);
+      transform: translateY(4%) scale(1.05);
       opacity: 1;
     }
 
     100% {
-      transform: translateY(0) scale(1);
+      transform: translateY(-12%) scale(1);
       opacity: 1;
     }
   }
 
   @keyframes prompt-depart {
     0% {
-      transform: translateY(0) scale(1);
+      transform: translateY(-12%) scale(1);
       opacity: 1;
     }
 
