@@ -14,7 +14,7 @@ interface AppViewProps {
   canBuildHarvester: boolean;
   canBuildMarket: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
-  onCloseModal: MouseEventHandler<HTMLButtonElement>;
+  onCloseModal: () => void;
   contextMenuState: ContextMenuState | null;
   fileInputRef: RefObject<HTMLInputElement>;
   onClickCanvas: MouseEventHandler<HTMLCanvasElement>;
@@ -51,7 +51,7 @@ interface AppViewProps {
   hasMarket: boolean;
   infoEntries: InfoEntry[];
   isInfoModalActive: boolean;
-  onCloseInfo: MouseEventHandler<HTMLButtonElement>;
+  onCloseInfo: () => void;
 }
 
 export function AppView({

@@ -3,7 +3,7 @@ import type { InfoEntry } from "../types";
 
 interface ControlModalProps {
   isActive: boolean;
-  onClose: MouseEventHandler<HTMLButtonElement>;
+  onClose: () => void;
   pauseStatusText: string;
   onRestart: MouseEventHandler<HTMLButtonElement>;
   onSave: MouseEventHandler<HTMLButtonElement>;
@@ -22,8 +22,14 @@ export function ControlModal({
     return null;
   }
 
+  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = (event) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6" onClick={handleBackdropClick}>
       <div className="flex w-[min(90vw,420px)] flex-col gap-5 rounded-3xl border border-orbit-03/35 bg-panel p-6 text-orbit-03">
         <div className="flex items-center justify-between gap-3">
           <h2 className="m-0 font-orbitron text-[1.35rem] uppercase tracking-[0.08em]">Command Center</h2>
@@ -66,7 +72,7 @@ export function ControlModal({
 
 interface InfoModalProps {
   isActive: boolean;
-  onClose: MouseEventHandler<HTMLButtonElement>;
+  onClose: () => void;
   entries: InfoEntry[];
 }
 
@@ -77,8 +83,14 @@ export function InfoModal({ isActive, onClose, entries }: InfoModalProps) {
 
   const hasEntries = entries.length > 0;
 
+  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = (event) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6" onClick={handleBackdropClick}>
       <div className="flex w-[min(90vw,420px)] max-h-[min(85vh,560px)] flex-col gap-5 rounded-3xl border border-orbit-03/35 bg-panel p-6 text-orbit-03">
         <div className="flex items-center justify-between gap-3">
           <h2 className="m-0 font-orbitron text-[1.35rem] uppercase tracking-[0.08em]">Intel Briefing</h2>
