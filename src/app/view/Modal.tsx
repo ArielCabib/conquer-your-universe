@@ -36,7 +36,7 @@ export function ControlModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className="cursor-pointer rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Close
           </button>
@@ -46,21 +46,21 @@ export function ControlModal({
           <button
             type="button"
             onClick={onRestart}
-            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className="cursor-pointer rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Restart Game
           </button>
           <button
             type="button"
             onClick={onSave}
-            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className="cursor-pointer rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Save Game
           </button>
           <button
             type="button"
             onClick={onOpenFile}
-            className="rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className="cursor-pointer rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-3 font-trebuchet text-[1rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Load Game
           </button>
@@ -97,7 +97,7 @@ export function InfoModal({ isActive, onClose, entries }: InfoModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className="cursor-pointer rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
           >
             Close
           </button>
