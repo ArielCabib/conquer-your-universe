@@ -40,12 +40,17 @@ export function CanvasArea({
     null,
   );
 
-  const clearLongPress = () => {
+  const longPressTriggeredRef = useRef(false);
+
+  const clearLongPress = (options?: { preserveTrigger?: boolean }) => {
     if (longPressTimeoutRef.current !== null) {
       window.clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
     }
     lastTouchRef.current = null;
+    if (!options?.preserveTrigger) {
+      longPressTriggeredRef.current = false;
+    }
   };
 
   useEffect(() => {
@@ -59,6 +64,8 @@ export function CanvasArea({
     if (!canvas) {
       return;
     }
+
+    longPressTriggeredRef.current = false;
 
     lastTouchRef.current = {
       identifier: touch.identifier,
@@ -75,6 +82,8 @@ export function CanvasArea({
         return;
       }
 
+      longPressTriggeredRef.current = true;
+
       canvas.dispatchEvent(
         new MouseEvent("contextmenu", {
           bubbles: true,
@@ -84,14 +93,11 @@ export function CanvasArea({
         }),
       );
 
-      clearLongPress();
+      clearLongPress({ preserveTrigger: true });
     }, LONG_PRESS_DURATION_MS);
   };
 
   const handleTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
     if (event.touches.length !== 1) {
       clearLongPress();
       return;
@@ -101,9 +107,6 @@ export function CanvasArea({
   };
 
   const handleTouchMove: TouchEventHandler<HTMLCanvasElement> = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
     if (!lastTouchRef.current) {
       return;
     }
@@ -125,8 +128,10 @@ export function CanvasArea({
   };
 
   const handleTouchEnd: TouchEventHandler<HTMLCanvasElement> = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+    if (longPressTriggeredRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
 
     clearLongPress();
   };
