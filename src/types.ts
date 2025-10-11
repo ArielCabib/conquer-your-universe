@@ -94,6 +94,16 @@ export interface MarketState {
   x: number;
   y: number;
   builtMs: number;
+  lastSaleMs: number;
+}
+
+export interface CoinProjectileState {
+  id: number;
+  x: number;
+  startY: number;
+  endY: number;
+  launchedMs: number;
+  durationMs: number;
 }
 
 export interface GameState {
@@ -112,10 +122,14 @@ export interface GameState {
   grainPile: GrainPileState | null;
   cropProjectiles: CropProjectileState[];
   grainProjectiles: GrainProjectileState[];
+  marketGrainProjectiles: GrainProjectileState[];
+  coinProjectiles: CoinProjectileState[];
   nextCropProjectileId: number;
   nextGrainProjectileId: number;
+  nextCoinProjectileId: number;
   market: MarketState | null;
   grainPileCapacity: number;
+  coins: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
   farmsBaseCapacity: number;
@@ -144,10 +158,14 @@ export function createInitialGameState(): GameState {
     grainPile: null,
     cropProjectiles: [],
     grainProjectiles: [],
+    marketGrainProjectiles: [],
+    coinProjectiles: [],
     nextCropProjectileId: 0,
     nextGrainProjectileId: 0,
+    nextCoinProjectileId: 0,
     market: null,
     grainPileCapacity: GRAIN_PILE_CAPACITY,
+    coins: 0,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,
     farmsBaseCapacity: 5,
@@ -301,6 +319,25 @@ export function createMarketState(x: number, y: number, builtMs: number): Market
     x,
     y,
     builtMs,
+    lastSaleMs: builtMs,
+  };
+}
+
+export function createCoinProjectileState(
+  id: number,
+  x: number,
+  startY: number,
+  endY: number,
+  launchedMs: number,
+  durationMs: number,
+): CoinProjectileState {
+  return {
+    id,
+    x,
+    startY,
+    endY,
+    launchedMs,
+    durationMs,
   };
 }
 
