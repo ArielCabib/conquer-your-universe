@@ -1,4 +1,4 @@
-function encodeBase64(bytes: Uint8Array): string {
+export function encodeBase64(bytes: Uint8Array): string {
   if (bytes.length === 0) {
     return "";
   }
@@ -21,7 +21,7 @@ function encodeBase64(bytes: Uint8Array): string {
   throw new Error("No base64 encoder available in this environment");
 }
 
-function decodeBase64(value: string): Uint8Array {
+export function decodeBase64(value: string): Uint8Array {
   if (!value) {
     return new Uint8Array(0);
   }
@@ -66,23 +66,17 @@ function supportsDecompressionStream(): boolean {
   );
 }
 
-export interface CompressionResult {
-  data: string;
-  compressed: boolean;
-}
-
-export async function compressString(value: string): Promise<CompressionResult> {
+export async function compressString(value: string): Promise<string> {
   if (!supportsCompressionStream()) {
-    return { data: value, compressed: false };
+    throw new Error("CompressionStream is not supported in this environment");
   }
 
   const compressor = new CompressionStream("gzip");
   const sourceStream = new Blob([value]).stream();
   const compressedStream = sourceStream.pipeThrough(compressor);
   const compressedBuffer = await new Response(compressedStream).arrayBuffer();
-  const encoded = encodeBase64(new Uint8Array(compressedBuffer));
 
-  return { data: encoded, compressed: true };
+  return encodeBase64(new Uint8Array(compressedBuffer));
 }
 
 export async function decompressString(value: string): Promise<string> {

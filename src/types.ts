@@ -2,6 +2,7 @@ import {
   BASE_SETTLER_MAX_LIFESPAN_MS,
   BASE_SETTLER_MIN_LIFESPAN_MS,
   BIRTH_ANIMATION_MS,
+  GAME_STATE_VERSION,
   GRAIN_PILE_CAPACITY,
   HOUSE_SPAWN_ANIMATION_MS,
   MOVE_INTERVAL_MS,
@@ -113,6 +114,7 @@ export interface CoinProjectileState {
 }
 
 export interface GameState {
+  version: number;
   planetName: string;
   settlers: SettlerState[];
   nextSettlerId: number;
@@ -150,6 +152,7 @@ export interface GameState {
 
 export function createInitialGameState(): GameState {
   return {
+    version: GAME_STATE_VERSION,
     planetName: "Your Planet",
     settlers: [],
     nextSettlerId: 0,

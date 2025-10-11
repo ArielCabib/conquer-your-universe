@@ -1,6 +1,7 @@
 import {
   BASE_SETTLER_MAX_LIFESPAN_MS,
   BASE_SETTLER_MIN_LIFESPAN_MS,
+  GAME_STATE_VERSION,
   GRAIN_PILE_CAPACITY,
 } from "./constants";
 import {
@@ -20,16 +21,6 @@ import {
 } from "./types";
 import { currentTimeMs } from "./app/helpers";
 import { compressString, decompressString } from "./utils/compression";
-
-const CURRENT_PERSISTENCE_VERSION = 1;
-
-type PersistedCompression = "none" | "gzip";
-
-interface PersistedEnvelope {
-  version: number;
-  compression?: PersistedCompression;
-  payload: string;
-}
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -111,6 +102,7 @@ type RawIntelBriefingEntry = {
 
 type RawGameState = Omit<
   GameState,
+  | "version"
   | "settlers"
   | "houses"
   | "farms"
@@ -188,6 +180,7 @@ type RawGameState = Omit<
   time_reference_ms?: number;
   intel_briefing_entries?: RawIntelBriefingEntry[];
   intelBriefingEntries?: RawIntelBriefingEntry[];
+  version?: unknown;
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -527,49 +520,27 @@ export async function deserializeGameState(serialized: string): Promise<GameStat
       return null;
     }
 
-    const envelope = JSON.parse(trimmed) as PersistedEnvelope | null;
-    if (!envelope || typeof envelope !== "object") {
-      return null;
-    }
-
-    if (
-      typeof envelope.version !== "number" ||
-      !Number.isInteger(envelope.version) ||
-      envelope.version < 0
-    ) {
-      console.warn("Invalid save version", envelope);
-      return null;
-    }
-
-    if (envelope.version !== CURRENT_PERSISTENCE_VERSION) {
-      console.warn("Unsupported save version", envelope.version);
-      return null;
-    }
-
-    if (typeof envelope.payload !== "string") {
-      console.warn("Invalid save payload", envelope);
-      return null;
-    }
-
-    const compression = envelope.compression ?? "none";
     let payloadJson: string;
 
-    if (compression === "gzip") {
-      try {
-        payloadJson = await decompressString(envelope.payload);
-      } catch (error) {
-        console.warn("Failed to decompress game state", error);
-        return null;
-      }
-    } else if (compression === "none") {
-      payloadJson = envelope.payload;
-    } else {
-      console.warn("Unsupported save compression", compression);
+    try {
+      payloadJson = await decompressString(trimmed);
+    } catch (error) {
+      console.warn("Failed to decompress game state", error);
       return null;
     }
 
     const data = JSON.parse(payloadJson) as RawGameState;
     if (!data || typeof data !== "object") {
+      return null;
+    }
+
+    if (typeof data.version !== "number" || !Number.isInteger(data.version)) {
+      console.warn("Invalid save version", data.version);
+      return null;
+    }
+
+    if (data.version !== GAME_STATE_VERSION) {
+      console.warn("Unsupported save version", data.version);
       return null;
     }
 
@@ -601,6 +572,7 @@ export async function deserializeGameState(serialized: string): Promise<GameStat
     );
 
     const state: GameState = {
+      version: GAME_STATE_VERSION,
       settlers,
       houses,
       farms,
@@ -777,7 +749,10 @@ export async function serializeGameState(
   state: GameState,
   timestampMs: number = currentTimeMs(),
 ): Promise<string> {
+  state.version = GAME_STATE_VERSION;
+
   const payload: RawGameState = {
+    version: state.version,
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
     farms: state.farms.map(serializeFarm),
@@ -816,23 +791,10 @@ export async function serializeGameState(
 
   const json = JSON.stringify(payload);
 
-  const fallbackEnvelope: PersistedEnvelope = {
-    version: CURRENT_PERSISTENCE_VERSION,
-    compression: "none",
-    payload: json,
-  };
-
   try {
-    const { data, compressed } = await compressString(json);
-    const envelope: PersistedEnvelope = {
-      version: CURRENT_PERSISTENCE_VERSION,
-      compression: compressed ? "gzip" : "none",
-      payload: data,
-    };
-
-    return JSON.stringify(envelope);
+    return await compressString(json);
   } catch (error) {
     console.warn("Failed to compress game state", error);
-    return JSON.stringify(fallbackEnvelope);
+    throw error;
   }
 }

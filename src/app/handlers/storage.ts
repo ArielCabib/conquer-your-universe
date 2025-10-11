@@ -8,6 +8,7 @@ import {
 } from "react";
 import { STORAGE_KEY } from "../../constants";
 import { serializeGameState, deserializeGameState } from "../../persistence";
+import { decodeBase64, encodeBase64 } from "../../utils/compression";
 import { GameState, InfoEntry } from "../../types";
 import {
   ensureCropRegistry,
@@ -31,12 +32,13 @@ export function useSaveGameHandler(gameStateRef: MutableRefObject<GameState>) {
     void (async () => {
       try {
         const serialized = await serializeGameState(state);
-        const blob = new Blob([serialized], { type: "application/json" });
+        const bytes = decodeBase64(serialized);
+        const blob = new Blob([bytes], { type: "application/gzip" });
         const url = URL.createObjectURL(blob);
 
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = "conquer-your-universe-save.json";
+        anchor.download = "conquer-your-universe-save.json.gz";
         document.body?.appendChild(anchor);
         anchor.click();
         anchor.remove();
@@ -82,13 +84,21 @@ export function useFileChangeHandler({
 
       const reader = new FileReader();
       reader.onload = () => {
-        const text = typeof reader.result === "string" ? reader.result : null;
-        if (!text) {
+        const result = reader.result;
+        let serialized: string | null = null;
+
+        if (typeof result === "string") {
+          serialized = result;
+        } else if (result instanceof ArrayBuffer) {
+          serialized = encodeBase64(new Uint8Array(result));
+        }
+
+        if (!serialized) {
           return;
         }
 
         void (async () => {
-          const loadedState = await deserializeGameState(text);
+          const loadedState = await deserializeGameState(serialized);
           if (!loadedState) {
             console.warn("Unable to parse game file");
             return;
@@ -126,7 +136,7 @@ export function useFileChangeHandler({
       };
 
       try {
-        reader.readAsText(file);
+        reader.readAsArrayBuffer(file);
       } catch (error) {
         console.warn("Failed to initiate game file read", error);
       }
