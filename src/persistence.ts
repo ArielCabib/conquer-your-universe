@@ -2,6 +2,7 @@ import {
   BASE_SETTLER_MAX_LIFESPAN_MS,
   BASE_SETTLER_MIN_LIFESPAN_MS,
   GRAIN_PILE_CAPACITY,
+  GAME_STATE_VERSION,
 } from "./constants";
 import {
   CropProjectileState,
@@ -125,6 +126,7 @@ type RawGameState = Omit<
   | "market"
   | "grainPileCapacity"
   | "coins"
+  | "version"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -167,8 +169,55 @@ type RawGameState = Omit<
   grain_pile_capacity?: number;
   grainPileCapacity?: number;
   coins?: number;
+  version?: number;
   time_reference_ms?: number;
 };
+
+type VersionedRawGameState = RawGameState & { version: number };
+
+type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | null;
+
+const migrations: Partial<Record<number, MigrationFn>> = {};
+
+function toVersionedRawGameState(raw: RawGameState): VersionedRawGameState | null {
+  const version = raw.version;
+  if (typeof version !== "number" || !Number.isInteger(version) || version < 1) {
+    return null;
+  }
+
+  return { ...raw, version } as VersionedRawGameState;
+}
+
+function migrateToCurrentVersion(raw: RawGameState): VersionedRawGameState | null {
+  const versioned = toVersionedRawGameState(raw);
+  if (!versioned) {
+    return null;
+  }
+
+  const visitedVersions = new Set<number>();
+  let current: VersionedRawGameState = { ...versioned };
+
+  while (current.version !== GAME_STATE_VERSION) {
+    if (visitedVersions.has(current.version)) {
+      return null;
+    }
+
+    visitedVersions.add(current.version);
+    const migrate = migrations[current.version];
+    if (!migrate) {
+      return null;
+    }
+
+    const next = migrate(current);
+    if (!next) {
+      return null;
+    }
+
+    current = { ...next };
+  }
+
+  return { ...current, version: GAME_STATE_VERSION };
+}
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
   if ("kind" in phase) {
@@ -453,8 +502,14 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
 
 export function deserializeGameState(serialized: string): GameState | null {
   try {
-    const data = JSON.parse(serialized) as RawGameState;
-    if (!data || typeof data !== "object") {
+    const raw = JSON.parse(serialized) as RawGameState;
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+
+    const data = migrateToCurrentVersion(raw);
+    if (!data) {
+      console.warn("Unsupported game state version");
       return null;
     }
 
@@ -482,6 +537,7 @@ export function deserializeGameState(serialized: string): GameState | null {
     const market = deserializeMarket(data.market);
 
     const state: GameState = {
+      version: GAME_STATE_VERSION,
       settlers,
       houses,
       farms,
@@ -655,6 +711,7 @@ function serializeMarket(market: MarketState | null): RawMarketState | null {
 
 export function serializeGameState(state: GameState, timestampMs: number = currentTimeMs()): string {
   const payload: RawGameState = {
+    version: state.version,
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
     farms: state.farms.map(serializeFarm),
