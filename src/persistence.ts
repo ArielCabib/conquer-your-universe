@@ -129,7 +129,6 @@ type RawGameState = Omit<
   | "grainPileCapacity"
   | "coins"
   | "version"
-  | "infoEntries"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -175,7 +174,6 @@ type RawGameState = Omit<
   version?: number;
   time_reference_ms?: number;
   info_entries?: InfoEntry[];
-  infoEntries?: InfoEntry[];
 };
 
 type VersionedRawGameState = RawGameState & { version: number };
@@ -189,7 +187,6 @@ const migrations: Partial<Record<number, MigrationFn>> = {
       ...state,
       version: 2,
       info_entries: entries,
-      infoEntries: entries,
     };
   },
 };
@@ -578,7 +575,7 @@ export function deserializeGameState(serialized: string): GameState | null {
         typeof data.coins === "number" && Number.isFinite(data.coins)
           ? Math.max(0, data.coins)
           : 0,
-      infoEntries: normalizeInfoEntries(data.info_entries ?? data.infoEntries),
+      infoEntries: normalizeInfoEntries(data.info_entries),
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
