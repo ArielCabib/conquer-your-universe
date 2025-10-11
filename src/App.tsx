@@ -22,9 +22,9 @@ import { createInitialGameState, GameState } from "./types";
 type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
-  explore: "Tap or click around and find out",
-  build: "Right click or long press the planet (or use the build buttons below) to build a house",
-  farm: "Right click or long press the planet (or use the build buttons below) to build a farm",
+  explore: "Click around and find out",
+  build: "Right click the planet to build a house",
+  farm: "Right click the planet to build a farm",
   harvester: "You can build a harvester",
   market: "You can build a market",
 };
@@ -159,7 +159,7 @@ export function App() {
     [hasContextMenuActions],
   );
 
-  const { handleContextMenuEvent, openContextMenuAtPoint } = useContextMenuHandler({
+  const handleContextMenu = useContextMenuHandler({
     canvasRef,
     isPaused,
     setContextMenuState,
@@ -260,8 +260,7 @@ export function App() {
       contextMenuState={contextMenuState}
       fileInputRef={fileInputRef}
       onClickCanvas={handleClick}
-      onContextMenuCanvas={handleContextMenuEvent}
-      onLongPressCanvas={openContextMenuAtPoint}
+      onContextMenuCanvas={handleContextMenu}
       housesBuilt={housesBuilt}
       housesCapacityLimit={housesCapacityLimit}
       farmsBuilt={farmsBuilt}

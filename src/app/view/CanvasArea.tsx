@@ -1,22 +1,13 @@
-import { useCallback, useEffect, useRef } from "react";
-import type {
-  MouseEvent as ReactMouseEvent,
-  MouseEventHandler,
-  PointerEvent as ReactPointerEvent,
-  RefObject,
-} from "react";
+import { useEffect, useRef } from "react";
+import type { MouseEventHandler, RefObject, TouchEventHandler } from "react";
 import { ContextMenuState } from "../types";
 
 const LONG_PRESS_DURATION_MS = 500;
-const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
-const LONG_PRESS_MOVE_THRESHOLD_SQUARED =
-  LONG_PRESS_MOVE_THRESHOLD_PX * LONG_PRESS_MOVE_THRESHOLD_PX;
 
 interface CanvasAreaProps {
   canvasRef: RefObject<HTMLCanvasElement>;
   onClick: MouseEventHandler<HTMLCanvasElement>;
   onContextMenu: MouseEventHandler<HTMLCanvasElement>;
-  onLongPress: (clientX: number, clientY: number) => void;
   isPaused: boolean;
   contextMenuState: ContextMenuState | null;
   onBuildHouse: MouseEventHandler<HTMLButtonElement>;
@@ -33,7 +24,6 @@ export function CanvasArea({
   canvasRef,
   onClick,
   onContextMenu,
-  onLongPress,
   isPaused,
   contextMenuState,
   onBuildHouse,
@@ -46,107 +36,91 @@ export function CanvasArea({
   canBuildMarket,
 }: CanvasAreaProps) {
   const longPressTimeoutRef = useRef<number | null>(null);
-  const touchStartPositionRef = useRef<{ x: number; y: number } | null>(null);
-  const hasLongPressTriggeredRef = useRef(false);
-  const suppressClickRef = useRef(false);
+  const lastTouchRef = useRef<{ identifier: number; clientX: number; clientY: number } | null>(
+    null,
+  );
 
-  const clearLongPressTimeout = useCallback(() => {
+  const clearLongPress = () => {
     if (longPressTimeoutRef.current !== null) {
       window.clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
     }
-  }, []);
-
-  const resetTouchTracking = useCallback(() => {
-    touchStartPositionRef.current = null;
-  }, []);
+    lastTouchRef.current = null;
+  };
 
   useEffect(() => {
     return () => {
-      clearLongPressTimeout();
-      resetTouchTracking();
-      hasLongPressTriggeredRef.current = false;
-      suppressClickRef.current = false;
+      clearLongPress();
     };
-  }, [clearLongPressTimeout, resetTouchTracking]);
+  }, []);
 
-  const handlePointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLCanvasElement>) => {
-      if (event.pointerType === "mouse") {
-        suppressClickRef.current = false;
-        clearLongPressTimeout();
-        resetTouchTracking();
+  const scheduleLongPress = (touch: Touch) => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    lastTouchRef.current = {
+      identifier: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current);
+    }
+
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      if (!lastTouchRef.current) {
         return;
       }
 
-      touchStartPositionRef.current = { x: event.clientX, y: event.clientY };
-      hasLongPressTriggeredRef.current = false;
-      suppressClickRef.current = false;
-      clearLongPressTimeout();
+      canvas.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: lastTouchRef.current.clientX,
+          clientY: lastTouchRef.current.clientY,
+        }),
+      );
 
-      longPressTimeoutRef.current = window.setTimeout(() => {
-        if (!touchStartPositionRef.current) {
-          return;
-        }
+      clearLongPress();
+    }, LONG_PRESS_DURATION_MS);
+  };
 
-        hasLongPressTriggeredRef.current = true;
-        suppressClickRef.current = true;
-        onLongPress(
-          touchStartPositionRef.current.x,
-          touchStartPositionRef.current.y,
-        );
-      }, LONG_PRESS_DURATION_MS);
-    },
-    [clearLongPressTimeout, onLongPress, resetTouchTracking],
-  );
+  const handleTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    if (event.touches.length !== 1) {
+      clearLongPress();
+      return;
+    }
 
-  const handlePointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLCanvasElement>) => {
-      if (event.pointerType === "mouse") {
-        return;
-      }
+    scheduleLongPress(event.touches[0]);
+  };
 
-      if (!touchStartPositionRef.current || hasLongPressTriggeredRef.current) {
-        return;
-      }
+  const handleTouchMove: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    if (!lastTouchRef.current) {
+      return;
+    }
 
-      const deltaX = event.clientX - touchStartPositionRef.current.x;
-      const deltaY = event.clientY - touchStartPositionRef.current.y;
-      const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+    const touch = Array.from(event.touches).find(
+      (t) => t.identifier === lastTouchRef.current?.identifier,
+    );
 
-      if (distanceSquared > LONG_PRESS_MOVE_THRESHOLD_SQUARED) {
-        clearLongPressTimeout();
-        resetTouchTracking();
-      }
-    },
-    [clearLongPressTimeout, resetTouchTracking],
-  );
+    if (!touch) {
+      clearLongPress();
+      return;
+    }
 
-  const handlePointerEnd = useCallback(
-    (event: ReactPointerEvent<HTMLCanvasElement>) => {
-      if (event.pointerType === "mouse") {
-        return;
-      }
+    lastTouchRef.current = {
+      identifier: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+  };
 
-      clearLongPressTimeout();
-      resetTouchTracking();
-    },
-    [clearLongPressTimeout, resetTouchTracking],
-  );
-
-  const handleCanvasClick = useCallback(
-    (event: ReactMouseEvent<HTMLCanvasElement>) => {
-      if (suppressClickRef.current) {
-        event.preventDefault();
-        event.stopPropagation();
-        suppressClickRef.current = false;
-        return;
-      }
-
-      onClick(event);
-    },
-    [onClick],
-  );
+  const handleTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
+    clearLongPress();
+  };
 
   const pausedOverlay = isPaused ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
@@ -177,7 +151,7 @@ export function CanvasArea({
   }
 
   const buttonBaseClass =
-    "w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01 disabled:cursor-not-allowed disabled:opacity-60";
+    "w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01";
 
   const contextMenu = contextMenuState && menuActions.length > 0 ? (
     <div
@@ -200,22 +174,6 @@ export function CanvasArea({
     </div>
   ) : null;
 
-  const quickActions = menuActions.length > 0 ? (
-    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {menuActions.map((action) => (
-        <button
-          key={`${action.key}-quick`}
-          type="button"
-          onClick={action.onClick}
-          disabled={isPaused}
-          className={buttonBaseClass}
-        >
-          {action.label}
-        </button>
-      ))}
-    </div>
-  ) : null;
-
   return (
     <div className="relative w-[min(80vw,540px)] max-w-[600px]">
       <canvas
@@ -225,19 +183,17 @@ export function CanvasArea({
         className={`h-auto w-full max-w-[600px] touch-manipulation ${
           isPaused ? "cursor-not-allowed pointer-events-none" : "cursor-pointer"
         }`}
-        onClick={handleCanvasClick}
+        onClick={onClick}
         onContextMenu={onContextMenu}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
-        onPointerLeave={handlePointerEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         Your browser does not support HTML canvas.
       </canvas>
       {pausedOverlay}
       {contextMenu}
-      {quickActions}
     </div>
   );
 }
