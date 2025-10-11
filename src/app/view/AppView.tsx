@@ -1,8 +1,8 @@
 import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
-import { ContextMenuState } from "../types";
+import { ContextMenuState, InfoEntry } from "../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
-import { ControlModal } from "./Modal";
+import { ControlModal, InfoModal } from "./Modal";
 import { BuildPrompt } from "./Prompt";
 import { StatsPanel } from "./Stats";
 
@@ -14,7 +14,7 @@ interface AppViewProps {
   canBuildHarvester: boolean;
   canBuildMarket: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
-  onCloseModal: MouseEventHandler<HTMLButtonElement>;
+  onCloseModal: () => void;
   contextMenuState: ContextMenuState | null;
   fileInputRef: RefObject<HTMLInputElement>;
   onClickCanvas: MouseEventHandler<HTMLCanvasElement>;
@@ -28,6 +28,7 @@ interface AppViewProps {
   onFileChange: ChangeEventHandler<HTMLInputElement>;
   onOpenFileDialog: MouseEventHandler<HTMLButtonElement>;
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
+  onOpenInfo: MouseEventHandler<HTMLButtonElement>;
   pauseStatusText: string;
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
@@ -48,6 +49,9 @@ interface AppViewProps {
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
+  infoEntries: InfoEntry[];
+  isInfoModalActive: boolean;
+  onCloseInfo: () => void;
 }
 
 export function AppView({
@@ -72,6 +76,7 @@ export function AppView({
   onFileChange,
   onOpenFileDialog,
   onOpenSettings,
+  onOpenInfo,
   pauseStatusText,
   onRestartGame,
   onSaveGame,
@@ -92,12 +97,16 @@ export function AppView({
   grainsInFlight,
   hasHarvester,
   hasMarket,
+  infoEntries,
+  isInfoModalActive,
+  onCloseInfo,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
       <section className="flex flex-col items-center gap-10 text-center">
         <HeaderSection
           onOpenSettings={onOpenSettings}
+          onOpenInfo={onOpenInfo}
           planetName={planetName}
           onPlanetNameChange={onPlanetNameChange}
         />
@@ -151,6 +160,7 @@ export function AppView({
         onSave={onSaveGame}
         onOpenFile={onOpenFileDialog}
       />
+      <InfoModal isActive={isInfoModalActive} onClose={onCloseInfo} entries={infoEntries} />
     </main>
   );
 }
