@@ -22,7 +22,6 @@ import { currentTimeMs } from "./app/helpers";
 import { compressString, decompressString } from "./utils/compression";
 
 const SERIALIZED_PREFIX = "gz:";
-const LEGACY_SERIALIZED_PREFIX = "lz:";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -529,9 +528,6 @@ export async function deserializeGameState(serialized: string): Promise<GameStat
         console.warn("Failed to decompress game state", error);
         return null;
       }
-    } else if (trimmed.startsWith(LEGACY_SERIALIZED_PREFIX)) {
-      console.warn("Legacy compressed game states are no longer supported");
-      return null;
     }
 
     const data = JSON.parse(payload) as RawGameState;
