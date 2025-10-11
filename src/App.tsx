@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState } from "./app/types";
+import { ContextMenuState, InfoEntry } from "./app/types";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -29,6 +29,34 @@ const PROMPT_MESSAGES: Record<PromptKey, string> = {
   market: "You can build a market",
 };
 
+const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
+  explore: {
+    id: "explore",
+    title: "Scout the Surface",
+    description: "Click around the planet to uncover interactive zones and begin guiding your settlers.",
+  },
+  build: {
+    id: "build",
+    title: "Establish Housing",
+    description: "Right click the planet to place a house. Homes expand your population capacity and unlock new growth.",
+  },
+  farm: {
+    id: "farm",
+    title: "Cultivate Farms",
+    description: "Right click again once you have enough settlers to construct farms. Farms extend settler lifespans with fresh crops.",
+  },
+  harvester: {
+    id: "harvester",
+    title: "Deploy a Harvester",
+    description: "Gather at least five crop bundles to assemble a harvester. It automates grain collection to keep supplies flowing.",
+  },
+  market: {
+    id: "market",
+    title: "Open the Market",
+    description: "Stockpile thirty grains to build a market. Trade routes unlock advanced upgrades for your thriving colony.",
+  },
+};
+
 export function App() {
   const gameStateRef = useRef<GameState>(createInitialGameState());
   const [aliveCount, setAliveCount] = useState(0);
@@ -36,12 +64,14 @@ export function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
   const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
+  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>([]);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
@@ -65,6 +95,8 @@ export function App() {
 
   const openSettings = useModalOpenHandler(setIsModalOpen);
   const closeModal = useModalCloseHandler(setIsModalOpen);
+  const openInfoModal = useModalOpenHandler(setIsInfoModalOpen);
+  const closeInfoModal = useModalCloseHandler(setIsInfoModalOpen);
 
   const restartGame = useRestartGameHandler({
     gameStateRef,
@@ -247,6 +279,25 @@ export function App() {
   const promptKey = forcedPromptKey ?? activePromptKey;
   const promptMessage = promptKey ? PROMPT_MESSAGES[promptKey] : null;
 
+  useEffect(() => {
+    if (!promptKey) {
+      return;
+    }
+
+    const entry = PROMPT_INFORMATION[promptKey];
+    if (!entry) {
+      return;
+    }
+
+    setInfoEntries((current) => {
+      if (current.some((item) => item.id === entry.id)) {
+        return current;
+      }
+
+      return [...current, entry];
+    });
+  }, [promptKey]);
+
   return (
     <AppView
       aliveNow={aliveCount}
@@ -269,6 +320,7 @@ export function App() {
       onFileChange={onFileChange}
       onOpenFileDialog={openFileDialog}
       onOpenSettings={openSettings}
+      onOpenInfo={openInfoModal}
       pauseStatusText={pauseStatusText}
       onRestartGame={restartGame}
       onSaveGame={saveGame}
@@ -290,6 +342,9 @@ export function App() {
       grainsInFlight={grainsInFlight}
       hasHarvester={hasHarvester}
       hasMarket={hasMarket}
+      infoEntries={infoEntries}
+      isInfoModalActive={isInfoModalOpen}
+      onCloseInfo={closeInfoModal}
     />
   );
 }
