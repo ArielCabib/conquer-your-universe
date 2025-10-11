@@ -85,7 +85,11 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenSettings}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <img src={settingsIcon} alt="" width={22} height={22} aria-hidden="true" />
+          <span
+            aria-hidden="true"
+            className="block h-[22px] w-[22px] bg-orbit-03 [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+            style={{ maskImage: `url(${settingsIcon})`, WebkitMaskImage: `url(${settingsIcon})` }}
+          />
         </button>
         <button
           type="button"
@@ -93,7 +97,11 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenInfo}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <img src={infoIcon} alt="" width={22} height={22} aria-hidden="true" />
+          <span
+            aria-hidden="true"
+            className="block h-[22px] w-[22px] bg-orbit-03 [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+            style={{ maskImage: `url(${infoIcon})`, WebkitMaskImage: `url(${infoIcon})` }}
+          />
         </button>
       </div>
       {isEditingName ? (

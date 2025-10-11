@@ -20,6 +20,10 @@
     background-color: var(--orbit-01);
   }
 
+  .bg-orbit-03 {
+    background-color: var(--orbit-03);
+  }
+
   .bg-orbit-04 {
     background-color: var(--orbit-04);
   }
