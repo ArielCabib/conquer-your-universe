@@ -20,6 +20,10 @@
     background-color: var(--orbit-01);
   }
 
+  .bg-orbit-03 {
+    background-color: var(--orbit-03);
+  }
+
   .bg-orbit-04 {
     background-color: var(--orbit-04);
   }
@@ -113,5 +117,28 @@
   .stats-panel {
     @apply mt-4 w-[min(80vw,540px)] max-w-[600px] overflow-hidden transition-[height,opacity] duration-200 ease-out;
     height: var(--stats-panel-height, 0px);
+  }
+
+  .icon-glyph {
+    display: block;
+    width: 22px;
+    height: 22px;
+    background-color: var(--orbit-03);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+  }
+
+  .icon-glyph--settings {
+    mask-image: url("../assets/cogwheel-svgrepo-com.svg");
+    -webkit-mask-image: url("../assets/cogwheel-svgrepo-com.svg");
+  }
+
+  .icon-glyph--info {
+    mask-image: url("../assets/question-mark-circle-outline-svgrepo-com.svg");
+    -webkit-mask-image: url("../assets/question-mark-circle-outline-svgrepo-com.svg");
   }
 }
