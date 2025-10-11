@@ -89,6 +89,9 @@ export function CanvasArea({
   };
 
   const handleTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (event.touches.length !== 1) {
       clearLongPress();
       return;
@@ -98,6 +101,9 @@ export function CanvasArea({
   };
 
   const handleTouchMove: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (!lastTouchRef.current) {
       return;
     }
@@ -118,7 +124,10 @@ export function CanvasArea({
     };
   };
 
-  const handleTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
+  const handleTouchEnd: TouchEventHandler<HTMLCanvasElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     clearLongPress();
   };
 
