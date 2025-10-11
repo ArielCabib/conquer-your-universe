@@ -29,7 +29,6 @@ interface AppViewProps {
   onOpenFileDialog: MouseEventHandler<HTMLButtonElement>;
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
-  pauseStatusText: string;
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;
@@ -77,7 +76,6 @@ export function AppView({
   onOpenFileDialog,
   onOpenSettings,
   onOpenInfo,
-  pauseStatusText,
   onRestartGame,
   onSaveGame,
   settlersCapacityLimit,
@@ -155,7 +153,6 @@ export function AppView({
       <ControlModal
         isActive={isModalActive}
         onClose={onCloseModal}
-        pauseStatusText={pauseStatusText}
         onRestart={onRestartGame}
         onSave={onSaveGame}
         onOpenFile={onOpenFileDialog}

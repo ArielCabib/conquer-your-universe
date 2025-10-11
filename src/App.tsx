@@ -153,7 +153,6 @@ export function App() {
     [gameStateRef],
   );
 
-  const pauseStatusText = isPaused ? "Time is currently paused." : "Time is currently running.";
   const state = gameStateRef.current;
   const housesBuilt = state.houses.length;
   const farmsBuilt = state.farms.length;
@@ -321,7 +320,6 @@ export function App() {
       onOpenFileDialog={openFileDialog}
       onOpenSettings={openSettings}
       onOpenInfo={openInfoModal}
-      pauseStatusText={pauseStatusText}
       onRestartGame={restartGame}
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
