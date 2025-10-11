@@ -1,10 +1,9 @@
-import type { MouseEventHandler, ReactNode } from "react";
+import type { MouseEventHandler } from "react";
 import type { InfoEntry } from "../types";
 
 interface ControlModalProps {
   isActive: boolean;
   onClose: () => void;
-  pauseStatusText: ReactNode;
   onRestart: MouseEventHandler<HTMLButtonElement>;
   onSave: MouseEventHandler<HTMLButtonElement>;
   onOpenFile: MouseEventHandler<HTMLButtonElement>;
@@ -13,7 +12,6 @@ interface ControlModalProps {
 export function ControlModal({
   isActive,
   onClose,
-  pauseStatusText,
   onRestart,
   onSave,
   onOpenFile,
@@ -41,7 +39,16 @@ export function ControlModal({
             Close
           </button>
         </div>
-        <p className="m-0 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03/85">{pauseStatusText}</p>
+        <p className="m-0 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03/85">
+          <a
+            href="https://www.patreon.com/cw/ArielCabib"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orbit-03 underline"
+          >
+            Support ArielCabib on Patreon
+          </a>
+        </p>
         <div className="flex flex-col gap-3">
           <button
             type="button"
