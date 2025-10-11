@@ -21,7 +21,15 @@ import {
 import { currentTimeMs } from "./app/helpers";
 import { compressString, decompressString } from "./utils/compression";
 
-const SERIALIZED_PREFIX = "gz:";
+const CURRENT_PERSISTENCE_VERSION = 1;
+
+type PersistedCompression = "none" | "gzip";
+
+interface PersistedEnvelope {
+  version: number;
+  compression?: PersistedCompression;
+  payload: string;
+}
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -519,18 +527,48 @@ export async function deserializeGameState(serialized: string): Promise<GameStat
       return null;
     }
 
-    let payload = trimmed;
-    if (trimmed.startsWith(SERIALIZED_PREFIX)) {
-      const encoded = trimmed.slice(SERIALIZED_PREFIX.length);
+    const envelope = JSON.parse(trimmed) as PersistedEnvelope | null;
+    if (!envelope || typeof envelope !== "object") {
+      return null;
+    }
+
+    if (
+      typeof envelope.version !== "number" ||
+      !Number.isInteger(envelope.version) ||
+      envelope.version < 0
+    ) {
+      console.warn("Invalid save version", envelope);
+      return null;
+    }
+
+    if (envelope.version !== CURRENT_PERSISTENCE_VERSION) {
+      console.warn("Unsupported save version", envelope.version);
+      return null;
+    }
+
+    if (typeof envelope.payload !== "string") {
+      console.warn("Invalid save payload", envelope);
+      return null;
+    }
+
+    const compression = envelope.compression ?? "none";
+    let payloadJson: string;
+
+    if (compression === "gzip") {
       try {
-        payload = await decompressString(encoded);
+        payloadJson = await decompressString(envelope.payload);
       } catch (error) {
         console.warn("Failed to decompress game state", error);
         return null;
       }
+    } else if (compression === "none") {
+      payloadJson = envelope.payload;
+    } else {
+      console.warn("Unsupported save compression", compression);
+      return null;
     }
 
-    const data = JSON.parse(payload) as RawGameState;
+    const data = JSON.parse(payloadJson) as RawGameState;
     if (!data || typeof data !== "object") {
       return null;
     }
@@ -778,14 +816,23 @@ export async function serializeGameState(
 
   const json = JSON.stringify(payload);
 
+  const fallbackEnvelope: PersistedEnvelope = {
+    version: CURRENT_PERSISTENCE_VERSION,
+    compression: "none",
+    payload: json,
+  };
+
   try {
     const { data, compressed } = await compressString(json);
-    if (compressed) {
-      return `${SERIALIZED_PREFIX}${data}`;
-    }
-    return data;
+    const envelope: PersistedEnvelope = {
+      version: CURRENT_PERSISTENCE_VERSION,
+      compression: compressed ? "gzip" : "none",
+      payload: data,
+    };
+
+    return JSON.stringify(envelope);
   } catch (error) {
     console.warn("Failed to compress game state", error);
-    return json;
+    return JSON.stringify(fallbackEnvelope);
   }
 }
