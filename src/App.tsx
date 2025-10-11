@@ -147,7 +147,7 @@ export function App() {
   const canBuildHarvester = !hasHarvester && totalCrops >= 5;
   const grainPile = state.grainPile;
   const grainCount = grainPile?.grains ?? 0;
-  const grainsInFlight = state.grainProjectiles.length;
+  const grainsInFlight = state.grainProjectiles.length + state.cropProjectiles.length;
   const grainCapacity = state.grainPileCapacity;
   const hasMarket = Boolean(state.market);
   const canBuildMarket = Boolean(grainPile && grainPile.grains >= 30 && !hasMarket);

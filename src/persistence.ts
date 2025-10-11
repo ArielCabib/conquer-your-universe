@@ -4,6 +4,7 @@ import {
   GRAIN_PILE_CAPACITY,
 } from "./constants";
 import {
+  CropProjectileState,
   CropState,
   FarmState,
   GameState,
@@ -56,11 +57,20 @@ type RawCropState = Omit<CropState, "createdMs"> & {
   created_ms?: number;
 };
 
-type RawHarvesterState = Omit<HarvesterState, "builtMs"> & {
+type RawHarvesterState = Omit<
+  HarvesterState,
+  "builtMs" | "lastHarvestMs" | "lastSpinUpdateMs" | "spinLevel" | "rotationAngle"
+> & {
   built_ms?: number;
   builtMs?: number;
   last_harvest_ms?: number;
   lastHarvestMs?: number;
+  last_spin_update_ms?: number;
+  lastSpinUpdateMs?: number;
+  spin_level?: number;
+  spinLevel?: number;
+  rotation_angle?: number;
+  rotationAngle?: number;
 };
 
 type RawGrainPileState = Omit<GrainPileState, "createdMs"> & {
@@ -68,6 +78,8 @@ type RawGrainPileState = Omit<GrainPileState, "createdMs"> & {
 };
 
 type RawGrainProjectileState = GrainProjectileState;
+
+type RawCropProjectileState = CropProjectileState;
 
 type RawMarketState = Omit<MarketState, "builtMs"> & {
   built_ms?: number;
@@ -96,6 +108,13 @@ type RawGameState = Omit<
   | "farmCropSpawnIntervalMs"
   | "houseSpawnIntervalMs"
   | "houseSpawnAmount"
+  | "harvester"
+  | "grainPile"
+  | "cropProjectiles"
+  | "grainProjectiles"
+  | "nextCropProjectileId"
+  | "nextGrainProjectileId"
+  | "market"
   | "grainPileCapacity"
 > & {
   settlers: RawSettlerState[];
@@ -107,8 +126,12 @@ type RawGameState = Omit<
   grainPile?: RawGrainPileState | null;
   grain_projectiles?: RawGrainProjectileState[];
   grainProjectiles?: RawGrainProjectileState[];
+  crop_projectiles?: RawCropProjectileState[];
+  cropProjectiles?: RawCropProjectileState[];
   next_grain_projectile_id?: number;
   nextGrainProjectileId?: number;
+  next_crop_projectile_id?: number;
+  nextCropProjectileId?: number;
   market?: RawMarketState | null;
   planet_name?: string;
   next_settler_id: number;
@@ -205,6 +228,16 @@ function deserializeHarvester(raw: RawHarvesterState | null | undefined): Harves
     y: raw.y,
     builtMs: raw.built_ms ?? raw.builtMs ?? 0,
     lastHarvestMs: raw.last_harvest_ms ?? raw.lastHarvestMs ?? raw.built_ms ?? raw.builtMs ?? 0,
+    lastSpinUpdateMs:
+      raw.last_spin_update_ms ??
+      raw.lastSpinUpdateMs ??
+      raw.last_harvest_ms ??
+      raw.lastHarvestMs ??
+      raw.built_ms ??
+      raw.builtMs ??
+      0,
+    spinLevel: raw.spin_level ?? raw.spinLevel ?? 0,
+    rotationAngle: raw.rotation_angle ?? raw.rotationAngle ?? 0,
   };
 }
 
@@ -224,6 +257,16 @@ function deserializeGrainPile(raw: RawGrainPileState | null | undefined): GrainP
 function deserializeGrainProjectiles(
   rawProjectiles: RawGrainProjectileState[] | null | undefined,
 ): GrainProjectileState[] {
+  if (!Array.isArray(rawProjectiles)) {
+    return [];
+  }
+
+  return rawProjectiles.map((projectile) => ({ ...projectile }));
+}
+
+function deserializeCropProjectiles(
+  rawProjectiles: RawCropProjectileState[] | null | undefined,
+): CropProjectileState[] {
   if (!Array.isArray(rawProjectiles)) {
     return [];
   }
@@ -285,11 +328,16 @@ function getLatestTimestamp(state: GameState, reference?: number | null): number
   if (state.harvester) {
     consider(state.harvester.builtMs);
     consider(state.harvester.lastHarvestMs);
+    consider(state.harvester.lastSpinUpdateMs);
   }
 
   if (state.grainPile) {
     consider(state.grainPile.createdMs);
   }
+
+  state.cropProjectiles.forEach((projectile) => {
+    consider(projectile.launchedMs);
+  });
 
   state.grainProjectiles.forEach((projectile) => {
     consider(projectile.launchedMs);
@@ -337,11 +385,16 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
   if (state.harvester) {
     state.harvester.builtMs = shiftIfFinite(state.harvester.builtMs, delta);
     state.harvester.lastHarvestMs = shiftIfFinite(state.harvester.lastHarvestMs, delta);
+    state.harvester.lastSpinUpdateMs = shiftIfFinite(state.harvester.lastSpinUpdateMs, delta);
   }
 
   if (state.grainPile) {
     state.grainPile.createdMs = shiftIfFinite(state.grainPile.createdMs, delta);
   }
+
+  state.cropProjectiles.forEach((projectile) => {
+    projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
+  });
 
   state.grainProjectiles.forEach((projectile) => {
     projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
@@ -370,7 +423,11 @@ export function deserializeGameState(serialized: string): GameState | null {
     const grainProjectiles = deserializeGrainProjectiles(
       data.grain_projectiles ?? data.grainProjectiles,
     );
+    const cropProjectiles = deserializeCropProjectiles(
+      data.crop_projectiles ?? data.cropProjectiles,
+    );
     const nextGrainProjectileId = data.next_grain_projectile_id ?? data.nextGrainProjectileId ?? 0;
+    const nextCropProjectileId = data.next_crop_projectile_id ?? data.nextCropProjectileId ?? 0;
     const market = deserializeMarket(data.market);
 
     const state: GameState = {
@@ -387,7 +444,9 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextCropId: data.next_crop_id ?? 0,
       harvester,
       grainPile,
+      cropProjectiles,
       grainProjectiles,
+      nextCropProjectileId,
       nextGrainProjectileId,
       market,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
@@ -486,6 +545,9 @@ function serializeHarvester(harvester: HarvesterState | null): RawHarvesterState
     y: harvester.y,
     built_ms: harvester.builtMs,
     last_harvest_ms: harvester.lastHarvestMs,
+    last_spin_update_ms: harvester.lastSpinUpdateMs,
+    spin_level: harvester.spinLevel,
+    rotation_angle: harvester.rotationAngle,
   };
 }
 
@@ -505,6 +567,12 @@ function serializeGrainPile(pile: GrainPileState | null): RawGrainPileState | nu
 function serializeGrainProjectiles(
   projectiles: GrainProjectileState[],
 ): RawGrainProjectileState[] {
+  return projectiles.map((projectile) => ({ ...projectile }));
+}
+
+function serializeCropProjectiles(
+  projectiles: CropProjectileState[],
+): RawCropProjectileState[] {
   return projectiles.map((projectile) => ({ ...projectile }));
 }
 
@@ -528,7 +596,9 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     crops: state.crops.map(serializeCrop),
     harvester: serializeHarvester(state.harvester),
     grain_pile: serializeGrainPile(state.grainPile),
+    crop_projectiles: serializeCropProjectiles(state.cropProjectiles),
     grain_projectiles: serializeGrainProjectiles(state.grainProjectiles),
+    next_crop_projectile_id: state.nextCropProjectileId,
     next_grain_projectile_id: state.nextGrainProjectileId,
     market: serializeMarket(state.market),
     planet_name: state.planetName,

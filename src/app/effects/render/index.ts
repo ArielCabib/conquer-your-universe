@@ -16,6 +16,7 @@ import { GameState } from "../../../types";
 import { currentTimeMs } from "../../helpers";
 import {
   drawCrop,
+  drawCropProjectile,
   drawFarm,
   drawGrainPile,
   drawGrainProjectile,
@@ -43,6 +44,9 @@ function renderStructures(
   }
   for (const crop of state.crops) {
     drawCrop(context, crop, now);
+  }
+  for (const projectile of state.cropProjectiles) {
+    drawCropProjectile(context, projectile, now);
   }
   if (state.grainPile) {
     drawGrainPile(context, state.grainPile);

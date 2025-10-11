@@ -53,18 +53,21 @@ export interface CropState {
   createdMs: number;
 }
 
-export interface HarvesterState {
-  x: number;
-  y: number;
-  builtMs: number;
-  lastHarvestMs: number;
-}
-
 export interface GrainPileState {
   x: number;
   y: number;
   grains: number;
   createdMs: number;
+}
+
+export interface CropProjectileState {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  launchedMs: number;
+  durationMs: number;
 }
 
 export interface GrainProjectileState {
@@ -75,6 +78,16 @@ export interface GrainProjectileState {
   endY: number;
   launchedMs: number;
   durationMs: number;
+}
+
+export interface HarvesterState {
+  x: number;
+  y: number;
+  builtMs: number;
+  lastHarvestMs: number;
+  spinLevel: number;
+  rotationAngle: number;
+  lastSpinUpdateMs: number;
 }
 
 export interface MarketState {
@@ -97,7 +110,9 @@ export interface GameState {
   nextCropId: number;
   harvester: HarvesterState | null;
   grainPile: GrainPileState | null;
+  cropProjectiles: CropProjectileState[];
   grainProjectiles: GrainProjectileState[];
+  nextCropProjectileId: number;
   nextGrainProjectileId: number;
   market: MarketState | null;
   grainPileCapacity: number;
@@ -127,7 +142,9 @@ export function createInitialGameState(): GameState {
     nextCropId: 0,
     harvester: null,
     grainPile: null,
+    cropProjectiles: [],
     grainProjectiles: [],
+    nextCropProjectileId: 0,
     nextGrainProjectileId: 0,
     market: null,
     grainPileCapacity: GRAIN_PILE_CAPACITY,
@@ -219,6 +236,29 @@ export function createHarvesterState(x: number, y: number, builtMs: number): Har
     y,
     builtMs,
     lastHarvestMs: builtMs,
+    spinLevel: 0,
+    rotationAngle: 0,
+    lastSpinUpdateMs: builtMs,
+  };
+}
+
+export function createCropProjectileState(
+  id: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  launchedMs: number,
+  durationMs: number,
+): CropProjectileState {
+  return {
+    id,
+    startX,
+    startY,
+    endX,
+    endY,
+    launchedMs,
+    durationMs,
   };
 }
 

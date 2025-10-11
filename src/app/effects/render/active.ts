@@ -1,5 +1,6 @@
 import {
   BIRTH_ANIMATION_MS,
+  CROP_FLIGHT_DURATION_MS,
   FADING_DURATION_MS,
   GRAIN_THROW_DURATION_MS,
   HARVESTER_PROCESS_INTERVAL_MS,
@@ -9,10 +10,12 @@ import {
   SETTLER_RADIUS,
 } from "../../../constants";
 import {
+  CropProjectileState,
   CropState,
   GameState,
   GrainProjectileState,
   SettlerState,
+  createCropProjectileState,
   createCropState,
   createGrainPileState,
   createGrainProjectileState,
@@ -253,32 +256,61 @@ export function handleActiveState(
   state.grainProjectiles = remainingProjectiles;
 
   const harvester = state.harvester;
-  if (harvester && state.crops.length > 0) {
-    const lastHarvest = harvester.lastHarvestMs ?? harvester.builtMs;
-    if (now - lastHarvest >= HARVESTER_PROCESS_INTERVAL_MS) {
-      if (!state.grainPile) {
-        const position = randomPointOnPlanet();
-        state.grainPile = createGrainPileState(position.x, position.y, now);
-      }
+  if (harvester) {
+    if (!Array.isArray(state.cropProjectiles)) {
+      state.cropProjectiles = [];
+    }
 
-      const pile = state.grainPile;
-      if (pile) {
-        const capacityRemaining = Math.max(
-          0,
-          state.grainPileCapacity - pile.grains - state.grainProjectiles.length,
+    if (!state.grainPile && (state.crops.length > 0 || state.cropProjectiles.length > 0)) {
+      const position = randomPointOnPlanet();
+      state.grainPile = createGrainPileState(position.x, position.y, now);
+    }
+
+    const pile = state.grainPile;
+    const pendingDeliveries = state.grainProjectiles.length + state.cropProjectiles.length;
+    const grainsInPile = pile?.grains ?? 0;
+    const capacityRemaining = Math.max(0, state.grainPileCapacity - grainsInPile - pendingDeliveries);
+    const lastHarvest = harvester.lastHarvestMs ?? harvester.builtMs;
+
+    if (
+      pile &&
+      state.crops.length > 0 &&
+      capacityRemaining > 0 &&
+      now - lastHarvest >= HARVESTER_PROCESS_INTERVAL_MS
+    ) {
+      const cropIndex = Math.floor(Math.random() * state.crops.length);
+      const [harvestedCrop] = state.crops.splice(cropIndex, 1);
+
+      if (harvestedCrop) {
+        const projectileId = state.nextCropProjectileId;
+        state.nextCropProjectileId = projectileId + 1;
+
+        const cropProjectile = createCropProjectileState(
+          projectileId,
+          harvestedCrop.x,
+          harvestedCrop.y,
+          harvester.x,
+          harvester.y,
+          now,
+          CROP_FLIGHT_DURATION_MS,
         );
 
-        if (capacityRemaining > 0) {
-          const cropIndex = Math.floor(Math.random() * state.crops.length);
-          const [harvestedCrop] = state.crops.splice(cropIndex, 1);
-          void harvestedCrop;
+        state.cropProjectiles.push(cropProjectile);
+        harvester.lastHarvestMs = now;
+      }
+    }
 
+    const remainingCropProjectiles: CropProjectileState[] = [];
+    if (pile) {
+      for (const projectile of state.cropProjectiles) {
+        const elapsed = now - projectile.launchedMs;
+        if (elapsed >= projectile.durationMs) {
           const projectileId = state.nextGrainProjectileId;
           state.nextGrainProjectileId = projectileId + 1;
 
           const offsetX = randomRange(-6, 6);
           const offsetY = randomRange(-4, 4);
-          const projectile = createGrainProjectileState(
+          const grainProjectile = createGrainProjectileState(
             projectileId,
             harvester.x,
             harvester.y,
@@ -288,9 +320,44 @@ export function handleActiveState(
             GRAIN_THROW_DURATION_MS,
           );
 
-          state.grainProjectiles.push(projectile);
-          harvester.lastHarvestMs = now;
+          state.grainProjectiles.push(grainProjectile);
+        } else {
+          remainingCropProjectiles.push(projectile);
         }
+      }
+    } else {
+      remainingCropProjectiles.push(...state.cropProjectiles);
+    }
+
+    state.cropProjectiles = remainingCropProjectiles;
+
+    const deltaMs = Math.max(0, now - harvester.lastSpinUpdateMs);
+    harvester.lastSpinUpdateMs = now;
+
+    const pendingAfterUpdate = state.cropProjectiles.length + state.grainProjectiles.length;
+    const activeCapacity = state.grainPileCapacity - (state.grainPile?.grains ?? 0) - pendingAfterUpdate;
+    const hasAvailableCapacity = activeCapacity > 0;
+    const hasPendingWork = pendingAfterUpdate > 0;
+    const hasIdleCrops = state.crops.length > 0;
+    const targetSpinLevel = hasAvailableCapacity ? (hasIdleCrops || hasPendingWork ? 1 : 0) : hasPendingWork ? 1 : 0;
+
+    const rampUp = deltaMs / 420;
+    const rampDown = deltaMs / 320;
+    if (targetSpinLevel > harvester.spinLevel) {
+      harvester.spinLevel = Math.min(targetSpinLevel, harvester.spinLevel + rampUp);
+    } else if (targetSpinLevel < harvester.spinLevel) {
+      harvester.spinLevel = Math.max(targetSpinLevel, harvester.spinLevel - rampDown);
+    }
+
+    const rotationSpeed = (Math.PI / 2) / HARVESTER_PROCESS_INTERVAL_MS;
+    harvester.rotationAngle += rotationSpeed * deltaMs * harvester.spinLevel;
+    if (!Number.isFinite(harvester.rotationAngle)) {
+      harvester.rotationAngle = 0;
+    } else {
+      const fullTurn = Math.PI * 2;
+      harvester.rotationAngle %= fullTurn;
+      if (harvester.rotationAngle < 0) {
+        harvester.rotationAngle += fullTurn;
       }
     }
   }

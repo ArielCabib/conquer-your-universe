@@ -1,5 +1,4 @@
 import {
-  HARVESTER_ROTATION_INTERVAL_MS,
   HARVESTER_SPAWN_ANIMATION_MS,
   ORBIT_01,
   ORBIT_02,
@@ -19,7 +18,7 @@ export function drawHarvester(
   const elapsed = Math.max(0, nowMs - harvester.builtMs);
   const spawnProgress = Math.min(1, elapsed / HARVESTER_SPAWN_ANIMATION_MS);
   const easedSpawn = easeOutQuad(spawnProgress);
-  const rotationAngle = ((nowMs - harvester.builtMs) / HARVESTER_ROTATION_INTERVAL_MS) * (Math.PI / 2);
+  const rotationAngle = harvester.rotationAngle;
 
   let scale = 0.2 + 0.8 * easedSpawn;
   if (spawnProgress < 1) {
@@ -49,7 +48,7 @@ export function drawHarvester(
   }
 
   context.rotate(rotationAngle);
-  context.globalAlpha = alpha;
+  context.globalAlpha = alpha * (0.7 + 0.3 * harvester.spinLevel);
 
   context.fillStyle = ORBIT_02;
   context.beginPath();
