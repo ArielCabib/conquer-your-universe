@@ -4,9 +4,3 @@ export interface ContextMenuState {
   offsetX: number;
   offsetY: number;
 }
-
-export interface InfoEntry {
-  id: string;
-  title: string;
-  description: string;
-}

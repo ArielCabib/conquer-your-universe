@@ -1,5 +1,5 @@
 import type { MouseEventHandler } from "react";
-import type { InfoEntry } from "../types";
+import type { InfoEntry } from "../../types";
 
 interface ControlModalProps {
   isActive: boolean;

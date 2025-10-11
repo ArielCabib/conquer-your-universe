@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState, InfoEntry } from "./app/types";
+import { ContextMenuState } from "./app/types";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -18,7 +18,7 @@ import {
 import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
-import { createInitialGameState, GameState } from "./types";
+import { createInitialGameState, GameState, InfoEntry } from "./types";
 type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
@@ -71,16 +71,22 @@ export function App() {
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
   const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
-  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>([]);
+  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>(() => [
+    ...gameStateRef.current.intelBriefingEntries,
+  ]);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
       setPlanetName(state.planetName);
+      setInfoEntries(state.intelBriefingEntries ?? []);
     },
-    [],
+    [setPlanetName, setInfoEntries],
   );
 
   useRestoreState(gameStateRef, handleStateRestore);
+  useEffect(() => {
+    gameStateRef.current.intelBriefingEntries = infoEntries;
+  }, [gameStateRef, infoEntries]);
   useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
   usePeriodicSave(gameStateRef);
 
@@ -105,6 +111,7 @@ export function App() {
     setIsPaused,
     pauseTimeRef,
     setPlanetName,
+    setInfoEntries,
   });
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
@@ -143,6 +150,7 @@ export function App() {
     setIsPaused,
     pauseTimeRef,
     setPlanetName,
+    setInfoEntries,
   });
 
   const handlePlanetNameChange = useCallback(
@@ -295,9 +303,11 @@ export function App() {
         return current;
       }
 
-      return [...current, entry];
+      const next = [...current, entry];
+      gameStateRef.current.intelBriefingEntries = next;
+      return next;
     });
-  }, [promptKey]);
+  }, [gameStateRef, promptKey]);
 
   return (
     <AppView

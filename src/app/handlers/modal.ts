@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
 import { STORAGE_KEY } from "../../constants";
-import { GameState, createInitialGameState } from "../../types";
+import { GameState, InfoEntry, createInitialGameState } from "../../types";
 import { serializeGameState } from "../../persistence";
 
 export function useModalOpenHandler(setIsModalOpen: Dispatch<SetStateAction<boolean>>) {
@@ -22,6 +22,7 @@ interface RestartOptions {
   setIsPaused: Dispatch<SetStateAction<boolean>>;
   pauseTimeRef: MutableRefObject<number | null>;
   setPlanetName: Dispatch<SetStateAction<string>>;
+  setInfoEntries: Dispatch<SetStateAction<InfoEntry[]>>;
 }
 
 export function useRestartGameHandler({
@@ -31,6 +32,7 @@ export function useRestartGameHandler({
   setIsPaused,
   pauseTimeRef,
   setPlanetName,
+  setInfoEntries,
 }: RestartOptions) {
   return useCallback(() => {
     gameStateRef.current = createInitialGameState();
@@ -45,8 +47,17 @@ export function useRestartGameHandler({
 
     setAliveCount(0);
     setPlanetName(gameStateRef.current.planetName);
+    setInfoEntries(gameStateRef.current.intelBriefingEntries);
     pauseTimeRef.current = null;
     setIsPaused(false);
     setIsModalOpen(false);
-  }, [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused, setPlanetName]);
+  }, [
+    gameStateRef,
+    pauseTimeRef,
+    setAliveCount,
+    setInfoEntries,
+    setIsModalOpen,
+    setIsPaused,
+    setPlanetName,
+  ]);
 }

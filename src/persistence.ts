@@ -13,11 +13,15 @@ import {
   CoinProjectileState,
   HarvesterState,
   HouseState,
+  InfoEntry,
   MarketState,
   SettlerPhase,
   SettlerState,
 } from "./types";
 import { currentTimeMs } from "./app/helpers";
+import { compressString, decompressString } from "./utils/compression";
+
+const SERIALIZED_PREFIX = "lz:";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -89,6 +93,12 @@ type RawMarketState = Omit<MarketState, "builtMs" | "lastSaleMs"> & {
   builtMs?: number;
   last_sale_ms?: number;
   lastSaleMs?: number;
+};
+
+type RawIntelBriefingEntry = {
+  id?: unknown;
+  title?: unknown;
+  description?: unknown;
 };
 
 type RawGameState = Omit<
@@ -168,6 +178,8 @@ type RawGameState = Omit<
   grainPileCapacity?: number;
   coins?: number;
   time_reference_ms?: number;
+  intel_briefing_entries?: RawIntelBriefingEntry[];
+  intelBriefingEntries?: RawIntelBriefingEntry[];
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -318,6 +330,51 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function normalizeInfoField(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return null;
+}
+
+function deserializeIntelBriefingEntries(
+  rawEntries: RawIntelBriefingEntry[] | null | undefined,
+): InfoEntry[] {
+  if (!Array.isArray(rawEntries)) {
+    return [];
+  }
+
+  const entries: InfoEntry[] = [];
+
+  rawEntries.forEach((entry) => {
+    const id = normalizeInfoField(entry.id);
+    const title = normalizeInfoField(entry.title);
+    const description = normalizeInfoField(entry.description);
+
+    if (!id || !title || !description) {
+      return;
+    }
+
+    entries.push({ id, title, description });
+  });
+
+  return entries;
+}
+
+function serializeIntelBriefingEntry(entry: InfoEntry): RawIntelBriefingEntry {
+  return {
+    id: entry.id,
+    title: entry.title,
+    description: entry.description,
+  };
+}
+
 function getLatestTimestamp(state: GameState, reference?: number | null): number | null {
   let latest: number | null = null;
   const consider = (value: number | null | undefined) => {
@@ -453,7 +510,27 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
 
 export function deserializeGameState(serialized: string): GameState | null {
   try {
-    const data = JSON.parse(serialized) as RawGameState;
+    if (typeof serialized !== "string") {
+      return null;
+    }
+
+    const trimmed = serialized.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+
+    let payload = trimmed;
+    if (trimmed.startsWith(SERIALIZED_PREFIX)) {
+      const encoded = trimmed.slice(SERIALIZED_PREFIX.length);
+      try {
+        payload = decompressString(encoded);
+      } catch (error) {
+        console.warn("Failed to decompress game state", error);
+        return null;
+      }
+    }
+
+    const data = JSON.parse(payload) as RawGameState;
     if (!data || typeof data !== "object") {
       return null;
     }
@@ -480,6 +557,10 @@ export function deserializeGameState(serialized: string): GameState | null {
     const coinProjectiles = deserializeCoinProjectiles(data.coin_projectiles ?? data.coinProjectiles);
     const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
+
+    const intelBriefingEntries = deserializeIntelBriefingEntries(
+      data.intel_briefing_entries ?? data.intelBriefingEntries,
+    );
 
     const state: GameState = {
       settlers,
@@ -517,6 +598,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       houseSpawnIntervalMs: data.house_spawn_interval_ms ?? 5_000,
       houseSpawnAmount: data.house_spawn_amount ?? 1,
       grainPileCapacity: data.grain_pile_capacity ?? data.grainPileCapacity ?? GRAIN_PILE_CAPACITY,
+      intelBriefingEntries,
     };
 
     const referenceTimestamp = data.time_reference_ms;
@@ -688,7 +770,16 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     grain_pile_capacity: state.grainPileCapacity,
     coins: state.coins,
     time_reference_ms: timestampMs,
+    intel_briefing_entries: state.intelBriefingEntries.map(serializeIntelBriefingEntry),
   };
 
-  return JSON.stringify(payload);
+  const json = JSON.stringify(payload);
+
+  try {
+    const compressed = compressString(json);
+    return `${SERIALIZED_PREFIX}${compressed}`;
+  } catch (error) {
+    console.warn("Failed to compress game state", error);
+    return json;
+  }
 }

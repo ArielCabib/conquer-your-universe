@@ -8,7 +8,7 @@ import {
 } from "react";
 import { STORAGE_KEY } from "../../constants";
 import { serializeGameState, deserializeGameState } from "../../persistence";
-import { GameState } from "../../types";
+import { GameState, InfoEntry } from "../../types";
 import {
   ensureCropRegistry,
   ensureFarmRegistry,
@@ -53,6 +53,7 @@ interface FileChangeOptions {
   setIsPaused: Dispatch<SetStateAction<boolean>>;
   pauseTimeRef: MutableRefObject<number | null>;
   setPlanetName: Dispatch<SetStateAction<string>>;
+  setInfoEntries: Dispatch<SetStateAction<InfoEntry[]>>;
 }
 
 export function useFileChangeHandler({
@@ -62,6 +63,7 @@ export function useFileChangeHandler({
   setIsPaused,
   pauseTimeRef,
   setPlanetName,
+  setInfoEntries,
 }: FileChangeOptions) {
   return useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +98,7 @@ export function useFileChangeHandler({
 
         gameStateRef.current = loadedState;
         setPlanetName(loadedState.planetName);
+        setInfoEntries(loadedState.intelBriefingEntries ?? []);
 
         try {
           if (typeof localStorage !== "undefined") {
@@ -125,6 +128,14 @@ export function useFileChangeHandler({
 
       input.value = "";
     },
-    [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused, setPlanetName],
+    [
+      gameStateRef,
+      pauseTimeRef,
+      setAliveCount,
+      setInfoEntries,
+      setIsModalOpen,
+      setIsPaused,
+      setPlanetName,
+    ],
   );
 }

@@ -1,5 +1,6 @@
 import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
-import { ContextMenuState, InfoEntry } from "../types";
+import { ContextMenuState } from "../types";
+import type { InfoEntry } from "../../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
 import { ControlModal, InfoModal } from "./Modal";
