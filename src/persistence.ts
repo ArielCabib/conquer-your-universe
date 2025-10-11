@@ -15,6 +15,7 @@ import {
   SettlerPhase,
   SettlerState,
 } from "./types";
+import { currentTimeMs } from "./app/helpers";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -127,6 +128,8 @@ type RawGameState = Omit<
   house_spawn_amount: number;
   grain_pile_capacity?: number;
   grainPileCapacity?: number;
+  time_reference_ms?: number;
+  timeReferenceMs?: number;
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -241,6 +244,115 @@ function deserializeMarket(raw: RawMarketState | null | undefined): MarketState 
   };
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function getLatestTimestamp(state: GameState, reference?: number | null): number | null {
+  let latest: number | null = null;
+  const consider = (value: number | null | undefined) => {
+    if (isFiniteNumber(value)) {
+      if (latest === null || value > latest) {
+        latest = value;
+      }
+    }
+  };
+
+  consider(reference);
+
+  state.settlers.forEach((settler) => {
+    consider(settler.moveStartMs);
+    consider(settler.lastDirectionChangeMs);
+    consider(settler.birthMs);
+    if (settler.phase.kind === "Fading") {
+      consider(settler.phase.startedMs);
+    }
+  });
+
+  state.houses.forEach((house) => {
+    consider(house.builtMs);
+    consider(house.lastSpawnMs);
+  });
+
+  state.farms.forEach((farm) => {
+    consider(farm.builtMs);
+    consider(farm.lastProducedMs);
+  });
+
+  state.crops.forEach((crop) => {
+    consider(crop.createdMs);
+  });
+
+  if (state.harvester) {
+    consider(state.harvester.builtMs);
+    consider(state.harvester.lastHarvestMs);
+  }
+
+  if (state.grainPile) {
+    consider(state.grainPile.createdMs);
+  }
+
+  state.grainProjectiles.forEach((projectile) => {
+    consider(projectile.launchedMs);
+  });
+
+  if (state.market) {
+    consider(state.market.builtMs);
+  }
+
+  return latest;
+}
+
+function shiftIfFinite(value: number, delta: number): number {
+  return Number.isFinite(value) ? value + delta : value;
+}
+
+function shiftGameStateTimestamps(state: GameState, delta: number): void {
+  if (delta === 0) {
+    return;
+  }
+
+  state.settlers.forEach((settler) => {
+    settler.moveStartMs += delta;
+    settler.lastDirectionChangeMs += delta;
+    settler.birthMs += delta;
+    if (settler.phase.kind === "Fading") {
+      settler.phase.startedMs += delta;
+    }
+  });
+
+  state.houses.forEach((house) => {
+    house.builtMs = shiftIfFinite(house.builtMs, delta);
+    house.lastSpawnMs = shiftIfFinite(house.lastSpawnMs, delta);
+  });
+
+  state.farms.forEach((farm) => {
+    farm.builtMs = shiftIfFinite(farm.builtMs, delta);
+    farm.lastProducedMs = shiftIfFinite(farm.lastProducedMs, delta);
+  });
+
+  state.crops.forEach((crop) => {
+    crop.createdMs = shiftIfFinite(crop.createdMs, delta);
+  });
+
+  if (state.harvester) {
+    state.harvester.builtMs = shiftIfFinite(state.harvester.builtMs, delta);
+    state.harvester.lastHarvestMs = shiftIfFinite(state.harvester.lastHarvestMs, delta);
+  }
+
+  if (state.grainPile) {
+    state.grainPile.createdMs = shiftIfFinite(state.grainPile.createdMs, delta);
+  }
+
+  state.grainProjectiles.forEach((projectile) => {
+    projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
+  });
+
+  if (state.market) {
+    state.market.builtMs = shiftIfFinite(state.market.builtMs, delta);
+  }
+}
+
 export function deserializeGameState(serialized: string): GameState | null {
   try {
     const data = JSON.parse(serialized) as RawGameState;
@@ -262,7 +374,7 @@ export function deserializeGameState(serialized: string): GameState | null {
     const nextGrainProjectileId = data.next_grain_projectile_id ?? data.nextGrainProjectileId ?? 0;
     const market = deserializeMarket(data.market);
 
-    return {
+    const state: GameState = {
       settlers,
       houses,
       farms,
@@ -290,6 +402,18 @@ export function deserializeGameState(serialized: string): GameState | null {
       houseSpawnAmount: data.house_spawn_amount ?? 1,
       grainPileCapacity: data.grain_pile_capacity ?? data.grainPileCapacity ?? GRAIN_PILE_CAPACITY,
     };
+
+    const referenceTimestamp = data.time_reference_ms ?? data.timeReferenceMs;
+    const baseline = getLatestTimestamp(state, referenceTimestamp);
+
+    if (baseline !== null) {
+      const delta = currentTimeMs() - baseline;
+      if (Math.abs(delta) > 0.001) {
+        shiftGameStateTimestamps(state, delta);
+      }
+    }
+
+    return state;
   } catch (error) {
     console.warn("Failed to deserialize game state", error);
     return null;
@@ -397,7 +521,7 @@ function serializeMarket(market: MarketState | null): RawMarketState | null {
   };
 }
 
-export function serializeGameState(state: GameState): string {
+export function serializeGameState(state: GameState, timestampMs: number = currentTimeMs()): string {
   const payload: RawGameState = {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
@@ -425,6 +549,7 @@ export function serializeGameState(state: GameState): string {
     house_spawn_interval_ms: state.houseSpawnIntervalMs,
     house_spawn_amount: state.houseSpawnAmount,
     grain_pile_capacity: state.grainPileCapacity,
+    time_reference_ms: timestampMs,
   };
 
   return JSON.stringify(payload);
