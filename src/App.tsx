@@ -33,17 +33,17 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
   explore: {
     id: "explore",
     title: "Scout the Surface",
-    description: "Click around the planet to uncover interactive zones and begin guiding your settlers.",
+    description: "Clicking the planet produces a settler.",
   },
   build: {
     id: "build",
     title: "Establish Housing",
-    description: "Right click the planet to place a house. Homes expand your population capacity and unlock new growth.",
+    description: "Having a settler allows you to build a house. Houses expand your population capacity.",
   },
   farm: {
     id: "farm",
     title: "Cultivate Farms",
-    description: "Right click again once you have enough settlers to construct farms. Farms extend settler lifespans with fresh crops.",
+    description: "Having at least ten settlers allows you to build a farm. Farms produce crops that can be processed into grains.",
   },
   harvester: {
     id: "harvester",
@@ -53,7 +53,7 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
   market: {
     id: "market",
     title: "Open the Market",
-    description: "Stockpile thirty grains to build a market. Trade routes unlock advanced upgrades for your thriving colony.",
+    description: "Stockpile thirty grains to build a market. Markets convert grains into coins.",
   },
 };
 
