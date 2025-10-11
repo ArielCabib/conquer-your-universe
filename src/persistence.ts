@@ -129,7 +129,6 @@ type RawGameState = Omit<
   grain_pile_capacity?: number;
   grainPileCapacity?: number;
   time_reference_ms?: number;
-  timeReferenceMs?: number;
 };
 
 function normalizeSettlerPhase(phase: RawSettlerPhase | SettlerPhase): SettlerPhase {
@@ -403,7 +402,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       grainPileCapacity: data.grain_pile_capacity ?? data.grainPileCapacity ?? GRAIN_PILE_CAPACITY,
     };
 
-    const referenceTimestamp = data.time_reference_ms ?? data.timeReferenceMs;
+    const referenceTimestamp = data.time_reference_ms;
     const baseline = getLatestTimestamp(state, referenceTimestamp);
 
     if (baseline !== null) {
