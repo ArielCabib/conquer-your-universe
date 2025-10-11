@@ -10,11 +10,14 @@ export function usePeriodicSave(gameStateRef: MutableRefObject<GameState>) {
     }
 
     const interval = window.setInterval(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, serializeGameState(gameStateRef.current));
-      } catch (error) {
-        console.warn("Failed to persist game state", error);
-      }
+      void (async () => {
+        try {
+          const serialized = await serializeGameState(gameStateRef.current);
+          localStorage.setItem(STORAGE_KEY, serialized);
+        } catch (error) {
+          console.warn("Failed to persist game state", error);
+        }
+      })();
     }, 1_000);
 
     return () => {

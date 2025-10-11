@@ -55,13 +55,16 @@ export function useBuildHouseMenuHandler({
       const builtAt = currentTimeMs();
       state.houses.push(createHouseState(houseId, menuState.canvasX, menuState.canvasY, builtAt));
 
-      try {
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+      void (async () => {
+        try {
+          if (typeof localStorage !== "undefined") {
+            const serialized = await serializeGameState(state);
+            localStorage.setItem(STORAGE_KEY, serialized);
+          }
+        } catch (error) {
+          console.warn("Failed to persist game state after building house", error);
         }
-      } catch (error) {
-        console.warn("Failed to persist game state after building house", error);
-      }
+      })();
 
       setContextMenuState(null);
     },
@@ -122,13 +125,16 @@ export function useBuildFarmMenuHandler({
         }
       });
 
-      try {
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+      void (async () => {
+        try {
+          if (typeof localStorage !== "undefined") {
+            const serialized = await serializeGameState(state);
+            localStorage.setItem(STORAGE_KEY, serialized);
+          }
+        } catch (error) {
+          console.warn("Failed to persist game state after building farm", error);
         }
-      } catch (error) {
-        console.warn("Failed to persist game state after building farm", error);
-      }
+      })();
 
       setContextMenuState(null);
     },
@@ -174,13 +180,16 @@ export function useBuildHarvesterMenuHandler({
       const builtAt = currentTimeMs();
       state.harvester = createHarvesterState(menuState.canvasX, menuState.canvasY, builtAt);
 
-      try {
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+      void (async () => {
+        try {
+          if (typeof localStorage !== "undefined") {
+            const serialized = await serializeGameState(state);
+            localStorage.setItem(STORAGE_KEY, serialized);
+          }
+        } catch (error) {
+          console.warn("Failed to persist game state after building harvester", error);
         }
-      } catch (error) {
-        console.warn("Failed to persist game state after building harvester", error);
-      }
+      })();
 
       setContextMenuState(null);
     },
@@ -226,13 +235,16 @@ export function useBuildMarketMenuHandler({
       const builtAt = currentTimeMs();
       state.market = createMarketState(menuState.canvasX, menuState.canvasY, builtAt);
 
-      try {
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+      void (async () => {
+        try {
+          if (typeof localStorage !== "undefined") {
+            const serialized = await serializeGameState(state);
+            localStorage.setItem(STORAGE_KEY, serialized);
+          }
+        } catch (error) {
+          console.warn("Failed to persist game state after building market", error);
         }
-      } catch (error) {
-        console.warn("Failed to persist game state after building market", error);
-      }
+      })();
 
       setContextMenuState(null);
     },

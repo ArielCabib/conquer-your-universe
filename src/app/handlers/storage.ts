@@ -28,21 +28,23 @@ export function useOpenFileDialogHandler(fileInputRef: RefObject<HTMLInputElemen
 export function useSaveGameHandler(gameStateRef: MutableRefObject<GameState>) {
   return useCallback(() => {
     const state = gameStateRef.current;
-    try {
-      const serialized = serializeGameState(state);
-      const blob = new Blob([serialized], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+    void (async () => {
+      try {
+        const serialized = await serializeGameState(state);
+        const blob = new Blob([serialized], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
 
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "conquer-your-universe-save.json";
-      document.body?.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.warn("Failed to create save file", error);
-    }
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "conquer-your-universe-save.json";
+        document.body?.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.warn("Failed to create save file", error);
+      }
+    })();
   }, [gameStateRef]);
 }
 
@@ -85,35 +87,38 @@ export function useFileChangeHandler({
           return;
         }
 
-        const loadedState = deserializeGameState(text);
-        if (!loadedState) {
-          console.warn("Unable to parse game file");
-          return;
-        }
-
-        ensureSettlerLifespans(loadedState);
-        ensureHouseRegistry(loadedState);
-        ensureFarmRegistry(loadedState);
-        ensureCropRegistry(loadedState);
-
-        gameStateRef.current = loadedState;
-        setPlanetName(loadedState.planetName);
-        setInfoEntries(loadedState.intelBriefingEntries ?? []);
-
-        try {
-          if (typeof localStorage !== "undefined") {
-            localStorage.setItem(STORAGE_KEY, serializeGameState(loadedState));
+        void (async () => {
+          const loadedState = await deserializeGameState(text);
+          if (!loadedState) {
+            console.warn("Unable to parse game file");
+            return;
           }
-        } catch (error) {
-          console.warn("Failed to persist loaded game state", error);
-        }
 
-        const aliveTotal = loadedState.settlers.filter((settler) => settler.phase.kind === "Alive").length;
+          ensureSettlerLifespans(loadedState);
+          ensureHouseRegistry(loadedState);
+          ensureFarmRegistry(loadedState);
+          ensureCropRegistry(loadedState);
 
-        setAliveCount(aliveTotal);
-        pauseTimeRef.current = null;
-        setIsPaused(false);
-        setIsModalOpen(false);
+          gameStateRef.current = loadedState;
+          setPlanetName(loadedState.planetName);
+          setInfoEntries(loadedState.intelBriefingEntries ?? []);
+
+          try {
+            if (typeof localStorage !== "undefined") {
+              const serialized = await serializeGameState(loadedState);
+              localStorage.setItem(STORAGE_KEY, serialized);
+            }
+          } catch (error) {
+            console.warn("Failed to persist loaded game state", error);
+          }
+
+          const aliveTotal = loadedState.settlers.filter((settler) => settler.phase.kind === "Alive").length;
+
+          setAliveCount(aliveTotal);
+          pauseTimeRef.current = null;
+          setIsPaused(false);
+          setIsModalOpen(false);
+        })();
       };
 
       reader.onerror = () => {

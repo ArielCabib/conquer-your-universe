@@ -19,25 +19,41 @@ export function useRestoreState(
       return;
     }
 
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const restored = deserializeGameState(stored);
-        if (restored) {
-          ensureSettlerLifespans(restored);
-          ensureHouseRegistry(restored);
-          ensureFarmRegistry(restored);
-          ensureCropRegistry(restored);
-          ensureHarvesterResources(restored);
-          gameStateRef.current = restored;
-          onRestore?.(restored);
-          return;
+    let isCancelled = false;
+
+    void (async () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const restored = await deserializeGameState(stored);
+          if (restored) {
+            ensureSettlerLifespans(restored);
+            ensureHouseRegistry(restored);
+            ensureFarmRegistry(restored);
+            ensureCropRegistry(restored);
+            ensureHarvesterResources(restored);
+            if (isCancelled) {
+              return;
+            }
+            gameStateRef.current = restored;
+            onRestore?.(restored);
+            return;
+          }
+        }
+
+        const serialized = await serializeGameState(gameStateRef.current);
+        if (!isCancelled) {
+          localStorage.setItem(STORAGE_KEY, serialized);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.warn("Failed to restore game state", error);
         }
       }
+    })();
 
-      localStorage.setItem(STORAGE_KEY, serializeGameState(gameStateRef.current));
-    } catch (error) {
-      console.warn("Failed to restore game state", error);
-    }
+    return () => {
+      isCancelled = true;
+    };
   }, [gameStateRef, onRestore]);
 }

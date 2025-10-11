@@ -37,13 +37,16 @@ export function useRestartGameHandler({
   return useCallback(() => {
     gameStateRef.current = createInitialGameState();
 
-    try {
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, serializeGameState(gameStateRef.current));
+    void (async () => {
+      try {
+        if (typeof localStorage !== "undefined") {
+          const serialized = await serializeGameState(gameStateRef.current);
+          localStorage.setItem(STORAGE_KEY, serialized);
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after restart", error);
       }
-    } catch (error) {
-      console.warn("Failed to persist game state after restart", error);
-    }
+    })();
 
     setAliveCount(0);
     setPlanetName(gameStateRef.current.planetName);

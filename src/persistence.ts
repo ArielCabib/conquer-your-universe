@@ -21,7 +21,8 @@ import {
 import { currentTimeMs } from "./app/helpers";
 import { compressString, decompressString } from "./utils/compression";
 
-const SERIALIZED_PREFIX = "lz:";
+const SERIALIZED_PREFIX = "gz:";
+const LEGACY_SERIALIZED_PREFIX = "lz:";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -508,7 +509,7 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
   }
 }
 
-export function deserializeGameState(serialized: string): GameState | null {
+export async function deserializeGameState(serialized: string): Promise<GameState | null> {
   try {
     if (typeof serialized !== "string") {
       return null;
@@ -523,11 +524,14 @@ export function deserializeGameState(serialized: string): GameState | null {
     if (trimmed.startsWith(SERIALIZED_PREFIX)) {
       const encoded = trimmed.slice(SERIALIZED_PREFIX.length);
       try {
-        payload = decompressString(encoded);
+        payload = await decompressString(encoded);
       } catch (error) {
         console.warn("Failed to decompress game state", error);
         return null;
       }
+    } else if (trimmed.startsWith(LEGACY_SERIALIZED_PREFIX)) {
+      console.warn("Legacy compressed game states are no longer supported");
+      return null;
     }
 
     const data = JSON.parse(payload) as RawGameState;
@@ -735,7 +739,10 @@ function serializeMarket(market: MarketState | null): RawMarketState | null {
   };
 }
 
-export function serializeGameState(state: GameState, timestampMs: number = currentTimeMs()): string {
+export async function serializeGameState(
+  state: GameState,
+  timestampMs: number = currentTimeMs(),
+): Promise<string> {
   const payload: RawGameState = {
     settlers: state.settlers.map(serializeSettler),
     houses: state.houses.map(serializeHouse),
@@ -776,8 +783,11 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
   const json = JSON.stringify(payload);
 
   try {
-    const compressed = compressString(json);
-    return `${SERIALIZED_PREFIX}${compressed}`;
+    const { data, compressed } = await compressString(json);
+    if (compressed) {
+      return `${SERIALIZED_PREFIX}${data}`;
+    }
+    return data;
   } catch (error) {
     console.warn("Failed to compress game state", error);
     return json;
