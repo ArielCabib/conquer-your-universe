@@ -9,6 +9,7 @@ import {
   PLANET_CENTER_Y,
   PLANET_RADIUS,
   SETTLER_RADIUS,
+  GAME_STATE_VERSION,
 } from "./constants";
 import { easeOutQuad } from "./utils/easing";
 
@@ -107,6 +108,7 @@ export interface CoinProjectileState {
 }
 
 export interface GameState {
+  version: number;
   planetName: string;
   settlers: SettlerState[];
   nextSettlerId: number;
@@ -143,6 +145,7 @@ export interface GameState {
 
 export function createInitialGameState(): GameState {
   return {
+    version: GAME_STATE_VERSION,
     planetName: "Your Planet",
     settlers: [],
     nextSettlerId: 0,
