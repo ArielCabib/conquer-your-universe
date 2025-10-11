@@ -3,5 +3,6 @@ export { drawFarm } from "./farm";
 export { drawCrop } from "./crop";
 export { drawHarvester } from "./harvester";
 export { drawGrainPile } from "./grainPile";
+export { drawCropProjectile } from "./cropProjectile";
 export { drawGrainProjectile } from "./grainProjectile";
 export { drawMarket } from "./market";

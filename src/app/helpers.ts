@@ -133,10 +133,36 @@ export function ensureHarvesterResources(state: GameState): void {
     ) {
       state.harvester.lastHarvestMs = state.harvester.builtMs;
     }
+
+    if (
+      typeof state.harvester.spinLevel !== "number" ||
+      !Number.isFinite(state.harvester.spinLevel) ||
+      state.harvester.spinLevel < 0
+    ) {
+      state.harvester.spinLevel = 0;
+    }
+
+    if (
+      typeof state.harvester.rotationAngle !== "number" ||
+      !Number.isFinite(state.harvester.rotationAngle)
+    ) {
+      state.harvester.rotationAngle = 0;
+    }
+
+    if (
+      typeof state.harvester.lastSpinUpdateMs !== "number" ||
+      !Number.isFinite(state.harvester.lastSpinUpdateMs)
+    ) {
+      state.harvester.lastSpinUpdateMs = state.harvester.builtMs;
+    }
   }
 
   if (!Array.isArray(state.grainProjectiles)) {
     state.grainProjectiles = [];
+  }
+
+  if (!Array.isArray(state.cropProjectiles)) {
+    state.cropProjectiles = [];
   }
 
   if (
@@ -153,6 +179,14 @@ export function ensureHarvesterResources(state: GameState): void {
     state.nextGrainProjectileId < 0
   ) {
     state.nextGrainProjectileId = 0;
+  }
+
+  if (
+    typeof state.nextCropProjectileId !== "number" ||
+    !Number.isFinite(state.nextCropProjectileId) ||
+    state.nextCropProjectileId < 0
+  ) {
+    state.nextCropProjectileId = 0;
   }
 
   if (state.grainPile) {
