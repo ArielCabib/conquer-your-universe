@@ -48,6 +48,7 @@ interface AppViewProps {
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
+  coinCount: number;
   infoEntries: InfoEntry[];
   isInfoModalActive: boolean;
   onCloseInfo: () => void;
@@ -95,6 +96,7 @@ export function AppView({
   grainsInFlight,
   hasHarvester,
   hasMarket,
+  coinCount,
   infoEntries,
   isInfoModalActive,
   onCloseInfo,
@@ -141,6 +143,7 @@ export function AppView({
           grainsInFlight={grainsInFlight}
           hasHarvester={hasHarvester}
           hasMarket={hasMarket}
+          coinCount={coinCount}
         />
       </section>
       <input

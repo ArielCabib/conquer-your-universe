@@ -3,6 +3,9 @@ import {
   CROP_FLIGHT_DURATION_MS,
   FADING_DURATION_MS,
   GRAIN_THROW_DURATION_MS,
+  MARKET_COIN_RISE_DURATION_MS,
+  MARKET_GRAIN_FLIGHT_DURATION_MS,
+  MARKET_SELL_INTERVAL_MS,
   HARVESTER_PROCESS_INTERVAL_MS,
   MOVE_INTERVAL_MS,
   ORBIT_02,
@@ -14,11 +17,13 @@ import {
   CropState,
   GameState,
   GrainProjectileState,
+  CoinProjectileState,
   SettlerState,
   createCropProjectileState,
   createCropState,
   createGrainPileState,
   createGrainProjectileState,
+  createCoinProjectileState,
   createSettlerState,
   settlerPositionAt,
 } from "../../../types";
@@ -361,6 +366,77 @@ export function handleActiveState(
       }
     }
   }
+
+  const market = state.market;
+  if (market) {
+    if (!Array.isArray(state.marketGrainProjectiles)) {
+      state.marketGrainProjectiles = [];
+    }
+    if (!Array.isArray(state.coinProjectiles)) {
+      state.coinProjectiles = [];
+    }
+
+    const pile = state.grainPile;
+    const grainAvailable = Boolean(pile && pile.grains > 0);
+    if (pile && grainAvailable && now - market.lastSaleMs >= MARKET_SELL_INTERVAL_MS) {
+      pile.grains = Math.max(0, pile.grains - 1);
+      market.lastSaleMs = now;
+
+      const projectileId = state.nextGrainProjectileId;
+      state.nextGrainProjectileId = projectileId + 1;
+
+      const startX = pile.x + randomRange(-6, 6);
+      const startY = pile.y - 12 + randomRange(-4, 4);
+      const endX = market.x + randomRange(-6, 6);
+      const endY = market.y - 26 + randomRange(-4, 4);
+
+      const grainToMarket = createGrainProjectileState(
+        projectileId,
+        startX,
+        startY,
+        endX,
+        endY,
+        now,
+        MARKET_GRAIN_FLIGHT_DURATION_MS,
+      );
+
+      state.marketGrainProjectiles.push(grainToMarket);
+    }
+
+    const remainingMarketProjectiles: GrainProjectileState[] = [];
+    for (const projectile of state.marketGrainProjectiles) {
+      const elapsed = now - projectile.launchedMs;
+      if (elapsed >= projectile.durationMs) {
+        const coinId = state.nextCoinProjectileId;
+        state.nextCoinProjectileId = coinId + 1;
+
+        const launchY = projectile.endY - 12;
+        const coin = createCoinProjectileState(
+          coinId,
+          projectile.endX,
+          launchY,
+          launchY - 40,
+          now,
+          MARKET_COIN_RISE_DURATION_MS,
+        );
+
+        state.coinProjectiles.push(coin);
+        state.coins = Math.max(0, state.coins + 1);
+        continue;
+      }
+      remainingMarketProjectiles.push(projectile);
+    }
+    state.marketGrainProjectiles = remainingMarketProjectiles;
+  }
+
+  const remainingCoins: CoinProjectileState[] = [];
+  for (const coin of state.coinProjectiles) {
+    const elapsed = now - coin.launchedMs;
+    if (elapsed < coin.durationMs) {
+      remainingCoins.push(coin);
+    }
+  }
+  state.coinProjectiles = remainingCoins;
 
   renderStructures(context, state, now);
   setAliveCount(aliveTotal);

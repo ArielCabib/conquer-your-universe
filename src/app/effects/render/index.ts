@@ -23,6 +23,7 @@ import {
   drawHarvester,
   drawHouse,
   drawMarket,
+  drawCoinProjectile,
 } from "../../drawing";
 import { handleActiveState } from "./active";
 import { renderPausedState } from "./paused";
@@ -57,11 +58,17 @@ function renderStructures(
   for (const projectile of state.grainProjectiles) {
     drawGrainProjectile(context, projectile, now);
   }
+  for (const projectile of state.marketGrainProjectiles) {
+    drawGrainProjectile(context, projectile, now);
+  }
   for (const house of state.houses) {
     drawHouse(context, house, now);
   }
   if (state.market) {
     drawMarket(context, state.market, now);
+  }
+  for (const coin of state.coinProjectiles) {
+    drawCoinProjectile(context, coin, now);
   }
 }
 

@@ -165,6 +165,14 @@ export function ensureHarvesterResources(state: GameState): void {
     state.cropProjectiles = [];
   }
 
+  if (!Array.isArray(state.marketGrainProjectiles)) {
+    state.marketGrainProjectiles = [];
+  }
+
+  if (!Array.isArray(state.coinProjectiles)) {
+    state.coinProjectiles = [];
+  }
+
   if (
     typeof state.grainPileCapacity !== "number" ||
     !Number.isFinite(state.grainPileCapacity) ||
@@ -189,6 +197,14 @@ export function ensureHarvesterResources(state: GameState): void {
     state.nextCropProjectileId = 0;
   }
 
+  if (
+    typeof state.nextCoinProjectileId !== "number" ||
+    !Number.isFinite(state.nextCoinProjectileId) ||
+    state.nextCoinProjectileId < 0
+  ) {
+    state.nextCoinProjectileId = 0;
+  }
+
   if (state.grainPile) {
     if (typeof state.grainPile.grains !== "number" || !Number.isFinite(state.grainPile.grains)) {
       state.grainPile.grains = 0;
@@ -202,6 +218,17 @@ export function ensureHarvesterResources(state: GameState): void {
 
     if (state.grainPile.grains > capacity) {
       state.grainPile.grains = capacity;
+    }
+  }
+
+  state.coins =
+    typeof state.coins === "number" && Number.isFinite(state.coins)
+      ? Math.max(0, state.coins)
+      : 0;
+
+  if (state.market) {
+    if (typeof state.market.lastSaleMs !== "number" || !Number.isFinite(state.market.lastSaleMs)) {
+      state.market.lastSaleMs = state.market.builtMs;
     }
   }
 }

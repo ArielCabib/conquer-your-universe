@@ -10,6 +10,7 @@ import {
   GameState,
   GrainPileState,
   GrainProjectileState,
+  CoinProjectileState,
   HarvesterState,
   HouseState,
   MarketState,
@@ -81,9 +82,13 @@ type RawGrainProjectileState = GrainProjectileState;
 
 type RawCropProjectileState = CropProjectileState;
 
-type RawMarketState = Omit<MarketState, "builtMs"> & {
+type RawCoinProjectileState = CoinProjectileState;
+
+type RawMarketState = Omit<MarketState, "builtMs" | "lastSaleMs"> & {
   built_ms?: number;
   builtMs?: number;
+  last_sale_ms?: number;
+  lastSaleMs?: number;
 };
 
 type RawGameState = Omit<
@@ -112,10 +117,14 @@ type RawGameState = Omit<
   | "grainPile"
   | "cropProjectiles"
   | "grainProjectiles"
+  | "marketGrainProjectiles"
+  | "coinProjectiles"
   | "nextCropProjectileId"
   | "nextGrainProjectileId"
+  | "nextCoinProjectileId"
   | "market"
   | "grainPileCapacity"
+  | "coins"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -126,12 +135,18 @@ type RawGameState = Omit<
   grainPile?: RawGrainPileState | null;
   grain_projectiles?: RawGrainProjectileState[];
   grainProjectiles?: RawGrainProjectileState[];
+  market_grain_projectiles?: RawGrainProjectileState[];
+  marketGrainProjectiles?: RawGrainProjectileState[];
   crop_projectiles?: RawCropProjectileState[];
   cropProjectiles?: RawCropProjectileState[];
   next_grain_projectile_id?: number;
   nextGrainProjectileId?: number;
+  coin_projectiles?: RawCoinProjectileState[];
+  coinProjectiles?: RawCoinProjectileState[];
   next_crop_projectile_id?: number;
   nextCropProjectileId?: number;
+  next_coin_projectile_id?: number;
+  nextCoinProjectileId?: number;
   market?: RawMarketState | null;
   planet_name?: string;
   next_settler_id: number;
@@ -151,6 +166,7 @@ type RawGameState = Omit<
   house_spawn_amount: number;
   grain_pile_capacity?: number;
   grainPileCapacity?: number;
+  coins?: number;
   time_reference_ms?: number;
 };
 
@@ -274,6 +290,16 @@ function deserializeCropProjectiles(
   return rawProjectiles.map((projectile) => ({ ...projectile }));
 }
 
+function deserializeCoinProjectiles(
+  rawProjectiles: RawCoinProjectileState[] | null | undefined,
+): CoinProjectileState[] {
+  if (!Array.isArray(rawProjectiles)) {
+    return [];
+  }
+
+  return rawProjectiles.map((projectile) => ({ ...projectile }));
+}
+
 function deserializeMarket(raw: RawMarketState | null | undefined): MarketState | null {
   if (!raw) {
     return null;
@@ -283,6 +309,8 @@ function deserializeMarket(raw: RawMarketState | null | undefined): MarketState 
     x: raw.x,
     y: raw.y,
     builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+    lastSaleMs:
+      raw.last_sale_ms ?? raw.lastSaleMs ?? raw.built_ms ?? raw.builtMs ?? 0,
   };
 }
 
@@ -343,8 +371,17 @@ function getLatestTimestamp(state: GameState, reference?: number | null): number
     consider(projectile.launchedMs);
   });
 
+  state.marketGrainProjectiles.forEach((projectile) => {
+    consider(projectile.launchedMs);
+  });
+
+  state.coinProjectiles.forEach((projectile) => {
+    consider(projectile.launchedMs);
+  });
+
   if (state.market) {
     consider(state.market.builtMs);
+    consider(state.market.lastSaleMs);
   }
 
   return latest;
@@ -400,8 +437,17 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
     projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
   });
 
+  state.marketGrainProjectiles.forEach((projectile) => {
+    projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
+  });
+
+  state.coinProjectiles.forEach((projectile) => {
+    projectile.launchedMs = shiftIfFinite(projectile.launchedMs, delta);
+  });
+
   if (state.market) {
     state.market.builtMs = shiftIfFinite(state.market.builtMs, delta);
+    state.market.lastSaleMs = shiftIfFinite(state.market.lastSaleMs, delta);
   }
 }
 
@@ -423,11 +469,16 @@ export function deserializeGameState(serialized: string): GameState | null {
     const grainProjectiles = deserializeGrainProjectiles(
       data.grain_projectiles ?? data.grainProjectiles,
     );
+    const marketGrainProjectiles = deserializeGrainProjectiles(
+      data.market_grain_projectiles ?? data.marketGrainProjectiles,
+    );
     const cropProjectiles = deserializeCropProjectiles(
       data.crop_projectiles ?? data.cropProjectiles,
     );
     const nextGrainProjectileId = data.next_grain_projectile_id ?? data.nextGrainProjectileId ?? 0;
     const nextCropProjectileId = data.next_crop_projectile_id ?? data.nextCropProjectileId ?? 0;
+    const coinProjectiles = deserializeCoinProjectiles(data.coin_projectiles ?? data.coinProjectiles);
+    const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
 
     const state: GameState = {
@@ -446,9 +497,16 @@ export function deserializeGameState(serialized: string): GameState | null {
       grainPile,
       cropProjectiles,
       grainProjectiles,
+      marketGrainProjectiles,
+      coinProjectiles,
       nextCropProjectileId,
       nextGrainProjectileId,
+      nextCoinProjectileId,
       market,
+      coins:
+        typeof data.coins === "number" && Number.isFinite(data.coins)
+          ? Math.max(0, data.coins)
+          : 0,
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
@@ -576,6 +634,12 @@ function serializeCropProjectiles(
   return projectiles.map((projectile) => ({ ...projectile }));
 }
 
+function serializeCoinProjectiles(
+  projectiles: CoinProjectileState[],
+): RawCoinProjectileState[] {
+  return projectiles.map((projectile) => ({ ...projectile }));
+}
+
 function serializeMarket(market: MarketState | null): RawMarketState | null {
   if (!market) {
     return null;
@@ -585,6 +649,7 @@ function serializeMarket(market: MarketState | null): RawMarketState | null {
     x: market.x,
     y: market.y,
     built_ms: market.builtMs,
+    last_sale_ms: market.lastSaleMs,
   };
 }
 
@@ -598,8 +663,11 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     grain_pile: serializeGrainPile(state.grainPile),
     crop_projectiles: serializeCropProjectiles(state.cropProjectiles),
     grain_projectiles: serializeGrainProjectiles(state.grainProjectiles),
+    market_grain_projectiles: serializeGrainProjectiles(state.marketGrainProjectiles),
+    coin_projectiles: serializeCoinProjectiles(state.coinProjectiles),
     next_crop_projectile_id: state.nextCropProjectileId,
     next_grain_projectile_id: state.nextGrainProjectileId,
+    next_coin_projectile_id: state.nextCoinProjectileId,
     market: serializeMarket(state.market),
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
@@ -618,6 +686,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     house_spawn_interval_ms: state.houseSpawnIntervalMs,
     house_spawn_amount: state.houseSpawnAmount,
     grain_pile_capacity: state.grainPileCapacity,
+    coins: state.coins,
     time_reference_ms: timestampMs,
   };
 

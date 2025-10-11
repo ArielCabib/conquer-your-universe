@@ -178,10 +178,12 @@ export function App() {
   const canBuildHarvester = !hasHarvester && totalCrops >= 5;
   const grainPile = state.grainPile;
   const grainCount = grainPile?.grains ?? 0;
-  const grainsInFlight = state.grainProjectiles.length + state.cropProjectiles.length;
+  const grainsInFlight =
+    state.grainProjectiles.length + state.cropProjectiles.length + state.marketGrainProjectiles.length;
   const grainCapacity = state.grainPileCapacity;
   const hasMarket = Boolean(state.market);
   const canBuildMarket = Boolean(grainPile && grainPile.grains >= 30 && !hasMarket);
+  const coinCount = state.coins ?? 0;
   const hasContextMenuActions =
     canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket;
 
@@ -340,6 +342,7 @@ export function App() {
       grainsInFlight={grainsInFlight}
       hasHarvester={hasHarvester}
       hasMarket={hasMarket}
+      coinCount={coinCount}
       infoEntries={infoEntries}
       isInfoModalActive={isInfoModalOpen}
       onCloseInfo={closeInfoModal}

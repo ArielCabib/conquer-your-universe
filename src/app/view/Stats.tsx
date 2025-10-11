@@ -17,6 +17,7 @@ interface StatsPanelProps {
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
+  coinCount: number;
 }
 
 function formatSeconds(ms: number): string {
@@ -41,6 +42,7 @@ export function StatsPanel({
   grainsInFlight,
   hasHarvester,
   hasMarket,
+  coinCount,
 }: StatsPanelProps) {
   const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
   const spawnLabel = houseSpawnAmount === 1 ? "settler" : "settlers";
@@ -111,6 +113,7 @@ export function StatsPanel({
     grainsInFlight,
     hasHarvester,
     hasMarket,
+    coinCount,
   ]);
 
   if (aliveNow > 0) {
@@ -181,6 +184,17 @@ export function StatsPanel({
         className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
       >
         Market established
+      </div>,
+    );
+  }
+
+  if (hasMarket || coinCount > 0) {
+    statCards.push(
+      <div
+        key="coins"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
+        Coins: {coinCount}
       </div>,
     );
   }
