@@ -70,7 +70,7 @@ export function BuildPrompt({ message }: BuildPromptProps) {
           : "";
 
   return (
-    <div className="pointer-events-none fixed left-1/2 top-1/2 z-20 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 justify-center px-4">
+    <div className="pointer-events-none fixed left-1/2 top-1/3 z-20 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 justify-center px-4">
       <div
         className={`prompt-badge ${animationClassName} rounded-xl border border-orbit-03/35 bg-panel-soft px-4 py-2 font-trebuchet text-[0.95rem] uppercase tracking-[0.04em] text-orbit-05 shadow-[0_12px_24px_rgba(var(--orbit-01-rgb)_/_0.45)]`}
       >
