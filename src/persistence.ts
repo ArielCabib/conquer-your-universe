@@ -19,6 +19,8 @@ import {
   SettlerState,
 } from "./types";
 import { currentTimeMs } from "./app/helpers";
+import type { InfoEntry } from "./infoEntries";
+import { getAllInfoEntries, normalizeInfoEntries } from "./infoEntries";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -127,6 +129,7 @@ type RawGameState = Omit<
   | "grainPileCapacity"
   | "coins"
   | "version"
+  | "infoEntries"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -171,13 +174,25 @@ type RawGameState = Omit<
   coins?: number;
   version?: number;
   time_reference_ms?: number;
+  info_entries?: InfoEntry[];
+  infoEntries?: InfoEntry[];
 };
 
 type VersionedRawGameState = RawGameState & { version: number };
 
 type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | null;
 
-const migrations: Partial<Record<number, MigrationFn>> = {};
+const migrations: Partial<Record<number, MigrationFn>> = {
+  1: (state) => {
+    const entries = getAllInfoEntries();
+    return {
+      ...state,
+      version: 2,
+      info_entries: entries,
+      infoEntries: entries,
+    };
+  },
+};
 
 function toVersionedRawGameState(raw: RawGameState): VersionedRawGameState | null {
   const version = raw.version;
@@ -563,6 +578,7 @@ export function deserializeGameState(serialized: string): GameState | null {
         typeof data.coins === "number" && Number.isFinite(data.coins)
           ? Math.max(0, data.coins)
           : 0,
+      infoEntries: normalizeInfoEntries(data.info_entries ?? data.infoEntries),
       settlersBaseCapacity: data.settlers_base_capacity ?? 10,
       housesBaseCapacity: data.houses_base_capacity ?? 5,
       farmsBaseCapacity: data.farms_base_capacity ?? 5,
@@ -744,6 +760,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     house_spawn_amount: state.houseSpawnAmount,
     grain_pile_capacity: state.grainPileCapacity,
     coins: state.coins,
+    info_entries: state.infoEntries.map((entry) => ({ ...entry })),
     time_reference_ms: timestampMs,
   };
 

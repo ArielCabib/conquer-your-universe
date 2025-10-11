@@ -12,6 +12,7 @@ import {
   GAME_STATE_VERSION,
 } from "./constants";
 import { easeOutQuad } from "./utils/easing";
+import type { InfoEntry } from "./infoEntries";
 
 export type SettlerPhase =
   | { kind: "Alive" }
@@ -141,6 +142,7 @@ export interface GameState {
   farmCropSpawnIntervalMs: number;
   houseSpawnIntervalMs: number;
   houseSpawnAmount: number;
+  infoEntries: InfoEntry[];
 }
 
 export function createInitialGameState(): GameState {
@@ -178,6 +180,7 @@ export function createInitialGameState(): GameState {
     farmCropSpawnIntervalMs: 4_500,
     houseSpawnIntervalMs: 5_000,
     houseSpawnAmount: 1,
+    infoEntries: [],
   };
 }
 

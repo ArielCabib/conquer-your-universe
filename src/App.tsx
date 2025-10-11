@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState, InfoEntry } from "./app/types";
+import { ContextMenuState } from "./app/types";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -18,8 +18,9 @@ import {
 import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
+import { InfoEntry, InfoEntryId, PROMPT_INFORMATION } from "./infoEntries";
 import { createInitialGameState, GameState } from "./types";
-type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
+type PromptKey = InfoEntryId;
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
@@ -27,34 +28,6 @@ const PROMPT_MESSAGES: Record<PromptKey, string> = {
   farm: "Right click the planet to build a farm",
   harvester: "You can build a harvester",
   market: "You can build a market",
-};
-
-const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
-  explore: {
-    id: "explore",
-    title: "Scout the Surface",
-    description: "Clicking the planet produces a settler.",
-  },
-  build: {
-    id: "build",
-    title: "Establish Housing",
-    description: "Having a settler allows you to build a house. Houses expand your population capacity.",
-  },
-  farm: {
-    id: "farm",
-    title: "Cultivate Farms",
-    description: "Having at least ten settlers allows you to build a farm. Farms produce crops that can be processed into grains.",
-  },
-  harvester: {
-    id: "harvester",
-    title: "Deploy a Harvester",
-    description: "Gather at least five crop bundles to assemble a harvester. It automates grain collection to keep supplies flowing.",
-  },
-  market: {
-    id: "market",
-    title: "Open the Market",
-    description: "Stockpile thirty grains to build a market. Markets convert grains into coins.",
-  },
 };
 
 export function App() {
@@ -71,13 +44,14 @@ export function App() {
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
   const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
-  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>([]);
+  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>(() => gameStateRef.current.infoEntries);
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
       setPlanetName(state.planetName);
+      setInfoEntries(state.infoEntries);
     },
-    [],
+    [setInfoEntries, setPlanetName],
   );
 
   useRestoreState(gameStateRef, handleStateRestore);
@@ -105,6 +79,7 @@ export function App() {
     setIsPaused,
     pauseTimeRef,
     setPlanetName,
+    setInfoEntries,
   });
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
@@ -143,6 +118,7 @@ export function App() {
     setIsPaused,
     pauseTimeRef,
     setPlanetName,
+    setInfoEntries,
   });
 
   const handlePlanetNameChange = useCallback(
@@ -290,14 +266,23 @@ export function App() {
       return;
     }
 
+    const normalizedEntry = { ...entry };
+
     setInfoEntries((current) => {
-      if (current.some((item) => item.id === entry.id)) {
+      if (current.some((item) => item.id === normalizedEntry.id)) {
+        gameStateRef.current.infoEntries = current;
         return current;
       }
 
-      return [...current, entry];
+      const next = [...current, normalizedEntry];
+      gameStateRef.current.infoEntries = next;
+      return next;
     });
-  }, [promptKey]);
+  }, [gameStateRef, promptKey]);
+
+  useEffect(() => {
+    gameStateRef.current.infoEntries = infoEntries;
+  }, [gameStateRef, infoEntries]);
 
   return (
     <AppView

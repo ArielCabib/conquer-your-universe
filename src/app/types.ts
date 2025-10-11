@@ -5,8 +5,4 @@ export interface ContextMenuState {
   offsetY: number;
 }
 
-export interface InfoEntry {
-  id: string;
-  title: string;
-  description: string;
-}
+export type { InfoEntry, InfoEntryId } from "../infoEntries";
