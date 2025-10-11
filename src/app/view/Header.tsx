@@ -9,6 +9,9 @@ import {
   useState,
 } from "react";
 
+import infoIcon from "../../../assets/question-mark-circle-outline-svgrepo-com.svg";
+import settingsIcon from "../../../assets/cogwheel-svgrepo-com.svg";
+
 interface HeaderSectionProps {
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
@@ -82,9 +85,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenSettings}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11.983 2a1 1 0 0 1 .993.883l.007.117v1.19a5.52 5.52 0 0 1 1.45.6l.84-.84a1 1 0 0 1 1.497 1.32l-.083.094-.84.84a5.52 5.52 0 0 1 .6 1.451h1.19a1 1 0 0 1 .117 1.993l-.117.007h-1.19a5.52 5.52 0 0 1-.6 1.45l.84.841a1 1 0 0 1-1.32 1.497l-.094-.083-.84-.84a5.52 5.52 0 0 1-1.451.6v1.19a1 1 0 0 1-1.993.117l-.007-.117v-1.19a5.52 5.52 0 0 1-1.45-.6l-.84.84a1 1 0 0 1-1.497-1.32l.083-.094.84-.84a5.52 5.52 0 0 1-.6-1.451h-1.19a1 1 0 0 1-.117-1.993l.117-.007h1.19a5.52 5.52 0 0 1 .6-1.45l-.84-.841a1 1 0 0 1 1.32-1.497l.094.083.84.84a5.52 5.52 0 0 1 1.451-.6v-1.19A1 1 0 0 1 11.983 2Zm.017 5a3 3 0 1 0 0 6a3 3 0 0 0 0-6Z" />
-          </svg>
+          <img src={settingsIcon} alt="" width={22} height={22} aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -92,9 +93,7 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
           onClick={onOpenInfo}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2a10 10 0 1 1 0 20a10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16a8 8 0 0 0 0-16Zm0 11a1 1 0 0 1 0 2a1 1 0 0 1 0-2Zm0-8a3 3 0 0 1 2.236 5.06l-.125.12l-.356.314c-.502.448-.755.858-.755 1.506a1 1 0 0 1-2 0c0-1.086.424-1.887 1.29-2.66l.352-.31A1 1 0 0 0 11 9a1 1 0 0 1-2 0a3 3 0 0 1 3-3Z" />
-          </svg>
+          <img src={infoIcon} alt="" width={22} height={22} aria-hidden="true" />
         </button>
       </div>
       {isEditingName ? (
