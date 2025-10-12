@@ -124,6 +124,7 @@ type RawGameState = Omit<
   | "nextGrainProjectileId"
   | "nextCoinProjectileId"
   | "market"
+  | "infoEntryIds"
   | "grainPileCapacity"
   | "coins"
   | "version"
@@ -150,6 +151,8 @@ type RawGameState = Omit<
   next_coin_projectile_id?: number;
   nextCoinProjectileId?: number;
   market?: RawMarketState | null;
+  info_entry_ids?: string[];
+  infoEntryIds?: string[];
   planet_name?: string;
   next_settler_id: number;
   settler_min_lifespan_ms: number;
@@ -177,7 +180,37 @@ type VersionedRawGameState = RawGameState & { version: number };
 
 type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | null;
 
-const migrations: Partial<Record<number, MigrationFn>> = {};
+function sanitizeInfoEntryIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const ids: string[] = [];
+
+  for (const entry of value) {
+    if (typeof entry !== "string") {
+      continue;
+    }
+
+    if (seen.has(entry)) {
+      continue;
+    }
+
+    ids.push(entry);
+    seen.add(entry);
+  }
+
+  return ids;
+}
+
+const migrations: Partial<Record<number, MigrationFn>> = {
+  1: (state) => ({
+    ...state,
+    version: 2,
+    info_entry_ids: sanitizeInfoEntryIds(state.info_entry_ids ?? state.infoEntryIds),
+  }),
+};
 
 function toVersionedRawGameState(raw: RawGameState): VersionedRawGameState | null {
   const version = raw.version;
@@ -536,6 +569,8 @@ export function deserializeGameState(serialized: string): GameState | null {
     const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
 
+    const infoEntryIds = sanitizeInfoEntryIds(data.info_entry_ids ?? data.infoEntryIds);
+
     const state: GameState = {
       version: GAME_STATE_VERSION,
       settlers,
@@ -559,6 +594,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextGrainProjectileId,
       nextCoinProjectileId,
       market,
+      infoEntryIds,
       coins:
         typeof data.coins === "number" && Number.isFinite(data.coins)
           ? Math.max(0, data.coins)
@@ -726,6 +762,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     next_grain_projectile_id: state.nextGrainProjectileId,
     next_coin_projectile_id: state.nextCoinProjectileId,
     market: serializeMarket(state.market),
+    info_entry_ids: state.infoEntryIds,
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,

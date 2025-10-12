@@ -130,6 +130,7 @@ export interface GameState {
   nextGrainProjectileId: number;
   nextCoinProjectileId: number;
   market: MarketState | null;
+  infoEntryIds: string[];
   grainPileCapacity: number;
   coins: number;
   settlersBaseCapacity: number;
@@ -167,6 +168,7 @@ export function createInitialGameState(): GameState {
     nextGrainProjectileId: 0,
     nextCoinProjectileId: 0,
     market: null,
+    infoEntryIds: [],
     grainPileCapacity: GRAIN_PILE_CAPACITY,
     coins: 0,
     settlersBaseCapacity: 10,

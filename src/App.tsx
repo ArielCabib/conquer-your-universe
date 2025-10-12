@@ -57,6 +57,39 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
   },
 };
 
+const INFO_ENTRY_LOOKUP: Record<string, InfoEntry> = Object.values(PROMPT_INFORMATION).reduce(
+  (accumulator, entry) => {
+    accumulator[entry.id] = entry;
+    return accumulator;
+  },
+  {} as Record<string, InfoEntry>,
+);
+
+function resolveInfoEntries(ids: readonly string[]): InfoEntry[] {
+  const seen = new Set<string>();
+  const entries: InfoEntry[] = [];
+
+  for (const id of ids) {
+    if (typeof id !== "string") {
+      continue;
+    }
+
+    if (seen.has(id)) {
+      continue;
+    }
+
+    const entry = INFO_ENTRY_LOOKUP[id];
+    if (!entry) {
+      continue;
+    }
+
+    entries.push(entry);
+    seen.add(id);
+  }
+
+  return entries;
+}
+
 export function App() {
   const gameStateRef = useRef<GameState>(createInitialGameState());
   const [aliveCount, setAliveCount] = useState(0);
@@ -71,11 +104,14 @@ export function App() {
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
   const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
-  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>([]);
+  const [infoEntries, setInfoEntries] = useState<InfoEntry[]>(() =>
+    resolveInfoEntries(gameStateRef.current.infoEntryIds),
+  );
 
   const handleStateRestore = useCallback(
     (state: GameState) => {
       setPlanetName(state.planetName);
+      setInfoEntries(resolveInfoEntries(state.infoEntryIds));
     },
     [],
   );
@@ -98,7 +134,7 @@ export function App() {
   const openInfoModal = useModalOpenHandler(setIsInfoModalOpen);
   const closeInfoModal = useModalCloseHandler(setIsInfoModalOpen);
 
-  const restartGame = useRestartGameHandler({
+  const restartGameHandler = useRestartGameHandler({
     gameStateRef,
     setAliveCount,
     setIsModalOpen,
@@ -106,6 +142,11 @@ export function App() {
     pauseTimeRef,
     setPlanetName,
   });
+
+  const restartGame = useCallback(() => {
+    restartGameHandler();
+    setInfoEntries([]);
+  }, [restartGameHandler]);
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
   const saveGame = useSaveGameHandler(gameStateRef);
@@ -291,13 +332,20 @@ export function App() {
     }
 
     setInfoEntries((current) => {
-      if (current.some((item) => item.id === entry.id)) {
+      const alreadyPresent = current.some((item) => item.id === entry.id);
+      const ids = gameStateRef.current.infoEntryIds;
+
+      if (!ids.includes(entry.id)) {
+        gameStateRef.current.infoEntryIds = [...ids, entry.id];
+      }
+
+      if (alreadyPresent) {
         return current;
       }
 
       return [...current, entry];
     });
-  }, [promptKey]);
+  }, [gameStateRef, promptKey]);
 
   return (
     <AppView
