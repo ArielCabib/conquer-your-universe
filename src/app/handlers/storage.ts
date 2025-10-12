@@ -53,6 +53,7 @@ interface FileChangeOptions {
   setIsPaused: Dispatch<SetStateAction<boolean>>;
   pauseTimeRef: MutableRefObject<number | null>;
   setPlanetName: Dispatch<SetStateAction<string>>;
+  setInfoEntryIds: Dispatch<SetStateAction<string[]>>;
 }
 
 export function useFileChangeHandler({
@@ -62,6 +63,7 @@ export function useFileChangeHandler({
   setIsPaused,
   pauseTimeRef,
   setPlanetName,
+  setInfoEntryIds,
 }: FileChangeOptions) {
   return useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +98,11 @@ export function useFileChangeHandler({
 
         gameStateRef.current = loadedState;
         setPlanetName(loadedState.planetName);
+        setInfoEntryIds(() => {
+          const ids = [...loadedState.infoEntryIds];
+          gameStateRef.current.infoEntryIds = ids;
+          return ids;
+        });
 
         try {
           if (typeof localStorage !== "undefined") {
@@ -125,6 +132,14 @@ export function useFileChangeHandler({
 
       input.value = "";
     },
-    [gameStateRef, pauseTimeRef, setAliveCount, setIsModalOpen, setIsPaused, setPlanetName],
+    [
+      gameStateRef,
+      pauseTimeRef,
+      setAliveCount,
+      setIsModalOpen,
+      setIsPaused,
+      setPlanetName,
+      setInfoEntryIds,
+    ],
   );
 }

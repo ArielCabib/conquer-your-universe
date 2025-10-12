@@ -28,4 +28,4 @@ export const GRAIN_DRAW_LIMIT = 5;
 export const MARKET_SELL_INTERVAL_MS = 1_000;
 export const MARKET_GRAIN_FLIGHT_DURATION_MS = 640;
 export const MARKET_COIN_RISE_DURATION_MS = 560;
-export const GAME_STATE_VERSION = 1;
+export const GAME_STATE_VERSION = 2;
