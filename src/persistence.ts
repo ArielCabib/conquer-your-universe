@@ -32,7 +32,18 @@ interface RawSettlerPhaseFading {
 
 type RawSettlerPhase = RawSettlerPhaseAlive | RawSettlerPhaseFading;
 
-type RawSettlerState = Omit<SettlerState, "anchorX" | "anchorY" | "targetX" | "targetY" | "moveStartMs" | "lastDirectionChangeMs" | "birthMs" | "phase" | "lifespanMs"> & {
+type RawSettlerState = Omit<
+  SettlerState,
+  | "anchorX"
+  | "anchorY"
+  | "targetX"
+  | "targetY"
+  | "moveStartMs"
+  | "lastDirectionChangeMs"
+  | "birthMs"
+  | "phase"
+  | "lifespanMs"
+> & {
   anchor_x: number;
   anchor_y: number;
   target_x: number;
@@ -41,22 +52,27 @@ type RawSettlerState = Omit<SettlerState, "anchorX" | "anchorY" | "targetX" | "t
   last_direction_change_ms: number;
   birth_ms: number;
   lifespan_ms?: number;
+  lifespanMs?: number;
   phase: RawSettlerPhase | SettlerPhase;
 };
 
 type RawHouseState = Omit<HouseState, "builtMs" | "lastSpawnMs"> & {
   built_ms?: number;
   last_spawn_ms?: number;
+  builtMs?: number;
+  lastSpawnMs?: number;
 };
 
 type RawFarmState = Omit<FarmState, "builtMs" | "lastProducedMs"> & {
   built_ms?: number;
   last_produced_ms?: number;
+  builtMs?: number;
   lastProducedMs?: number;
 };
 
 type RawCropState = Omit<CropState, "createdMs"> & {
   created_ms?: number;
+  createdMs?: number;
 };
 
 type RawHarvesterState = Omit<
@@ -77,6 +93,7 @@ type RawHarvesterState = Omit<
 
 type RawGrainPileState = Omit<GrainPileState, "createdMs"> & {
   created_ms?: number;
+  createdMs?: number;
 };
 
 type RawGrainProjectileState = GrainProjectileState;

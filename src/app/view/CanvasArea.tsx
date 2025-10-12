@@ -59,7 +59,11 @@ export function CanvasArea({
     };
   }, []);
 
-  const scheduleLongPress = (touch: Touch) => {
+  const scheduleLongPress = (touch: {
+    identifier: number;
+    clientX: number;
+    clientY: number;
+  }) => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
