@@ -8,6 +8,8 @@ import {
 import { GameState, settlerPositionAt } from "../../../types";
 import { easeOutQuad } from "../../helpers";
 import { Dispatch, SetStateAction } from "react";
+import type { SimulationSnapshot } from "../../types";
+import { updateSimulationSnapshot } from "../../state/simulationSnapshot";
 
 export function renderPausedState(
   context: CanvasRenderingContext2D,
@@ -15,6 +17,7 @@ export function renderPausedState(
   now: number,
   setAliveCount: Dispatch<SetStateAction<number>>,
   renderStructures: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
+  setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>,
 ) {
   let aliveTotal = 0;
 
@@ -67,5 +70,6 @@ export function renderPausedState(
   }
 
   renderStructures(context, state, now);
+  updateSimulationSnapshot(state, setSimulationSnapshot);
   setAliveCount(aliveTotal);
 }

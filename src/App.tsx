@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
-import { ContextMenuState, InfoEntry } from "./app/types";
+import { ContextMenuState, InfoEntry, SimulationSnapshot } from "./app/types";
+import { computeSimulationSnapshot } from "./app/state/simulationSnapshot";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -60,6 +61,9 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
 export function App() {
   const gameStateRef = useRef<GameState>(createInitialGameState());
   const [aliveCount, setAliveCount] = useState(0);
+  const [simulationSnapshot, setSimulationSnapshot] = useState<SimulationSnapshot>(() =>
+    computeSimulationSnapshot(gameStateRef.current),
+  );
   const [planetName, setPlanetName] = useState(() => gameStateRef.current.planetName);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -84,12 +88,13 @@ export function App() {
     (state: GameState) => {
       setPlanetName(state.planetName);
       setInfoEntryIds(() => [...state.infoEntryIds]);
+      setSimulationSnapshot(computeSimulationSnapshot(state));
     },
-    [setInfoEntryIds],
+    [setInfoEntryIds, setSimulationSnapshot],
   );
 
   useRestoreState(gameStateRef, handleStateRestore);
-  useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef);
+  useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef, setSimulationSnapshot);
   usePeriodicSave(gameStateRef);
 
   const handleClick = useCanvasClickHandler({
@@ -121,7 +126,8 @@ export function App() {
       gameStateRef.current.infoEntryIds = [];
       return [];
     });
-  }, [gameStateRef, restartGameHandler]);
+    setSimulationSnapshot(computeSimulationSnapshot(gameStateRef.current));
+  }, [gameStateRef, restartGameHandler, setSimulationSnapshot]);
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
   const saveGame = useSaveGameHandler(gameStateRef);
@@ -160,6 +166,7 @@ export function App() {
     pauseTimeRef,
     setPlanetName,
     setInfoEntryIds,
+    setSimulationSnapshot,
   });
 
   const handlePlanetNameChange = useCallback(
@@ -190,17 +197,15 @@ export function App() {
   const canBuildHouse = aliveCount >= 1 && hasHouseCapacity;
   const hasFarmCapacity = farmCapacityLimit === 0 || farmsBuilt < farmCapacityLimit;
   const canBuildFarm = aliveCount >= 10 && hasFarmCapacity;
-  const hasHarvester = Boolean(state.harvester);
-  const totalCrops = state.crops.length;
+  const totalCrops = simulationSnapshot.cropCount;
+  const hasHarvester = simulationSnapshot.hasHarvester;
   const canBuildHarvester = !hasHarvester && totalCrops >= 5;
-  const grainPile = state.grainPile;
-  const grainCount = grainPile?.grains ?? 0;
-  const grainsInFlight =
-    state.grainProjectiles.length + state.cropProjectiles.length + state.marketGrainProjectiles.length;
+  const grainCount = simulationSnapshot.grainCount;
+  const grainsInFlight = simulationSnapshot.grainsInFlight;
   const grainCapacity = state.grainPileCapacity;
-  const hasMarket = Boolean(state.market);
-  const canBuildMarket = Boolean(grainPile && grainPile.grains >= 30 && !hasMarket);
-  const coinCount = state.coins ?? 0;
+  const hasMarket = simulationSnapshot.hasMarket;
+  const canBuildMarket = simulationSnapshot.hasGrainPile && grainCount >= 30 && !hasMarket;
+  const coinCount = simulationSnapshot.coinCount;
   const hasContextMenuActions =
     canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket;
 

@@ -15,6 +15,8 @@ import {
   ensureHouseRegistry,
   ensureSettlerLifespans,
 } from "../helpers";
+import type { SimulationSnapshot } from "../types";
+import { computeSimulationSnapshot } from "../state/simulationSnapshot";
 
 export function useOpenFileDialogHandler(fileInputRef: RefObject<HTMLInputElement>) {
   return useCallback(() => {
@@ -54,6 +56,7 @@ interface FileChangeOptions {
   pauseTimeRef: MutableRefObject<number | null>;
   setPlanetName: Dispatch<SetStateAction<string>>;
   setInfoEntryIds: Dispatch<SetStateAction<string[]>>;
+  setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>;
 }
 
 export function useFileChangeHandler({
@@ -64,6 +67,7 @@ export function useFileChangeHandler({
   pauseTimeRef,
   setPlanetName,
   setInfoEntryIds,
+  setSimulationSnapshot,
 }: FileChangeOptions) {
   return useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +107,7 @@ export function useFileChangeHandler({
           gameStateRef.current.infoEntryIds = ids;
           return ids;
         });
+        setSimulationSnapshot(computeSimulationSnapshot(loadedState));
 
         try {
           if (typeof localStorage !== "undefined") {
@@ -140,6 +145,7 @@ export function useFileChangeHandler({
       setIsPaused,
       setPlanetName,
       setInfoEntryIds,
+      setSimulationSnapshot,
     ],
   );
 }

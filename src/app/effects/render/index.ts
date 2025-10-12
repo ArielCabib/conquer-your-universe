@@ -13,6 +13,7 @@ import {
   VIEWBOX_WIDTH,
 } from "../../../constants";
 import { GameState } from "../../../types";
+import type { SimulationSnapshot } from "../../types";
 import { currentTimeMs } from "../../helpers";
 import {
   drawCrop,
@@ -77,6 +78,7 @@ export function useCanvasRenderer(
   gameStateRef: MutableRefObject<GameState>,
   setAliveCount: Dispatch<SetStateAction<number>>,
   pauseTimeRef: MutableRefObject<number | null>,
+  setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>,
 ) {
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -103,9 +105,23 @@ export function useCanvasRenderer(
       renderPlanet(context);
 
       if (isPaused) {
-        renderPausedState(context, gameStateRef.current, now, setAliveCount, renderStructures);
+        renderPausedState(
+          context,
+          gameStateRef.current,
+          now,
+          setAliveCount,
+          renderStructures,
+          setSimulationSnapshot,
+        );
       } else {
-        handleActiveState(context, gameStateRef.current, now, setAliveCount, renderStructures);
+        handleActiveState(
+          context,
+          gameStateRef.current,
+          now,
+          setAliveCount,
+          renderStructures,
+          setSimulationSnapshot,
+        );
       }
 
       animationFrame = window.requestAnimationFrame(drawFrame);

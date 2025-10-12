@@ -35,6 +35,8 @@ import {
   randomTargetForSettler,
 } from "../../helpers";
 import { Dispatch, SetStateAction } from "react";
+import type { SimulationSnapshot } from "../../types";
+import { updateSimulationSnapshot } from "../../state/simulationSnapshot";
 
 function drawBirthHalo(
   context: CanvasRenderingContext2D,
@@ -112,6 +114,7 @@ export function handleActiveState(
   now: number,
   setAliveCount: Dispatch<SetStateAction<number>>,
   renderStructures: (ctx: CanvasRenderingContext2D, gameState: GameState, timestamp: number) => void,
+  setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>,
 ) {
   let aliveTotal = 0;
   const survivors: SettlerState[] = [];
@@ -439,5 +442,6 @@ export function handleActiveState(
   state.coinProjectiles = remainingCoins;
 
   renderStructures(context, state, now);
+  updateSimulationSnapshot(state, setSimulationSnapshot);
   setAliveCount(aliveTotal);
 }
