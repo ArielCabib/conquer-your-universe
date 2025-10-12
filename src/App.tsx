@@ -25,7 +25,7 @@ type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
   build: "Right click the planet to build a house",
-  farm: "Right click the planet to build a farm",
+  farm: "You can build a farm",
   harvester: "You can build a harvester",
   market: "You can build a market",
 };
