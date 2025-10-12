@@ -153,7 +153,6 @@ type RawGameState = Omit<
   market?: RawMarketState | null;
   planet_name?: string;
   info_entry_ids?: string[];
-  infoEntryIds?: string[];
   next_settler_id: number;
   settler_min_lifespan_ms: number;
   settler_max_lifespan_ms: number;
@@ -182,9 +181,8 @@ type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | nul
 
 const migrations: Partial<Record<number, MigrationFn>> = {
   1: (state) => {
-    const rawIds = state.info_entry_ids ?? state.infoEntryIds;
-    const infoEntryIds = Array.isArray(rawIds)
-      ? rawIds.filter((value): value is string => typeof value === "string")
+    const infoEntryIds = Array.isArray(state.info_entry_ids)
+      ? state.info_entry_ids.filter((value): value is string => typeof value === "string")
       : [];
 
     return {
@@ -551,9 +549,8 @@ export function deserializeGameState(serialized: string): GameState | null {
     const coinProjectiles = deserializeCoinProjectiles(data.coin_projectiles ?? data.coinProjectiles);
     const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
-    const infoEntryIdsRaw = data.info_entry_ids ?? data.infoEntryIds;
-    const infoEntryIds = Array.isArray(infoEntryIdsRaw)
-      ? infoEntryIdsRaw.filter((value): value is string => typeof value === "string")
+    const infoEntryIds = Array.isArray(data.info_entry_ids)
+      ? data.info_entry_ids.filter((value): value is string => typeof value === "string")
       : [];
 
     const state: GameState = {
