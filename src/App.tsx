@@ -39,22 +39,22 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
   build: {
     id: "build",
     title: "Establish Housing",
-    description: "Having a settler allows you to build a house. Houses expand your population capacity.",
+    description: "Having a settler allows you to build a house. Houses expand your population capacity. What happens when you have more settlers?",
   },
   farm: {
     id: "farm",
     title: "Cultivate Farms",
-    description: "Having at least ten settlers allows you to build a farm. Farms produce crops that can be processed into grains.",
+    description: "Having at least ten settlers allows you to build a farm. Farms produce crops that can be processed into grains. What will you do with all those crops?",
   },
   harvester: {
     id: "harvester",
     title: "Deploy a Harvester",
-    description: "Gather at least five crop bundles to assemble a harvester. It automates grain collection to keep supplies flowing.",
+    description: "Gather at least five crop bundles to assemble a harvester. It automates grain collection to keep supplies flowing. What will you do with all those grains?",
   },
   market: {
     id: "market",
     title: "Open the Market",
-    description: "Stockpile thirty grains to build a market. Markets convert grains into coins.",
+    description: "Stockpile thirty grains to build a market. Markets convert grains into coins. What will you do with all those coins?",
   },
 };
 
