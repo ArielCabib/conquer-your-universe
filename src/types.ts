@@ -126,6 +126,7 @@ export interface GameState {
   grainProjectiles: GrainProjectileState[];
   marketGrainProjectiles: GrainProjectileState[];
   coinProjectiles: CoinProjectileState[];
+  infoEntryIds: string[];
   nextCropProjectileId: number;
   nextGrainProjectileId: number;
   nextCoinProjectileId: number;
@@ -163,6 +164,7 @@ export function createInitialGameState(): GameState {
     grainProjectiles: [],
     marketGrainProjectiles: [],
     coinProjectiles: [],
+    infoEntryIds: [],
     nextCropProjectileId: 0,
     nextGrainProjectileId: 0,
     nextCoinProjectileId: 0,

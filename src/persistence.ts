@@ -127,6 +127,7 @@ type RawGameState = Omit<
   | "grainPileCapacity"
   | "coins"
   | "version"
+  | "infoEntryIds"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -151,6 +152,8 @@ type RawGameState = Omit<
   nextCoinProjectileId?: number;
   market?: RawMarketState | null;
   planet_name?: string;
+  info_entry_ids?: string[];
+  infoEntryIds?: string[];
   next_settler_id: number;
   settler_min_lifespan_ms: number;
   settler_max_lifespan_ms: number;
@@ -177,7 +180,20 @@ type VersionedRawGameState = RawGameState & { version: number };
 
 type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | null;
 
-const migrations: Partial<Record<number, MigrationFn>> = {};
+const migrations: Partial<Record<number, MigrationFn>> = {
+  1: (state) => {
+    const rawIds = state.info_entry_ids ?? state.infoEntryIds;
+    const infoEntryIds = Array.isArray(rawIds)
+      ? rawIds.filter((value): value is string => typeof value === "string")
+      : [];
+
+    return {
+      ...state,
+      info_entry_ids: infoEntryIds,
+      version: 2,
+    };
+  },
+};
 
 function toVersionedRawGameState(raw: RawGameState): VersionedRawGameState | null {
   const version = raw.version;
@@ -535,6 +551,10 @@ export function deserializeGameState(serialized: string): GameState | null {
     const coinProjectiles = deserializeCoinProjectiles(data.coin_projectiles ?? data.coinProjectiles);
     const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
+    const infoEntryIdsRaw = data.info_entry_ids ?? data.infoEntryIds;
+    const infoEntryIds = Array.isArray(infoEntryIdsRaw)
+      ? infoEntryIdsRaw.filter((value): value is string => typeof value === "string")
+      : [];
 
     const state: GameState = {
       version: GAME_STATE_VERSION,
@@ -555,6 +575,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       grainProjectiles,
       marketGrainProjectiles,
       coinProjectiles,
+      infoEntryIds,
       nextCropProjectileId,
       nextGrainProjectileId,
       nextCoinProjectileId,
@@ -722,6 +743,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     grain_projectiles: serializeGrainProjectiles(state.grainProjectiles),
     market_grain_projectiles: serializeGrainProjectiles(state.marketGrainProjectiles),
     coin_projectiles: serializeCoinProjectiles(state.coinProjectiles),
+    info_entry_ids: state.infoEntryIds.slice(),
     next_crop_projectile_id: state.nextCropProjectileId,
     next_grain_projectile_id: state.nextGrainProjectileId,
     next_coin_projectile_id: state.nextCoinProjectileId,
