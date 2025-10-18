@@ -144,7 +144,14 @@ export function AppView({
           onBuildResearcher={onBuildResearcherFromMenu}
           canBuildResearcher={canBuildResearcher}
         />
-        {isResearchViewActive ? null : (
+        <div
+          className={`w-full overflow-hidden transition-all duration-500 ease-out ${
+            isResearchViewActive
+              ? "max-h-0 opacity-0 pointer-events-none"
+              : "max-h-[640px] opacity-100"
+          }`}
+          aria-hidden={isResearchViewActive}
+        >
           <StatsPanel
             aliveNow={aliveNow}
             settlersCapacityLimit={settlersCapacityLimit}
@@ -166,7 +173,7 @@ export function AppView({
             hasResearcher={hasResearcher}
             coinCount={coinCount}
           />
-        )}
+        </div>
       </section>
       <input
         ref={fileInputRef}

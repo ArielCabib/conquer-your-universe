@@ -206,13 +206,24 @@ export function CanvasArea({
     </div>
   ) : null;
 
-  const canvasClass = `h-auto w-full max-w-[600px] touch-manipulation ${
-    isResearchViewActive
-      ? "cursor-default pointer-events-none"
-      : isPaused
-        ? "cursor-not-allowed pointer-events-none"
-        : "cursor-pointer"
-  }`;
+  const canvasInteractionClass = isResearchViewActive
+    ? "cursor-default pointer-events-none"
+    : isPaused
+      ? "cursor-not-allowed pointer-events-none"
+      : "cursor-pointer";
+
+  const canvasOpacityClass = isResearchViewActive ? "opacity-0" : "opacity-100";
+
+  const canvasClass = `h-auto w-full max-w-[600px] touch-manipulation transition-opacity duration-500 ease-out ${canvasInteractionClass} ${canvasOpacityClass}`;
+
+  const researchOverlay = (
+    <div
+      className={`absolute inset-0 flex items-center justify-center bg-panel transition-opacity duration-500 ease-out ${
+        isResearchViewActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
+      aria-hidden={!isResearchViewActive}
+    />
+  );
 
   return (
     <div className="relative w-[min(80vw,540px)] max-w-[600px]">
@@ -230,6 +241,7 @@ export function CanvasArea({
       >
         Your browser does not support HTML canvas.
       </canvas>
+      {researchOverlay}
       {pausedOverlay}
       {contextMenu}
     </div>
