@@ -278,6 +278,7 @@ export function useBuildResearcherMenuHandler({
 
       const builtAt = currentTimeMs();
       state.researcher = createResearcherState(menuState.canvasX, menuState.canvasY, builtAt);
+      state.coins = Math.max(0, state.coins - 50);
 
       try {
         if (typeof localStorage !== "undefined") {
