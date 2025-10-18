@@ -147,6 +147,27 @@
     -webkit-mask-image: url("../assets/research-flask.svg");
   }
 
+  .research-button-animate {
+    animation: research-button-pop 420ms ease-out;
+  }
+
+  @keyframes research-button-pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+
+    55% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
   .prompt-badge {
     position: relative;
     opacity: 0;

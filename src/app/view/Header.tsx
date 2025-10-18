@@ -29,6 +29,7 @@ export function HeaderSection({
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(planetName);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [showResearchAnimation, setShowResearchAnimation] = useState(false);
 
   useEffect(() => {
     if (!isEditingName) {
@@ -82,6 +83,27 @@ export function HeaderSection({
     [startEditing],
   );
 
+  useEffect(() => {
+    if (!hasResearcher) {
+      setShowResearchAnimation(false);
+      return;
+    }
+
+    setShowResearchAnimation(true);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowResearchAnimation(false);
+    }, 600);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [hasResearcher]);
+
   return (
     <div className="mx-auto flex w-[min(80vw,540px)] max-w-[600px] flex-col items-center gap-4">
       <div className="flex w-full justify-end gap-3">
@@ -90,7 +112,7 @@ export function HeaderSection({
             type="button"
             aria-label="Open research lab"
             onClick={onOpenResearch}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${showResearchAnimation ? "research-button-animate" : ""}`}
           >
             <span aria-hidden="true" className="icon-glyph icon-glyph--research cursor-pointer" />
           </button>
