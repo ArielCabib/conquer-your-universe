@@ -18,6 +18,7 @@ interface StatsPanelProps {
   hasHarvester: boolean;
   hasMarket: boolean;
   hasResearcher: boolean;
+  coinCapacity: number;
   coinCount: number;
 }
 
@@ -44,6 +45,7 @@ export function StatsPanel({
   hasHarvester,
   hasMarket,
   hasResearcher,
+  coinCapacity,
   coinCount,
 }: StatsPanelProps) {
   const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
@@ -116,6 +118,7 @@ export function StatsPanel({
     hasHarvester,
     hasMarket,
     hasResearcher,
+    coinCapacity,
     coinCount,
   ]);
 
@@ -191,13 +194,18 @@ export function StatsPanel({
     );
   }
 
-  if (hasMarket || coinCount > 0) {
+  const hasCoinDisplay = hasMarket || coinCount > 0;
+
+  if (hasCoinDisplay) {
+    const coinLabel =
+      coinCapacity > 0 ? `Coins: ${coinCount}/${coinCapacity}` : `Coins: ${coinCount}`;
+
     statCards.push(
       <div
         key="coins"
         className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
       >
-        Coins: {coinCount}
+        {coinLabel}
       </div>,
     );
   }

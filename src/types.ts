@@ -9,6 +9,7 @@ import {
   PLANET_CENTER_Y,
   PLANET_RADIUS,
   SETTLER_RADIUS,
+  BASE_COIN_CAPACITY,
   GAME_STATE_VERSION,
 } from "./constants";
 import { easeOutQuad } from "./utils/easing";
@@ -139,6 +140,7 @@ export interface GameState {
   market: MarketState | null;
   researcher: ResearcherState | null;
   grainPileCapacity: number;
+  coinCapacity: number;
   coins: number;
   settlersBaseCapacity: number;
   housesBaseCapacity: number;
@@ -178,6 +180,7 @@ export function createInitialGameState(): GameState {
     market: null,
     researcher: null,
     grainPileCapacity: GRAIN_PILE_CAPACITY,
+    coinCapacity: BASE_COIN_CAPACITY,
     coins: 0,
     settlersBaseCapacity: 10,
     housesBaseCapacity: 5,

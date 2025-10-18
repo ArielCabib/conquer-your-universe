@@ -381,7 +381,9 @@ export function handleActiveState(
 
     const pile = state.grainPile;
     const grainAvailable = Boolean(pile && pile.grains > 0);
-    if (pile && grainAvailable && now - market.lastSaleMs >= MARKET_SELL_INTERVAL_MS) {
+    const coinCapacity = state.coinCapacity;
+    const hasCoinRoom = coinCapacity <= 0 || state.coins < coinCapacity;
+    if (pile && grainAvailable && hasCoinRoom && now - market.lastSaleMs >= MARKET_SELL_INTERVAL_MS) {
       pile.grains = Math.max(0, pile.grains - 1);
       market.lastSaleMs = now;
 
@@ -424,7 +426,9 @@ export function handleActiveState(
         );
 
         state.coinProjectiles.push(coin);
-        state.coins = Math.max(0, state.coins + 1);
+        const capacity = state.coinCapacity;
+        const increased = Math.max(0, state.coins + 1);
+        state.coins = capacity > 0 ? Math.min(capacity, increased) : increased;
         continue;
       }
       remainingMarketProjectiles.push(projectile);

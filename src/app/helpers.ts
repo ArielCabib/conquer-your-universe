@@ -1,4 +1,5 @@
 import {
+  BASE_COIN_CAPACITY,
   GRAIN_PILE_CAPACITY,
   MOVE_DISTANCE_MAX,
   MOVE_DISTANCE_MIN,
@@ -221,10 +222,21 @@ export function ensureHarvesterResources(state: GameState): void {
     }
   }
 
-  state.coins =
-    typeof state.coins === "number" && Number.isFinite(state.coins)
-      ? Math.max(0, state.coins)
-      : 0;
+  if (typeof state.coinCapacity !== "number" || !Number.isFinite(state.coinCapacity)) {
+    state.coinCapacity = BASE_COIN_CAPACITY;
+  }
+
+  if (state.coinCapacity < 0) {
+    state.coinCapacity = 0;
+  }
+
+  if (typeof state.coins === "number" && Number.isFinite(state.coins)) {
+    const capacity = state.coinCapacity;
+    const nonNegative = Math.max(0, state.coins);
+    state.coins = capacity > 0 ? Math.min(nonNegative, capacity) : nonNegative;
+  } else {
+    state.coins = 0;
+  }
 
   if (state.market) {
     if (typeof state.market.lastSaleMs !== "number" || !Number.isFinite(state.market.lastSaleMs)) {

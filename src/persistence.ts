@@ -1,4 +1,5 @@
 import {
+  BASE_COIN_CAPACITY,
   BASE_SETTLER_MAX_LIFESPAN_MS,
   BASE_SETTLER_MIN_LIFESPAN_MS,
   GRAIN_PILE_CAPACITY,
@@ -195,6 +196,7 @@ type RawGameState = Omit<
   house_spawn_amount: number;
   grain_pile_capacity?: number;
   grainPileCapacity?: number;
+  coin_capacity?: number;
   coins?: number;
   version?: number;
   time_reference_ms?: number;
@@ -221,6 +223,26 @@ const migrations: Partial<Record<number, MigrationFn>> = {
       ...state,
       researcher: state.researcher ?? null,
       version: 3,
+    };
+  },
+  3: (state) => {
+    const capacityValue = (() => {
+      const rawCapacity =
+        typeof state.coin_capacity === "number"
+          ? state.coin_capacity
+          : typeof (state as { coinCapacity?: number }).coinCapacity === "number"
+            ? (state as { coinCapacity?: number }).coinCapacity
+            : null;
+      if (typeof rawCapacity === "number" && Number.isFinite(rawCapacity)) {
+        return Math.max(0, rawCapacity);
+      }
+      return BASE_COIN_CAPACITY;
+    })();
+
+    return {
+      ...state,
+      coin_capacity: capacityValue,
+      version: 4,
     };
   },
 };
@@ -608,6 +630,13 @@ export function deserializeGameState(serialized: string): GameState | null {
       ? data.info_entry_ids.filter((value): value is string => typeof value === "string")
       : [];
 
+    const rawCoinCapacity =
+      data.coin_capacity ?? (data as { coinCapacity?: number }).coinCapacity;
+    const coinCapacity =
+      typeof rawCoinCapacity === "number" && Number.isFinite(rawCoinCapacity)
+        ? Math.max(0, rawCoinCapacity)
+        : BASE_COIN_CAPACITY;
+
     const state: GameState = {
       version: GAME_STATE_VERSION,
       settlers,
@@ -633,6 +662,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextCoinProjectileId,
       market,
       researcher,
+      coinCapacity,
       coins:
         typeof data.coins === "number" && Number.isFinite(data.coins)
           ? Math.max(0, data.coins)
@@ -831,6 +861,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     house_spawn_interval_ms: state.houseSpawnIntervalMs,
     house_spawn_amount: state.houseSpawnAmount,
     grain_pile_capacity: state.grainPileCapacity,
+    coin_capacity: state.coinCapacity,
     coins: state.coins,
     time_reference_ms: timestampMs,
   };

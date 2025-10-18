@@ -221,6 +221,7 @@ export function App() {
   const canBuildMarket = simulationSnapshot.hasGrainPile && grainCount >= 30 && !hasMarket;
   const hasResearcher = simulationSnapshot.hasResearcher;
   const coinCount = simulationSnapshot.coinCount;
+  const coinCapacity = state.coinCapacity;
   const canBuildResearcher = coinCount >= 50 && !hasResearcher;
   const hasContextMenuActions =
     canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket || canBuildResearcher;
@@ -403,6 +404,7 @@ export function App() {
       onPlanetNameChange={handlePlanetNameChange}
       grainCount={grainCount}
       grainCapacity={grainCapacity}
+      coinCapacity={coinCapacity}
       grainsInFlight={grainsInFlight}
       hasHarvester={hasHarvester}
       hasMarket={hasMarket}

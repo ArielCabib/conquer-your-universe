@@ -47,6 +47,7 @@ interface AppViewProps {
   onPlanetNameChange: (name: string) => void;
   grainCount: number;
   grainCapacity: number;
+  coinCapacity: number;
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
@@ -98,6 +99,7 @@ export function AppView({
   onPlanetNameChange,
   grainCount,
   grainCapacity,
+  coinCapacity,
   grainsInFlight,
   hasHarvester,
   hasMarket,
@@ -148,6 +150,7 @@ export function AppView({
           houseSpawnAmount={houseSpawnAmount}
           grainCount={grainCount}
           grainCapacity={grainCapacity}
+          coinCapacity={coinCapacity}
           grainsInFlight={grainsInFlight}
           hasHarvester={hasHarvester}
           hasMarket={hasMarket}
