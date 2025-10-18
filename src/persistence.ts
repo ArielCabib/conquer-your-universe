@@ -153,11 +153,14 @@ type RawGameState = Omit<
   | "coins"
   | "version"
   | "infoEntryIds"
+  | "completedResearchNodeIds"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
   farms: RawFarmState[];
   crops: RawCropState[];
+  completed_research_node_ids?: string[];
+  completedResearchNodeIds?: string[];
   harvester?: RawHarvesterState | null;
   grain_pile?: RawGrainPileState | null;
   grainPile?: RawGrainPileState | null;
@@ -208,13 +211,9 @@ type MigrationFn = (state: VersionedRawGameState) => VersionedRawGameState | nul
 
 const migrations: Partial<Record<number, MigrationFn>> = {
   1: (state) => {
-    const infoEntryIds = Array.isArray(state.info_entry_ids)
-      ? state.info_entry_ids.filter((value): value is string => typeof value === "string")
-      : [];
-
     return {
       ...state,
-      info_entry_ids: infoEntryIds,
+      info_entry_ids: [],
       version: 2,
     };
   },
@@ -226,23 +225,17 @@ const migrations: Partial<Record<number, MigrationFn>> = {
     };
   },
   3: (state) => {
-    const capacityValue = (() => {
-      const rawCapacity =
-        typeof state.coin_capacity === "number"
-          ? state.coin_capacity
-          : typeof (state as { coinCapacity?: number }).coinCapacity === "number"
-            ? (state as { coinCapacity?: number }).coinCapacity
-            : null;
-      if (typeof rawCapacity === "number" && Number.isFinite(rawCapacity)) {
-        return Math.max(0, rawCapacity);
-      }
-      return BASE_COIN_CAPACITY;
-    })();
-
     return {
       ...state,
-      coin_capacity: capacityValue,
+      coin_capacity: BASE_COIN_CAPACITY,
       version: 4,
+    };
+  },
+  4: (state) => {
+    return {
+      ...state,
+      completed_research_node_ids: [],
+      version: 5,
     };
   },
 };
@@ -266,6 +259,7 @@ function migrateToCurrentVersion(raw: RawGameState): VersionedRawGameState | nul
   let current: VersionedRawGameState = { ...versioned };
 
   while (current.version !== GAME_STATE_VERSION) {
+    console.log("Migrating game state from version", current.version);
     if (visitedVersions.has(current.version)) {
       return null;
     }
@@ -629,6 +623,11 @@ export function deserializeGameState(serialized: string): GameState | null {
     const infoEntryIds = Array.isArray(data.info_entry_ids)
       ? data.info_entry_ids.filter((value): value is string => typeof value === "string")
       : [];
+    const completedResearchSource =
+      data.completed_research_node_ids ?? data.completedResearchNodeIds;
+    const completedResearchNodeIds = Array.isArray(completedResearchSource)
+      ? completedResearchSource.filter((value): value is string => typeof value === "string")
+      : [];
 
     const rawCoinCapacity =
       data.coin_capacity ?? (data as { coinCapacity?: number }).coinCapacity;
@@ -657,6 +656,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       marketGrainProjectiles,
       coinProjectiles,
       infoEntryIds,
+      completedResearchNodeIds,
       nextCropProjectileId,
       nextGrainProjectileId,
       nextCoinProjectileId,
@@ -839,6 +839,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     market_grain_projectiles: serializeGrainProjectiles(state.marketGrainProjectiles),
     coin_projectiles: serializeCoinProjectiles(state.coinProjectiles),
     info_entry_ids: state.infoEntryIds.slice(),
+    completed_research_node_ids: state.completedResearchNodeIds.slice(),
     next_crop_projectile_id: state.nextCropProjectileId,
     next_grain_projectile_id: state.nextGrainProjectileId,
     next_coin_projectile_id: state.nextCoinProjectileId,

@@ -58,6 +58,7 @@ interface AppViewProps {
   isInfoModalActive: boolean;
   onCloseInfo: () => void;
   isResearchViewActive: boolean;
+  completedResearchNodeIds: readonly string[];
 }
 
 export function AppView({
@@ -112,6 +113,7 @@ export function AppView({
   isInfoModalActive,
   onCloseInfo,
   isResearchViewActive,
+  completedResearchNodeIds,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
@@ -132,6 +134,7 @@ export function AppView({
           onContextMenu={onContextMenuCanvas}
           isPaused={isPaused}
           isResearchViewActive={isResearchViewActive}
+          completedResearchNodeIds={completedResearchNodeIds}
           contextMenuState={contextMenuState}
           onBuildHouse={onBuildHouseFromMenu}
           canBuildHouse={canBuildHouse}

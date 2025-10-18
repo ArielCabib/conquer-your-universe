@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { MouseEventHandler, RefObject, TouchEventHandler } from "react";
 import { ContextMenuState } from "../types";
+import { ResearchTree } from "./ResearchTree";
 
 const LONG_PRESS_DURATION_MS = 500;
 
@@ -10,6 +11,7 @@ interface CanvasAreaProps {
   onContextMenu: MouseEventHandler<HTMLCanvasElement>;
   isPaused: boolean;
   isResearchViewActive: boolean;
+  completedResearchNodeIds: readonly string[];
   contextMenuState: ContextMenuState | null;
   onBuildHouse: MouseEventHandler<HTMLButtonElement>;
   canBuildHouse: boolean;
@@ -29,6 +31,7 @@ export function CanvasArea({
   onContextMenu,
   isPaused,
   isResearchViewActive,
+  completedResearchNodeIds,
   contextMenuState,
   onBuildHouse,
   canBuildHouse,
@@ -222,7 +225,11 @@ export function CanvasArea({
         isResearchViewActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
       aria-hidden={!isResearchViewActive}
-    />
+    >
+      {isResearchViewActive ? (
+        <ResearchTree completedNodeIds={completedResearchNodeIds} />
+      ) : null}
+    </div>
   );
 
   return (

@@ -29,4 +29,4 @@ export const MARKET_SELL_INTERVAL_MS = 1_000;
 export const MARKET_GRAIN_FLIGHT_DURATION_MS = 640;
 export const MARKET_COIN_RISE_DURATION_MS = 560;
 export const BASE_COIN_CAPACITY = 200;
-export const GAME_STATE_VERSION = 4;
+export const GAME_STATE_VERSION = 5;

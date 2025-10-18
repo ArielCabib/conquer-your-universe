@@ -236,6 +236,7 @@ export function App() {
   const coinCount = simulationSnapshot.coinCount;
   const coinCapacity = state.coinCapacity;
   const canBuildResearcher = coinCount >= 50 && !hasResearcher;
+  const completedResearchNodeIds = state.completedResearchNodeIds;
   const hasContextMenuActions =
     canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket || canBuildResearcher;
 
@@ -434,6 +435,7 @@ export function App() {
       isInfoModalActive={isInfoModalOpen}
       onCloseInfo={closeInfoModal}
       isResearchViewActive={isResearchViewActive}
+      completedResearchNodeIds={completedResearchNodeIds}
     />
   );
 }
