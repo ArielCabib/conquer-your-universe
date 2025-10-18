@@ -18,6 +18,8 @@ interface CanvasAreaProps {
   canBuildHarvester: boolean;
   onBuildMarket: MouseEventHandler<HTMLButtonElement>;
   canBuildMarket: boolean;
+  onBuildResearcher: MouseEventHandler<HTMLButtonElement>;
+  canBuildResearcher: boolean;
 }
 
 export function CanvasArea({
@@ -34,6 +36,8 @@ export function CanvasArea({
   canBuildHarvester,
   onBuildMarket,
   canBuildMarket,
+  onBuildResearcher,
+  canBuildResearcher,
 }: CanvasAreaProps) {
   const longPressTimeoutRef = useRef<number | null>(null);
   const lastTouchRef = useRef<{ identifier: number; clientX: number; clientY: number } | null>(
@@ -166,6 +170,14 @@ export function CanvasArea({
 
   if (canBuildMarket) {
     menuActions.push({ key: "market", label: "Build Market", onClick: onBuildMarket });
+  }
+
+  if (canBuildResearcher) {
+    menuActions.push({
+      key: "researcher",
+      label: "Build Researcher",
+      onClick: onBuildResearcher,
+    });
   }
 
   const buttonBaseClass =

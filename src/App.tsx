@@ -7,6 +7,7 @@ import {
   useBuildHarvesterMenuHandler,
   useBuildHouseMenuHandler,
   useBuildMarketMenuHandler,
+  useBuildResearcherMenuHandler,
   useCanvasClickHandler,
   useContextMenuHandler,
   useFileChangeHandler,
@@ -20,7 +21,7 @@ import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { createInitialGameState, GameState } from "./types";
-type PromptKey = "explore" | "build" | "farm" | "harvester" | "market";
+type PromptKey = "explore" | "build" | "farm" | "harvester" | "market" | "researcher";
 
 const PROMPT_MESSAGES: Record<PromptKey, string> = {
   explore: "Click around and find out",
@@ -28,6 +29,7 @@ const PROMPT_MESSAGES: Record<PromptKey, string> = {
   farm: "You can build a farm",
   harvester: "You can build a harvester",
   market: "You can build a market",
+  researcher: "You can recruit a researcher",
 };
 
 const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
@@ -56,6 +58,11 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
     title: "Open the Market",
     description: "Stockpile thirty grains to build a market. Markets convert grains into coins. What will you do with all those coins?",
   },
+  researcher: {
+    id: "researcher",
+    title: "Recruit a Researcher",
+    description: "Accumulate fifty coins to recruit a researcher. Researchers expand your civilization's knowledge base.",
+  },
 };
 
 export function App() {
@@ -75,6 +82,7 @@ export function App() {
   const [forcedPromptKey, setForcedPromptKey] = useState<PromptKey | null>(null);
   const [hasShownHarvesterPrompt, setHasShownHarvesterPrompt] = useState(false);
   const [hasShownMarketPrompt, setHasShownMarketPrompt] = useState(false);
+  const [hasShownResearcherPrompt, setHasShownResearcherPrompt] = useState(false);
   const [infoEntryIds, setInfoEntryIds] = useState<string[]>(() => [
     ...gameStateRef.current.infoEntryIds,
   ]);
@@ -158,6 +166,12 @@ export function App() {
     setContextMenuState,
   });
 
+  const buildResearcherFromMenu = useBuildResearcherMenuHandler({
+    gameStateRef,
+    contextMenuState,
+    setContextMenuState,
+  });
+
   const onFileChange = useFileChangeHandler({
     gameStateRef,
     setAliveCount,
@@ -205,9 +219,11 @@ export function App() {
   const grainCapacity = state.grainPileCapacity;
   const hasMarket = simulationSnapshot.hasMarket;
   const canBuildMarket = simulationSnapshot.hasGrainPile && grainCount >= 30 && !hasMarket;
+  const hasResearcher = simulationSnapshot.hasResearcher;
   const coinCount = simulationSnapshot.coinCount;
+  const canBuildResearcher = coinCount >= 50 && !hasResearcher;
   const hasContextMenuActions =
-    canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket;
+    canBuildHouse || canBuildFarm || canBuildHarvester || canBuildMarket || canBuildResearcher;
 
   const getHasContextMenuActions = useCallback(
     () => hasContextMenuActions,
@@ -280,7 +296,28 @@ export function App() {
   }, [canBuildMarket, hasShownMarketPrompt]);
 
   useEffect(() => {
-    if (forcedPromptKey !== "harvester" && forcedPromptKey !== "market") {
+    if (canBuildResearcher) {
+      if (!hasShownResearcherPrompt) {
+        setForcedPromptKey("researcher");
+        setHasShownResearcherPrompt(true);
+      }
+      return;
+    }
+
+    setHasShownResearcherPrompt(false);
+    setForcedPromptKey((current) => (current === "researcher" ? null : current));
+  }, [canBuildResearcher, hasShownResearcherPrompt]);
+
+  useEffect(() => {
+    if (!forcedPromptKey) {
+      return;
+    }
+
+    if (
+      forcedPromptKey !== "harvester" &&
+      forcedPromptKey !== "market" &&
+      forcedPromptKey !== "researcher"
+    ) {
       return;
     }
 
@@ -290,7 +327,7 @@ export function App() {
 
     const timeoutId = window.setTimeout(() => {
       setForcedPromptKey((current) =>
-        current === "harvester" || current === "market" ? null : current,
+        current === "harvester" || current === "market" || current === "researcher" ? null : current,
       );
     }, 4_500);
 
@@ -332,6 +369,7 @@ export function App() {
       canBuildFarm={canBuildFarm}
       canBuildHarvester={canBuildHarvester}
       canBuildMarket={canBuildMarket}
+      canBuildResearcher={canBuildResearcher}
       canvasRef={canvasRef}
       onCloseModal={closeModal}
       contextMenuState={contextMenuState}
@@ -355,6 +393,7 @@ export function App() {
       onBuildFarmFromMenu={buildFarmFromMenu}
       onBuildHarvesterFromMenu={buildHarvesterFromMenu}
       onBuildMarketFromMenu={buildMarketFromMenu}
+      onBuildResearcherFromMenu={buildResearcherFromMenu}
       settlerMinLifespanMs={settlerMinLifespanMs}
       settlerMaxLifespanMs={settlerMaxLifespanMs}
       farmLifespanBonusMs={farmLifespanBonusMs}
@@ -367,6 +406,7 @@ export function App() {
       grainsInFlight={grainsInFlight}
       hasHarvester={hasHarvester}
       hasMarket={hasMarket}
+      hasResearcher={hasResearcher}
       coinCount={coinCount}
       infoEntries={infoEntries}
       isInfoModalActive={isInfoModalOpen}

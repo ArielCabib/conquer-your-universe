@@ -25,6 +25,7 @@ import {
   drawHouse,
   drawMarket,
   drawCoinProjectile,
+  drawResearcher,
 } from "../../drawing";
 import { handleActiveState } from "./active";
 import { renderPausedState } from "./paused";
@@ -67,6 +68,9 @@ function renderStructures(
   }
   if (state.market) {
     drawMarket(context, state.market, now);
+  }
+  if (state.researcher) {
+    drawResearcher(context, state.researcher, now);
   }
   for (const coin of state.coinProjectiles) {
     drawCoinProjectile(context, coin, now);

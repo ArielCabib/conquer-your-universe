@@ -107,6 +107,12 @@ export interface CoinProjectileState {
   durationMs: number;
 }
 
+export interface ResearcherState {
+  x: number;
+  y: number;
+  builtMs: number;
+}
+
 export interface GameState {
   version: number;
   planetName: string;
@@ -131,6 +137,7 @@ export interface GameState {
   nextGrainProjectileId: number;
   nextCoinProjectileId: number;
   market: MarketState | null;
+  researcher: ResearcherState | null;
   grainPileCapacity: number;
   coins: number;
   settlersBaseCapacity: number;
@@ -169,6 +176,7 @@ export function createInitialGameState(): GameState {
     nextGrainProjectileId: 0,
     nextCoinProjectileId: 0,
     market: null,
+    researcher: null,
     grainPileCapacity: GRAIN_PILE_CAPACITY,
     coins: 0,
     settlersBaseCapacity: 10,
@@ -325,6 +333,14 @@ export function createMarketState(x: number, y: number, builtMs: number): Market
     y,
     builtMs,
     lastSaleMs: builtMs,
+  };
+}
+
+export function createResearcherState(x: number, y: number, builtMs: number): ResearcherState {
+  return {
+    x,
+    y,
+    builtMs,
   };
 }
 

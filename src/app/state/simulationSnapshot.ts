@@ -10,6 +10,7 @@ function snapshotsEqual(a: SimulationSnapshot, b: SimulationSnapshot): boolean {
     a.grainsInFlight === b.grainsInFlight &&
     a.hasGrainPile === b.hasGrainPile &&
     a.hasHarvester === b.hasHarvester &&
+    a.hasResearcher === b.hasResearcher &&
     a.hasMarket === b.hasMarket &&
     a.coinCount === b.coinCount
   );
@@ -25,6 +26,7 @@ export function computeSimulationSnapshot(state: GameState): SimulationSnapshot 
       state.marketGrainProjectiles.length,
     hasGrainPile: Boolean(state.grainPile),
     hasHarvester: Boolean(state.harvester),
+    hasResearcher: Boolean(state.researcher),
     hasMarket: Boolean(state.market),
     coinCount: state.coins ?? 0,
   };

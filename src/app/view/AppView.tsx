@@ -13,6 +13,7 @@ interface AppViewProps {
   canBuildFarm: boolean;
   canBuildHarvester: boolean;
   canBuildMarket: boolean;
+  canBuildResearcher: boolean;
   canvasRef: RefObject<HTMLCanvasElement>;
   onCloseModal: () => void;
   contextMenuState: ContextMenuState | null;
@@ -37,6 +38,7 @@ interface AppViewProps {
   onBuildFarmFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildHarvesterFromMenu: MouseEventHandler<HTMLButtonElement>;
   onBuildMarketFromMenu: MouseEventHandler<HTMLButtonElement>;
+  onBuildResearcherFromMenu: MouseEventHandler<HTMLButtonElement>;
   settlerMinLifespanMs: number;
   settlerMaxLifespanMs: number;
   farmLifespanBonusMs: number;
@@ -48,6 +50,7 @@ interface AppViewProps {
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
+  hasResearcher: boolean;
   coinCount: number;
   infoEntries: InfoEntry[];
   isInfoModalActive: boolean;
@@ -61,6 +64,7 @@ export function AppView({
   canBuildFarm,
   canBuildHarvester,
   canBuildMarket,
+  canBuildResearcher,
   canvasRef,
   onCloseModal,
   contextMenuState,
@@ -85,6 +89,7 @@ export function AppView({
   onBuildFarmFromMenu,
   onBuildHarvesterFromMenu,
   onBuildMarketFromMenu,
+  onBuildResearcherFromMenu,
   settlerMinLifespanMs,
   settlerMaxLifespanMs,
   farmLifespanBonusMs,
@@ -96,6 +101,7 @@ export function AppView({
   grainsInFlight,
   hasHarvester,
   hasMarket,
+  hasResearcher,
   coinCount,
   infoEntries,
   isInfoModalActive,
@@ -125,6 +131,8 @@ export function AppView({
           canBuildHarvester={canBuildHarvester}
           onBuildMarket={onBuildMarketFromMenu}
           canBuildMarket={canBuildMarket}
+          onBuildResearcher={onBuildResearcherFromMenu}
+          canBuildResearcher={canBuildResearcher}
         />
         <StatsPanel
           aliveNow={aliveNow}
@@ -143,6 +151,7 @@ export function AppView({
           grainsInFlight={grainsInFlight}
           hasHarvester={hasHarvester}
           hasMarket={hasMarket}
+          hasResearcher={hasResearcher}
           coinCount={coinCount}
         />
       </section>

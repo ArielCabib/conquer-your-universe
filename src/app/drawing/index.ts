@@ -7,3 +7,4 @@ export { drawCropProjectile } from "./cropProjectile";
 export { drawGrainProjectile } from "./grainProjectile";
 export { drawMarket } from "./market";
 export { drawCoinProjectile } from "./coinProjectile";
+export { drawResearcher } from "./researcher";

@@ -15,6 +15,7 @@ import {
   HarvesterState,
   HouseState,
   MarketState,
+  ResearcherState,
   SettlerPhase,
   SettlerState,
 } from "./types";
@@ -109,6 +110,11 @@ type RawMarketState = Omit<MarketState, "builtMs" | "lastSaleMs"> & {
   lastSaleMs?: number;
 };
 
+type RawResearcherState = Omit<ResearcherState, "builtMs"> & {
+  built_ms?: number;
+  builtMs?: number;
+};
+
 type RawGameState = Omit<
   GameState,
   | "settlers"
@@ -141,6 +147,7 @@ type RawGameState = Omit<
   | "nextGrainProjectileId"
   | "nextCoinProjectileId"
   | "market"
+  | "researcher"
   | "grainPileCapacity"
   | "coins"
   | "version"
@@ -168,6 +175,7 @@ type RawGameState = Omit<
   next_coin_projectile_id?: number;
   nextCoinProjectileId?: number;
   market?: RawMarketState | null;
+  researcher?: RawResearcherState | null;
   planet_name?: string;
   info_entry_ids?: string[];
   next_settler_id: number;
@@ -206,6 +214,13 @@ const migrations: Partial<Record<number, MigrationFn>> = {
       ...state,
       info_entry_ids: infoEntryIds,
       version: 2,
+    };
+  },
+  2: (state) => {
+    return {
+      ...state,
+      researcher: state.researcher ?? null,
+      version: 3,
     };
   },
 };
@@ -394,6 +409,20 @@ function deserializeMarket(raw: RawMarketState | null | undefined): MarketState 
   };
 }
 
+function deserializeResearcher(
+  raw: RawResearcherState | null | undefined,
+): ResearcherState | null {
+  if (!raw) {
+    return null;
+  }
+
+  return {
+    x: raw.x,
+    y: raw.y,
+    builtMs: raw.built_ms ?? raw.builtMs ?? 0,
+  };
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -464,6 +493,10 @@ function getLatestTimestamp(state: GameState, reference?: number | null): number
     consider(state.market.lastSaleMs);
   }
 
+  if (state.researcher) {
+    consider(state.researcher.builtMs);
+  }
+
   return latest;
 }
 
@@ -529,6 +562,10 @@ function shiftGameStateTimestamps(state: GameState, delta: number): void {
     state.market.builtMs = shiftIfFinite(state.market.builtMs, delta);
     state.market.lastSaleMs = shiftIfFinite(state.market.lastSaleMs, delta);
   }
+
+  if (state.researcher) {
+    state.researcher.builtMs = shiftIfFinite(state.researcher.builtMs, delta);
+  }
 }
 
 export function deserializeGameState(serialized: string): GameState | null {
@@ -566,6 +603,7 @@ export function deserializeGameState(serialized: string): GameState | null {
     const coinProjectiles = deserializeCoinProjectiles(data.coin_projectiles ?? data.coinProjectiles);
     const nextCoinProjectileId = data.next_coin_projectile_id ?? data.nextCoinProjectileId ?? 0;
     const market = deserializeMarket(data.market);
+    const researcher = deserializeResearcher(data.researcher);
     const infoEntryIds = Array.isArray(data.info_entry_ids)
       ? data.info_entry_ids.filter((value): value is string => typeof value === "string")
       : [];
@@ -594,6 +632,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       nextGrainProjectileId,
       nextCoinProjectileId,
       market,
+      researcher,
       coins:
         typeof data.coins === "number" && Number.isFinite(data.coins)
           ? Math.max(0, data.coins)
@@ -744,6 +783,18 @@ function serializeMarket(market: MarketState | null): RawMarketState | null {
   };
 }
 
+function serializeResearcher(researcher: ResearcherState | null): RawResearcherState | null {
+  if (!researcher) {
+    return null;
+  }
+
+  return {
+    x: researcher.x,
+    y: researcher.y,
+    built_ms: researcher.builtMs,
+  };
+}
+
 export function serializeGameState(state: GameState, timestampMs: number = currentTimeMs()): string {
   const payload: RawGameState = {
     version: state.version,
@@ -762,6 +813,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     next_grain_projectile_id: state.nextGrainProjectileId,
     next_coin_projectile_id: state.nextCoinProjectileId,
     market: serializeMarket(state.market),
+    researcher: serializeResearcher(state.researcher),
     planet_name: state.planetName,
     next_settler_id: state.nextSettlerId,
     settler_min_lifespan_ms: state.settlerMinLifespanMs,

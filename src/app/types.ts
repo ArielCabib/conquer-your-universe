@@ -18,5 +18,6 @@ export interface SimulationSnapshot {
   hasGrainPile: boolean;
   hasHarvester: boolean;
   hasMarket: boolean;
+  hasResearcher: boolean;
   coinCount: number;
 }

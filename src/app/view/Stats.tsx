@@ -17,6 +17,7 @@ interface StatsPanelProps {
   grainsInFlight: number;
   hasHarvester: boolean;
   hasMarket: boolean;
+  hasResearcher: boolean;
   coinCount: number;
 }
 
@@ -42,6 +43,7 @@ export function StatsPanel({
   grainsInFlight,
   hasHarvester,
   hasMarket,
+  hasResearcher,
   coinCount,
 }: StatsPanelProps) {
   const spawnIntervalSeconds = formatSeconds(houseSpawnIntervalMs);
@@ -113,6 +115,7 @@ export function StatsPanel({
     grainsInFlight,
     hasHarvester,
     hasMarket,
+    hasResearcher,
     coinCount,
   ]);
 
@@ -195,6 +198,17 @@ export function StatsPanel({
         className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
       >
         Coins: {coinCount}
+      </div>,
+    );
+  }
+
+  if (hasResearcher) {
+    statCards.push(
+      <div
+        key="researcher"
+        className="rounded-2xl border border-orbit-02 bg-panel-soft px-4 py-2 font-trebuchet text-[clamp(1rem,2vw,1.15rem)] tracking-[0.05em] text-orbit-03"
+      >
+        Researcher established
       </div>,
     );
   }

@@ -6,6 +6,7 @@ import {
   createHarvesterState,
   createHouseState,
   createMarketState,
+  createResearcherState,
 } from "../../types";
 import { ContextMenuState } from "../types";
 import { pointWithinPlanet, currentTimeMs } from "../helpers";
@@ -232,6 +233,58 @@ export function useBuildMarketMenuHandler({
         }
       } catch (error) {
         console.warn("Failed to persist game state after building market", error);
+      }
+
+      setContextMenuState(null);
+    },
+    [contextMenuState, gameStateRef, setContextMenuState],
+  );
+}
+
+interface BuildResearcherOptions {
+  gameStateRef: MutableRefObject<GameState>;
+  contextMenuState: ContextMenuState | null;
+  setContextMenuState: SetContextMenuState;
+}
+
+export function useBuildResearcherMenuHandler({
+  gameStateRef,
+  contextMenuState,
+  setContextMenuState,
+}: BuildResearcherOptions) {
+  return useCallback(
+    () => {
+      const menuState = contextMenuState;
+      if (!menuState) {
+        return;
+      }
+
+      if (!pointWithinPlanet(menuState.canvasX, menuState.canvasY)) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const state = gameStateRef.current;
+
+      if (state.researcher) {
+        setContextMenuState(null);
+        return;
+      }
+
+      if (state.coins < 50) {
+        setContextMenuState(null);
+        return;
+      }
+
+      const builtAt = currentTimeMs();
+      state.researcher = createResearcherState(menuState.canvasX, menuState.canvasY, builtAt);
+
+      try {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after building researcher", error);
       }
 
       setContextMenuState(null);
