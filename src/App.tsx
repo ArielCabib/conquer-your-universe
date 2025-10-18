@@ -61,7 +61,7 @@ const PROMPT_INFORMATION: Record<PromptKey, InfoEntry> = {
   researcher: {
     id: "researcher",
     title: "Recruit a Researcher",
-    description: "Accumulate fifty coins to recruit a researcher. Researchers expand your civilization's knowledge base.",
+    description: "Accumulate fifty coins to recruit a researcher. You can unlock new technologies.",
   },
 };
 
