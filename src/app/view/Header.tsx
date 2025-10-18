@@ -12,11 +12,20 @@ import {
 interface HeaderSectionProps {
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
+  onOpenResearch: MouseEventHandler<HTMLButtonElement>;
   planetName: string;
   onPlanetNameChange: (name: string) => void;
+  hasResearcher: boolean;
 }
 
-export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanetNameChange }: HeaderSectionProps) {
+export function HeaderSection({
+  onOpenSettings,
+  onOpenInfo,
+  onOpenResearch,
+  planetName,
+  onPlanetNameChange,
+  hasResearcher,
+}: HeaderSectionProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(planetName);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -76,6 +85,16 @@ export function HeaderSection({ onOpenSettings, onOpenInfo, planetName, onPlanet
   return (
     <div className="mx-auto flex w-[min(80vw,540px)] max-w-[600px] flex-col items-center gap-4">
       <div className="flex w-full justify-end gap-3">
+        {hasResearcher ? (
+          <button
+            type="button"
+            aria-label="Open research lab"
+            onClick={onOpenResearch}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+          >
+            <span aria-hidden="true" className="icon-glyph icon-glyph--research cursor-pointer" />
+          </button>
+        ) : null}
         <button
           type="button"
           aria-label="Open settings"

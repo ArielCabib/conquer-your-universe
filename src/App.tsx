@@ -76,6 +76,7 @@ export function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
@@ -118,6 +119,8 @@ export function App() {
   const closeModal = useModalCloseHandler(setIsModalOpen);
   const openInfoModal = useModalOpenHandler(setIsInfoModalOpen);
   const closeInfoModal = useModalCloseHandler(setIsInfoModalOpen);
+  const openResearchModal = useModalOpenHandler(setIsResearchModalOpen);
+  const closeResearchModal = useModalCloseHandler(setIsResearchModalOpen);
 
   const restartGameHandler = useRestartGameHandler({
     gameStateRef,
@@ -310,6 +313,12 @@ export function App() {
   }, [canBuildResearcher, hasShownResearcherPrompt]);
 
   useEffect(() => {
+    if (!hasResearcher) {
+      setIsResearchModalOpen(false);
+    }
+  }, [hasResearcher]);
+
+  useEffect(() => {
     if (!forcedPromptKey) {
       return;
     }
@@ -386,6 +395,7 @@ export function App() {
       onOpenFileDialog={openFileDialog}
       onOpenSettings={openSettings}
       onOpenInfo={openInfoModal}
+      onOpenResearch={openResearchModal}
       onRestartGame={restartGame}
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
@@ -413,6 +423,8 @@ export function App() {
       infoEntries={infoEntries}
       isInfoModalActive={isInfoModalOpen}
       onCloseInfo={closeInfoModal}
+      isResearchModalActive={isResearchModalOpen}
+      onCloseResearch={closeResearchModal}
     />
   );
 }

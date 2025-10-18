@@ -142,6 +142,11 @@
     -webkit-mask-image: url("../assets/question-mark-circle-outline-svgrepo-com.svg");
   }
 
+  .icon-glyph--research {
+    mask-image: url("../assets/research-flask.svg");
+    -webkit-mask-image: url("../assets/research-flask.svg");
+  }
+
   .prompt-badge {
     position: relative;
     opacity: 0;

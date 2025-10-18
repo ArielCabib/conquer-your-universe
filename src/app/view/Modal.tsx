@@ -130,3 +130,49 @@ export function InfoModal({ isActive, onClose, entries }: InfoModalProps) {
     </div>
   );
 }
+
+interface ResearchModalProps {
+  isActive: boolean;
+  onClose: () => void;
+  coinCount: number;
+  coinCapacity: number;
+}
+
+export function ResearchModal({ isActive, onClose, coinCount, coinCapacity }: ResearchModalProps) {
+  if (!isActive) {
+    return null;
+  }
+
+  const coinLabel = coinCapacity > 0 ? `Coin reserve: ${coinCount}/${coinCapacity}` : `Coin reserve: ${coinCount}`;
+
+  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = (event) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-6" onClick={handleBackdropClick}>
+      <div className="flex w-[min(90vw,420px)] flex-col gap-5 rounded-3xl border border-orbit-03/35 bg-panel p-6 text-orbit-03">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="m-0 font-orbitron text-[1.35rem] uppercase tracking-[0.08em]">Research Lab</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded-lg bg-panel-soft px-3 py-1 font-trebuchet text-[0.9rem] tracking-[0.06em] text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04"
+          >
+            Close
+          </button>
+        </div>
+        
+        <div className="rounded-2xl border border-orbit-03/35 bg-panel-soft px-4 py-3 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] text-orbit-03">
+          <p className="m-0 text-[0.95rem] tracking-[0.04em] text-orbit-03">{coinLabel}</p>
+          <p className="mb-0 mt-1 text-[0.85rem] tracking-[0.04em] text-orbit-03/85">
+            Coins fund upcoming breakthroughs—keep trading to accelerate research.
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  );
+}
