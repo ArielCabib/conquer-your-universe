@@ -12,19 +12,21 @@ import {
 interface HeaderSectionProps {
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
-  onOpenResearch: MouseEventHandler<HTMLButtonElement>;
+  onToggleResearchView: MouseEventHandler<HTMLButtonElement>;
   planetName: string;
   onPlanetNameChange: (name: string) => void;
   hasResearcher: boolean;
+  isResearchViewActive: boolean;
 }
 
 export function HeaderSection({
   onOpenSettings,
   onOpenInfo,
-  onOpenResearch,
+  onToggleResearchView,
   planetName,
   onPlanetNameChange,
   hasResearcher,
+  isResearchViewActive,
 }: HeaderSectionProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(planetName);
@@ -43,6 +45,12 @@ export function HeaderSection({
       inputRef.current?.select();
     }
   }, [isEditingName]);
+
+  useEffect(() => {
+    if (isResearchViewActive) {
+      setIsEditingName(false);
+    }
+  }, [isResearchViewActive]);
 
   const startEditing = useCallback(() => {
     setDraftName(planetName);
@@ -111,8 +119,9 @@ export function HeaderSection({
           <button
             type="button"
             aria-label="Open research lab"
-            onClick={onOpenResearch}
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 bg-panel-soft text-orbit-03 transition-colors duration-150 hover:bg-orbit-04/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${showResearchAnimation ? "research-button-animate" : ""}`}
+            aria-pressed={isResearchViewActive}
+            onClick={onToggleResearchView}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-orbit-03/40 text-orbit-03 transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 ${isResearchViewActive ? "bg-orbit-04/30" : "bg-panel-soft hover:bg-orbit-04/20"} ${showResearchAnimation ? "research-button-animate" : ""}`}
           >
             <span aria-hidden="true" className="icon-glyph icon-glyph--research cursor-pointer" />
           </button>
@@ -148,13 +157,13 @@ export function HeaderSection({
         </form>
       ) : (
         <h1
-          role="button"
-          tabIndex={0}
-          onClick={startEditing}
-          onKeyDown={handleHeadingKeyDown}
-          className="m-0 text-center font-orbitron text-[clamp(2.5rem,3vw,3.5rem)] uppercase tracking-[0.12em] text-orbit-0 cursor-pointer"
+          role={isResearchViewActive ? undefined : "button"}
+          tabIndex={isResearchViewActive ? undefined : 0}
+          onClick={isResearchViewActive ? undefined : startEditing}
+          onKeyDown={isResearchViewActive ? undefined : handleHeadingKeyDown}
+          className={`m-0 text-center font-orbitron text-[clamp(2.5rem,3vw,3.5rem)] uppercase tracking-[0.12em] text-orbit-0 ${isResearchViewActive ? "" : "cursor-pointer"}`}
         >
-          {planetName}
+          {isResearchViewActive ? "research lab" : planetName}
         </h1>
       )}
     </div>

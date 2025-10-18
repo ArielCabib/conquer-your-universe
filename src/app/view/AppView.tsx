@@ -2,7 +2,7 @@ import type { ChangeEventHandler, MouseEventHandler, RefObject } from "react";
 import { ContextMenuState, InfoEntry } from "../types";
 import { CanvasArea } from "./CanvasArea";
 import { HeaderSection } from "./Header";
-import { ControlModal, InfoModal, ResearchModal } from "./Modal";
+import { ControlModal, InfoModal } from "./Modal";
 import { BuildPrompt } from "./Prompt";
 import { StatsPanel } from "./Stats";
 
@@ -30,7 +30,7 @@ interface AppViewProps {
   onOpenFileDialog: MouseEventHandler<HTMLButtonElement>;
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
-  onOpenResearch: MouseEventHandler<HTMLButtonElement>;
+  onToggleResearchView: MouseEventHandler<HTMLButtonElement>;
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;
@@ -57,8 +57,7 @@ interface AppViewProps {
   infoEntries: InfoEntry[];
   isInfoModalActive: boolean;
   onCloseInfo: () => void;
-  isResearchModalActive: boolean;
-  onCloseResearch: () => void;
+  isResearchViewActive: boolean;
 }
 
 export function AppView({
@@ -85,7 +84,7 @@ export function AppView({
   onOpenFileDialog,
   onOpenSettings,
   onOpenInfo,
-  onOpenResearch,
+  onToggleResearchView,
   onRestartGame,
   onSaveGame,
   settlersCapacityLimit,
@@ -112,8 +111,7 @@ export function AppView({
   infoEntries,
   isInfoModalActive,
   onCloseInfo,
-  isResearchModalActive,
-  onCloseResearch,
+  isResearchViewActive,
 }: AppViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-orbit-01">
@@ -121,10 +119,11 @@ export function AppView({
         <HeaderSection
           onOpenSettings={onOpenSettings}
           onOpenInfo={onOpenInfo}
-          onOpenResearch={onOpenResearch}
+          onToggleResearchView={onToggleResearchView}
           planetName={planetName}
           onPlanetNameChange={onPlanetNameChange}
           hasResearcher={hasResearcher}
+          isResearchViewActive={isResearchViewActive}
         />
         <BuildPrompt message={promptMessage} />
         <CanvasArea
@@ -132,6 +131,7 @@ export function AppView({
           onClick={onClickCanvas}
           onContextMenu={onContextMenuCanvas}
           isPaused={isPaused}
+          isResearchViewActive={isResearchViewActive}
           contextMenuState={contextMenuState}
           onBuildHouse={onBuildHouseFromMenu}
           canBuildHouse={canBuildHouse}
@@ -144,27 +144,29 @@ export function AppView({
           onBuildResearcher={onBuildResearcherFromMenu}
           canBuildResearcher={canBuildResearcher}
         />
-        <StatsPanel
-          aliveNow={aliveNow}
-          settlersCapacityLimit={settlersCapacityLimit}
-          housesBuilt={housesBuilt}
-          housesCapacityLimit={housesCapacityLimit}
-          farmsBuilt={farmsBuilt}
-          farmCapacityLimit={farmCapacityLimit}
-          settlerMinLifespanMs={settlerMinLifespanMs}
-          settlerMaxLifespanMs={settlerMaxLifespanMs}
-          farmLifespanBonusMs={farmLifespanBonusMs}
-          houseSpawnIntervalMs={houseSpawnIntervalMs}
-          houseSpawnAmount={houseSpawnAmount}
-          grainCount={grainCount}
-          grainCapacity={grainCapacity}
-          coinCapacity={coinCapacity}
-          grainsInFlight={grainsInFlight}
-          hasHarvester={hasHarvester}
-          hasMarket={hasMarket}
-          hasResearcher={hasResearcher}
-          coinCount={coinCount}
-        />
+        {isResearchViewActive ? null : (
+          <StatsPanel
+            aliveNow={aliveNow}
+            settlersCapacityLimit={settlersCapacityLimit}
+            housesBuilt={housesBuilt}
+            housesCapacityLimit={housesCapacityLimit}
+            farmsBuilt={farmsBuilt}
+            farmCapacityLimit={farmCapacityLimit}
+            settlerMinLifespanMs={settlerMinLifespanMs}
+            settlerMaxLifespanMs={settlerMaxLifespanMs}
+            farmLifespanBonusMs={farmLifespanBonusMs}
+            houseSpawnIntervalMs={houseSpawnIntervalMs}
+            houseSpawnAmount={houseSpawnAmount}
+            grainCount={grainCount}
+            grainCapacity={grainCapacity}
+            coinCapacity={coinCapacity}
+            grainsInFlight={grainsInFlight}
+            hasHarvester={hasHarvester}
+            hasMarket={hasMarket}
+            hasResearcher={hasResearcher}
+            coinCount={coinCount}
+          />
+        )}
       </section>
       <input
         ref={fileInputRef}
@@ -181,12 +183,6 @@ export function AppView({
         onOpenFile={onOpenFileDialog}
       />
       <InfoModal isActive={isInfoModalActive} onClose={onCloseInfo} entries={infoEntries} />
-      <ResearchModal
-        isActive={isResearchModalActive}
-        onClose={onCloseResearch}
-        coinCount={coinCount}
-        coinCapacity={coinCapacity}
-      />
     </main>
   );
 }

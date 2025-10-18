@@ -83,6 +83,7 @@ export function useCanvasRenderer(
   setAliveCount: Dispatch<SetStateAction<number>>,
   pauseTimeRef: MutableRefObject<number | null>,
   setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>,
+  isResearchViewActive: boolean,
 ) {
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -106,7 +107,10 @@ export function useCanvasRenderer(
       const isPaused = typeof pausedTime === "number";
 
       context.clearRect(0, 0, VIEWBOX_WIDTH, VIEWBOX_HEIGHT);
-      renderPlanet(context);
+
+      if (!isResearchViewActive) {
+        renderPlanet(context);
+      }
 
       if (isPaused) {
         renderPausedState(
@@ -128,6 +132,10 @@ export function useCanvasRenderer(
         );
       }
 
+      if (isResearchViewActive) {
+        context.clearRect(0, 0, VIEWBOX_WIDTH, VIEWBOX_HEIGHT);
+      }
+
       animationFrame = window.requestAnimationFrame(drawFrame);
     };
 
@@ -136,5 +144,5 @@ export function useCanvasRenderer(
     return () => {
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [canvasRef, gameStateRef, pauseTimeRef, setAliveCount]);
+  }, [canvasRef, gameStateRef, isResearchViewActive, pauseTimeRef, setAliveCount, setSimulationSnapshot]);
 }

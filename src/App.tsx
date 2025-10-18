@@ -76,7 +76,7 @@ export function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-  const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
+  const [isResearchViewActive, setIsResearchViewActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeRef = useRef<number | null>(null);
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | null>(null);
@@ -103,7 +103,14 @@ export function App() {
   );
 
   useRestoreState(gameStateRef, handleStateRestore);
-  useCanvasRenderer(canvasRef, gameStateRef, setAliveCount, pauseTimeRef, setSimulationSnapshot);
+  useCanvasRenderer(
+    canvasRef,
+    gameStateRef,
+    setAliveCount,
+    pauseTimeRef,
+    setSimulationSnapshot,
+    isResearchViewActive,
+  );
   usePeriodicSave(gameStateRef);
 
   const handleClick = useCanvasClickHandler({
@@ -119,8 +126,6 @@ export function App() {
   const closeModal = useModalCloseHandler(setIsModalOpen);
   const openInfoModal = useModalOpenHandler(setIsInfoModalOpen);
   const closeInfoModal = useModalCloseHandler(setIsInfoModalOpen);
-  const openResearchModal = useModalOpenHandler(setIsResearchModalOpen);
-  const closeResearchModal = useModalCloseHandler(setIsResearchModalOpen);
 
   const restartGameHandler = useRestartGameHandler({
     gameStateRef,
@@ -174,6 +179,11 @@ export function App() {
     contextMenuState,
     setContextMenuState,
   });
+
+  const toggleResearchView = useCallback(() => {
+    setContextMenuState(null);
+    setIsResearchViewActive((current) => !current);
+  }, [setContextMenuState, setIsResearchViewActive]);
 
   const onFileChange = useFileChangeHandler({
     gameStateRef,
@@ -314,7 +324,7 @@ export function App() {
 
   useEffect(() => {
     if (!hasResearcher) {
-      setIsResearchModalOpen(false);
+      setIsResearchViewActive(false);
     }
   }, [hasResearcher]);
 
@@ -395,7 +405,7 @@ export function App() {
       onOpenFileDialog={openFileDialog}
       onOpenSettings={openSettings}
       onOpenInfo={openInfoModal}
-      onOpenResearch={openResearchModal}
+      onToggleResearchView={toggleResearchView}
       onRestartGame={restartGame}
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
@@ -423,8 +433,7 @@ export function App() {
       infoEntries={infoEntries}
       isInfoModalActive={isInfoModalOpen}
       onCloseInfo={closeInfoModal}
-      isResearchModalActive={isResearchModalOpen}
-      onCloseResearch={closeResearchModal}
+      isResearchViewActive={isResearchViewActive}
     />
   );
 }

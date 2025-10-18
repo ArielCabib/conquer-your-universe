@@ -9,6 +9,7 @@ interface CanvasAreaProps {
   onClick: MouseEventHandler<HTMLCanvasElement>;
   onContextMenu: MouseEventHandler<HTMLCanvasElement>;
   isPaused: boolean;
+  isResearchViewActive: boolean;
   contextMenuState: ContextMenuState | null;
   onBuildHouse: MouseEventHandler<HTMLButtonElement>;
   canBuildHouse: boolean;
@@ -27,6 +28,7 @@ export function CanvasArea({
   onClick,
   onContextMenu,
   isPaused,
+  isResearchViewActive,
   contextMenuState,
   onBuildHouse,
   canBuildHouse,
@@ -144,7 +146,7 @@ export function CanvasArea({
     clearLongPress();
   };
 
-  const pausedOverlay = isPaused ? (
+  const pausedOverlay = isPaused && !isResearchViewActive ? (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-overlay text-[1.1rem] font-orbitron uppercase tracking-[0.08em] text-orbit-03">
       Paused
     </div>
@@ -183,7 +185,7 @@ export function CanvasArea({
   const buttonBaseClass =
     "w-full rounded-lg px-3 py-2 text-left font-trebuchet text-[0.95rem] tracking-[0.04em] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orbit-04 cursor-pointer bg-transparent text-orbit-03 hover:bg-orbit-04 hover:text-orbit-01";
 
-  const contextMenu = contextMenuState && menuActions.length > 0 ? (
+  const contextMenu = !isResearchViewActive && contextMenuState && menuActions.length > 0 ? (
     <div
       className="absolute z-10 min-w-[160px] -translate-x-1/2 transform rounded-xl border border-orbit-03/40 bg-menu p-1 shadow-context-menu"
       style={{
@@ -204,21 +206,27 @@ export function CanvasArea({
     </div>
   ) : null;
 
+  const canvasClass = `h-auto w-full max-w-[600px] touch-manipulation ${
+    isResearchViewActive
+      ? "cursor-default pointer-events-none"
+      : isPaused
+        ? "cursor-not-allowed pointer-events-none"
+        : "cursor-pointer"
+  }`;
+
   return (
     <div className="relative w-[min(80vw,540px)] max-w-[600px]">
       <canvas
         ref={canvasRef}
         width={600}
         height={480}
-        className={`h-auto w-full max-w-[600px] touch-manipulation ${
-          isPaused ? "cursor-not-allowed pointer-events-none" : "cursor-pointer"
-        }`}
-        onClick={onClick}
-        onContextMenu={onContextMenu}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
+        className={canvasClass}
+        onClick={isResearchViewActive ? undefined : onClick}
+        onContextMenu={isResearchViewActive ? undefined : onContextMenu}
+        onTouchStart={isResearchViewActive ? undefined : handleTouchStart}
+        onTouchMove={isResearchViewActive ? undefined : handleTouchMove}
+        onTouchEnd={isResearchViewActive ? undefined : handleTouchEnd}
+        onTouchCancel={isResearchViewActive ? undefined : handleTouchEnd}
       >
         Your browser does not support HTML canvas.
       </canvas>
