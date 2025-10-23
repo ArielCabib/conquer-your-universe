@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import { RESEARCH_NODES } from "../research/nodes";
 
 interface ResearchTreeProps {
@@ -16,6 +18,7 @@ export function ResearchTree({
   coinCount,
 }: ResearchTreeProps) {
   const completed = new Set(completedNodeIds);
+  const nodeRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   const visibleNodes = RESEARCH_NODES.filter((node) =>
     node.dependsOn.every((dependency) => completed.has(dependency)),
@@ -23,6 +26,31 @@ export function ResearchTree({
     definition: node,
     status: (completed.has(node.id) ? "completed" : "available") as ResearchNodeStatus,
   }));
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const element = entry.target as HTMLElement;
+            element.classList.add("research-node-item--visible");
+            observer.unobserve(element);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      },
+    );
+
+    nodeRefs.current.forEach((element) => {
+      if (!element.classList.contains("research-node-item--visible")) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [visibleNodes]);
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-8  text-orbit-03">
@@ -54,7 +82,18 @@ export function ResearchTree({
                 : null;
 
             return (
-              <li key={definition.id} className="list-none">
+              <li
+                key={definition.id}
+                className="research-node-item list-none"
+                ref={(element) => {
+                  if (element) {
+                    nodeRefs.current.set(definition.id, element);
+                  } else {
+                    nodeRefs.current.delete(definition.id);
+                  }
+                }}
+                style={{ transitionDelay: `${index * 60}ms` }}
+              >
                 <div className="flex items-start gap-4">
                   <div className="relative flex flex-col items-center">
                     <div
