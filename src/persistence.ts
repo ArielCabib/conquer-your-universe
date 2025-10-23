@@ -154,6 +154,7 @@ type RawGameState = Omit<
   | "version"
   | "infoEntryIds"
   | "completedResearchNodeIds"
+  | "researchProgress"
 > & {
   settlers: RawSettlerState[];
   houses: RawHouseState[];
@@ -161,6 +162,8 @@ type RawGameState = Omit<
   crops: RawCropState[];
   completed_research_node_ids?: string[];
   completedResearchNodeIds?: string[];
+  research_progress?: Record<string, number>;
+  researchProgress?: Record<string, number>;
   harvester?: RawHarvesterState | null;
   grain_pile?: RawGrainPileState | null;
   grainPile?: RawGrainPileState | null;
@@ -629,6 +632,16 @@ export function deserializeGameState(serialized: string): GameState | null {
       ? completedResearchSource.filter((value): value is string => typeof value === "string")
       : [];
 
+    const researchProgress: Record<string, number> = {};
+    const researchProgressSource = data.research_progress ?? data.researchProgress;
+    if (researchProgressSource && typeof researchProgressSource === "object") {
+      for (const [key, value] of Object.entries(researchProgressSource)) {
+        if (typeof value === "number" && Number.isFinite(value)) {
+          researchProgress[key] = value;
+        }
+      }
+    }
+
     const rawCoinCapacity =
       data.coin_capacity ?? (data as { coinCapacity?: number }).coinCapacity;
     const coinCapacity =
@@ -657,6 +670,7 @@ export function deserializeGameState(serialized: string): GameState | null {
       coinProjectiles,
       infoEntryIds,
       completedResearchNodeIds,
+      researchProgress,
       nextCropProjectileId,
       nextGrainProjectileId,
       nextCoinProjectileId,
@@ -840,6 +854,7 @@ export function serializeGameState(state: GameState, timestampMs: number = curre
     coin_projectiles: serializeCoinProjectiles(state.coinProjectiles),
     info_entry_ids: state.infoEntryIds.slice(),
     completed_research_node_ids: state.completedResearchNodeIds.slice(),
+    research_progress: { ...state.researchProgress },
     next_crop_projectile_id: state.nextCropProjectileId,
     next_grain_projectile_id: state.nextGrainProjectileId,
     next_coin_projectile_id: state.nextCoinProjectileId,

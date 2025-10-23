@@ -1,44 +1,20 @@
-interface ResearchNodeDefinition {
-  id: string;
-  title: string;
-  description: string;
-  dependsOn: string[];
-}
-
-const RESEARCH_NODES: ResearchNodeDefinition[] = [
-  {
-    id: "core-theory",
-    title: "Core Hypothesis",
-    description: "Establish a unified model for planetary growth to unlock future breakthroughs.",
-    dependsOn: [],
-  },
-  {
-    id: "habitation-efficiency",
-    title: "Habitation Efficiency",
-    description: "Streamline housing blueprints to support larger settler populations.",
-    dependsOn: ["core-theory"],
-  },
-  {
-    id: "agro-dynamics",
-    title: "Agro Dynamics",
-    description: "Optimize farm nutrient cycles to accelerate crop production.",
-    dependsOn: ["core-theory"],
-  },
-  {
-    id: "quantum-trade",
-    title: "Quantum Trade",
-    description: "Stabilize markets with predictive commerce models for rapid coin generation.",
-    dependsOn: ["habitation-efficiency", "agro-dynamics"],
-  },
-];
+import { RESEARCH_NODES } from "../research/nodes";
 
 interface ResearchTreeProps {
   completedNodeIds: readonly string[];
+  onResearchNode: (nodeId: string) => void;
+  progressByNodeId: Readonly<Record<string, number>>;
+  coinCount: number;
 }
 
 type ResearchNodeStatus = "available" | "completed";
 
-export function ResearchTree({ completedNodeIds }: ResearchTreeProps) {
+export function ResearchTree({
+  completedNodeIds,
+  onResearchNode,
+  progressByNodeId,
+  coinCount,
+}: ResearchTreeProps) {
   const completed = new Set(completedNodeIds);
 
   const visibleNodes = RESEARCH_NODES.filter((node) =>
@@ -63,6 +39,26 @@ export function ResearchTree({ completedNodeIds }: ResearchTreeProps) {
           {visibleNodes.map(({ definition, status }, index) => {
             const isCompleted = status === "completed";
             const statusLabel = isCompleted ? "Completed" : "Available";
+            const requirements = definition.requirements;
+            const clickTarget = requirements?.clickCount ?? 0;
+            const coinCost = requirements?.coinCost ?? 0;
+            const recordedProgress = progressByNodeId[definition.id] ?? 0;
+            const displayProgress =
+              clickTarget > 0 ? Math.min(recordedProgress, clickTarget) : recordedProgress;
+            const hasCoins = coinCount >= coinCost;
+            const buttonDisabled = isCompleted || !hasCoins;
+            const buttonClass = `mt-3 w-full rounded-xl border border-orbit-03/35 px-4 py-2 font-trebuchet text-[0.95rem] tracking-[0.05em] transition-colors duration-150 ${
+              buttonDisabled
+                ? "cursor-not-allowed bg-panel text-orbit-03/60"
+                : "cursor-pointer bg-panel text-orbit-03 hover:bg-orbit-04/20"
+            }`;
+
+            const progressLabel =
+              clickTarget > 0 ? `Progress: ${displayProgress}/${clickTarget} clicks` : null;
+            const coinRequirementLabel =
+              coinCost > 0
+                ? `Requires ${coinCost} coins${hasCoins ? "" : " (need more)"}`
+                : null;
 
             return (
               <li key={definition.id} className="list-none">
@@ -85,7 +81,9 @@ export function ResearchTree({ completedNodeIds }: ResearchTreeProps) {
                       </h3>
                       <span
                         className={`rounded-full border border-orbit-03/25 px-3 py-[2px] font-trebuchet text-[0.75rem] uppercase tracking-[0.08em] ${
-                          isCompleted ? "bg-orbit-04/25 text-orbit-04" : "bg-panel text-orbit-03/80"
+                          isCompleted
+                            ? "bg-orbit-04/25 text-orbit-04"
+                            : "bg-panel text-orbit-03/80"
                         }`}
                       >
                         {statusLabel}
@@ -96,11 +94,19 @@ export function ResearchTree({ completedNodeIds }: ResearchTreeProps) {
                     </p>
                     <button
                       type="button"
-                      className="mt-3 w-full cursor-not-allowed rounded-xl border border-orbit-03/35 bg-panel px-4 py-2 font-trebuchet text-[0.95rem] tracking-[0.05em] text-orbit-03 transition-colors duration-150"
-                      disabled
+                      className={buttonClass}
+                      onClick={() => onResearchNode(definition.id)}
+                      disabled={buttonDisabled}
                     >
-                      Research
+                      {isCompleted ? "Researched" : "Research"}
                     </button>
+                    {(progressLabel || coinRequirementLabel) && !isCompleted ? (
+                      <p className="mb-0 mt-2 text-left font-trebuchet text-[0.75rem] tracking-[0.05em] text-orbit-03/80">
+                        {[progressLabel, coinRequirementLabel]
+                          .filter((value): value is string => Boolean(value))
+                          .join(" | ")}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </li>

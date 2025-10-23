@@ -135,6 +135,7 @@ export interface GameState {
   coinProjectiles: CoinProjectileState[];
   infoEntryIds: string[];
   completedResearchNodeIds: string[];
+  researchProgress: Record<string, number>;
   nextCropProjectileId: number;
   nextGrainProjectileId: number;
   nextCoinProjectileId: number;
@@ -176,6 +177,7 @@ export function createInitialGameState(): GameState {
     coinProjectiles: [],
     infoEntryIds: [],
     completedResearchNodeIds: [],
+    researchProgress: {},
     nextCropProjectileId: 0,
     nextGrainProjectileId: 0,
     nextCoinProjectileId: 0,

@@ -31,6 +31,7 @@ interface AppViewProps {
   onOpenSettings: MouseEventHandler<HTMLButtonElement>;
   onOpenInfo: MouseEventHandler<HTMLButtonElement>;
   onToggleResearchView: MouseEventHandler<HTMLButtonElement>;
+  onResearchNode: (nodeId: string) => void;
   onRestartGame: MouseEventHandler<HTMLButtonElement>;
   onSaveGame: MouseEventHandler<HTMLButtonElement>;
   settlersCapacityLimit: number;
@@ -54,6 +55,7 @@ interface AppViewProps {
   hasMarket: boolean;
   hasResearcher: boolean;
   coinCount: number;
+  researchProgress: Readonly<Record<string, number>>;
   infoEntries: InfoEntry[];
   isInfoModalActive: boolean;
   onCloseInfo: () => void;
@@ -86,6 +88,7 @@ export function AppView({
   onOpenSettings,
   onOpenInfo,
   onToggleResearchView,
+  onResearchNode,
   onRestartGame,
   onSaveGame,
   settlersCapacityLimit,
@@ -109,6 +112,7 @@ export function AppView({
   hasMarket,
   hasResearcher,
   coinCount,
+  researchProgress,
   infoEntries,
   isInfoModalActive,
   onCloseInfo,
@@ -135,6 +139,9 @@ export function AppView({
           isPaused={isPaused}
           isResearchViewActive={isResearchViewActive}
           completedResearchNodeIds={completedResearchNodeIds}
+          onResearchNode={onResearchNode}
+          researchProgress={researchProgress}
+          coinCount={coinCount}
           contextMenuState={contextMenuState}
           onBuildHouse={onBuildHouseFromMenu}
           canBuildHouse={canBuildHouse}

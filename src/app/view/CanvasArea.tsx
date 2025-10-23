@@ -12,6 +12,9 @@ interface CanvasAreaProps {
   isPaused: boolean;
   isResearchViewActive: boolean;
   completedResearchNodeIds: readonly string[];
+  onResearchNode: (nodeId: string) => void;
+  researchProgress: Readonly<Record<string, number>>;
+  coinCount: number;
   contextMenuState: ContextMenuState | null;
   onBuildHouse: MouseEventHandler<HTMLButtonElement>;
   canBuildHouse: boolean;
@@ -32,6 +35,9 @@ export function CanvasArea({
   isPaused,
   isResearchViewActive,
   completedResearchNodeIds,
+  onResearchNode,
+  researchProgress,
+  coinCount,
   contextMenuState,
   onBuildHouse,
   canBuildHouse,
@@ -227,7 +233,12 @@ export function CanvasArea({
       aria-hidden={!isResearchViewActive}
     >
       {isResearchViewActive ? (
-        <ResearchTree completedNodeIds={completedResearchNodeIds} />
+        <ResearchTree
+          completedNodeIds={completedResearchNodeIds}
+          onResearchNode={onResearchNode}
+          progressByNodeId={researchProgress}
+          coinCount={coinCount}
+        />
       ) : null}
     </div>
   );

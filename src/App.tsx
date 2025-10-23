@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppView } from "./app/view/AppView";
 import { ContextMenuState, InfoEntry, SimulationSnapshot } from "./app/types";
-import { computeSimulationSnapshot } from "./app/state/simulationSnapshot";
+import { computeSimulationSnapshot, updateSimulationSnapshot } from "./app/state/simulationSnapshot";
 import {
   useBuildFarmMenuHandler,
   useBuildHarvesterMenuHandler,
@@ -20,6 +20,9 @@ import {
 import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
+import { getResearchNodeRequirements } from "./app/research/nodes";
+import { STORAGE_KEY } from "./constants";
+import { serializeGameState } from "./persistence";
 import { createInitialGameState, GameState } from "./types";
 type PromptKey = "explore" | "build" | "farm" | "harvester" | "market" | "researcher";
 
@@ -87,6 +90,9 @@ export function App() {
   const [infoEntryIds, setInfoEntryIds] = useState<string[]>(() => [
     ...gameStateRef.current.infoEntryIds,
   ]);
+  const [researchProgressSnapshot, setResearchProgressSnapshot] = useState<Record<string, number>>(
+    () => ({ ...gameStateRef.current.researchProgress }),
+  );
   const infoEntries = useMemo(() => {
     return infoEntryIds
       .map((id) => PROMPT_INFORMATION[id as PromptKey])
@@ -98,8 +104,9 @@ export function App() {
       setPlanetName(state.planetName);
       setInfoEntryIds(() => [...state.infoEntryIds]);
       setSimulationSnapshot(computeSimulationSnapshot(state));
+      setResearchProgressSnapshot({ ...state.researchProgress });
     },
-    [setInfoEntryIds, setSimulationSnapshot],
+    [setInfoEntryIds, setResearchProgressSnapshot, setSimulationSnapshot],
   );
 
   useRestoreState(gameStateRef, handleStateRestore);
@@ -143,7 +150,8 @@ export function App() {
       return [];
     });
     setSimulationSnapshot(computeSimulationSnapshot(gameStateRef.current));
-  }, [gameStateRef, restartGameHandler, setSimulationSnapshot]);
+    setResearchProgressSnapshot({ ...gameStateRef.current.researchProgress });
+  }, [gameStateRef, restartGameHandler, setResearchProgressSnapshot, setSimulationSnapshot]);
 
   const openFileDialog = useOpenFileDialogHandler(fileInputRef);
   const saveGame = useSaveGameHandler(gameStateRef);
@@ -179,6 +187,55 @@ export function App() {
     contextMenuState,
     setContextMenuState,
   });
+
+  const handleResearchNode = useCallback(
+    (nodeId: string) => {
+      const state = gameStateRef.current;
+      if (state.completedResearchNodeIds.includes(nodeId)) {
+        return;
+      }
+
+      const requirements = getResearchNodeRequirements(nodeId);
+      const clickTarget = requirements?.clickCount ?? 0;
+      const currentClicks = state.researchProgress[nodeId] ?? 0;
+      const nextClicks =
+        clickTarget > 0 ? Math.min(currentClicks + 1, clickTarget) : currentClicks + 1;
+
+      if (state.researchProgress[nodeId] !== nextClicks) {
+        state.researchProgress = {
+          ...state.researchProgress,
+          [nodeId]: nextClicks,
+        };
+      }
+
+      const meetsClickRequirement = clickTarget === 0 || nextClicks >= clickTarget;
+      const coinCost = requirements?.coinCost ?? 0;
+      const hasRequiredCoins = state.coins >= coinCost;
+
+      if (meetsClickRequirement && hasRequiredCoins) {
+        const updatedCompleted = state.completedResearchNodeIds.includes(nodeId)
+          ? state.completedResearchNodeIds
+          : [...state.completedResearchNodeIds, nodeId];
+        state.completedResearchNodeIds = updatedCompleted;
+
+        if (coinCost > 0) {
+          state.coins = Math.max(0, state.coins - coinCost);
+        }
+      }
+
+      setResearchProgressSnapshot({ ...state.researchProgress });
+      updateSimulationSnapshot(state, setSimulationSnapshot);
+
+      try {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, serializeGameState(state));
+        }
+      } catch (error) {
+        console.warn("Failed to persist game state after research attempt", error);
+      }
+    },
+    [gameStateRef, setResearchProgressSnapshot, setSimulationSnapshot],
+  );
 
   const toggleResearchView = useCallback(() => {
     setContextMenuState(null);
@@ -407,6 +464,7 @@ export function App() {
       onOpenSettings={openSettings}
       onOpenInfo={openInfoModal}
       onToggleResearchView={toggleResearchView}
+      onResearchNode={handleResearchNode}
       onRestartGame={restartGame}
       onSaveGame={saveGame}
       settlersCapacityLimit={settlersCapacityLimit}
@@ -431,6 +489,7 @@ export function App() {
       hasMarket={hasMarket}
       hasResearcher={hasResearcher}
       coinCount={coinCount}
+      researchProgress={researchProgressSnapshot}
       infoEntries={infoEntries}
       isInfoModalActive={isInfoModalOpen}
       onCloseInfo={closeInfoModal}
