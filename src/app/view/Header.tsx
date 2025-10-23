@@ -163,7 +163,7 @@ export function HeaderSection({
           onKeyDown={isResearchViewActive ? undefined : handleHeadingKeyDown}
           className={`m-0 text-center font-orbitron text-[clamp(2.5rem,3vw,3.5rem)] uppercase tracking-[0.12em] text-orbit-0 ${isResearchViewActive ? "" : "cursor-pointer"}`}
         >
-          {isResearchViewActive ? "research lab" : planetName}
+          {isResearchViewActive ? "research" : planetName}
         </h1>
       )}
     </div>

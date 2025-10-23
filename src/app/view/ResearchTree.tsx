@@ -25,15 +25,8 @@ export function ResearchTree({
   }));
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-8 px-6 py-8 text-orbit-03">
-      <header className="flex max-w-[480px] flex-col items-center gap-3 text-center">
-        <h2 className="m-0 font-orbitron text-[1.35rem] uppercase tracking-[0.08em] text-orbit-03">
-          Research Tree
-        </h2>
-        <p className="m-0 font-trebuchet text-[0.95rem] leading-[1.55] tracking-[0.04em] text-orbit-03/85">
-          Completing a breakthrough reveals the next layer of discoveries.
-        </p>
-      </header>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-8  text-orbit-03">
+      
       <div className="w-full max-w-[520px] overflow-y-auto">
         <ul className="m-0 flex flex-col gap-6 p-0">
           {visibleNodes.map(({ definition, status }, index) => {
