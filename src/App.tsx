@@ -250,6 +250,7 @@ export function App() {
     pauseTimeRef,
     setPlanetName,
     setInfoEntryIds,
+    setResearchProgressSnapshot,
     setSimulationSnapshot,
   });
 

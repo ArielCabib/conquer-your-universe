@@ -56,6 +56,7 @@ interface FileChangeOptions {
   pauseTimeRef: MutableRefObject<number | null>;
   setPlanetName: Dispatch<SetStateAction<string>>;
   setInfoEntryIds: Dispatch<SetStateAction<string[]>>;
+  setResearchProgressSnapshot: Dispatch<SetStateAction<Record<string, number>>>;
   setSimulationSnapshot: Dispatch<SetStateAction<SimulationSnapshot>>;
 }
 
@@ -67,6 +68,7 @@ export function useFileChangeHandler({
   pauseTimeRef,
   setPlanetName,
   setInfoEntryIds,
+  setResearchProgressSnapshot,
   setSimulationSnapshot,
 }: FileChangeOptions) {
   return useCallback(
@@ -107,6 +109,7 @@ export function useFileChangeHandler({
           gameStateRef.current.infoEntryIds = ids;
           return ids;
         });
+        setResearchProgressSnapshot({ ...loadedState.researchProgress });
         setSimulationSnapshot(computeSimulationSnapshot(loadedState));
 
         try {
@@ -145,6 +148,7 @@ export function useFileChangeHandler({
       setIsPaused,
       setPlanetName,
       setInfoEntryIds,
+      setResearchProgressSnapshot,
       setSimulationSnapshot,
     ],
   );
