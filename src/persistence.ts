@@ -241,6 +241,13 @@ const migrations: Partial<Record<number, MigrationFn>> = {
       version: 5,
     };
   },
+  5: (state) => {
+    return {
+      ...state,
+      research_progress: {},
+      version: 6,
+    };
+  }
 };
 
 function toVersionedRawGameState(raw: RawGameState): VersionedRawGameState | null {
