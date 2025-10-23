@@ -25,8 +25,12 @@ export const RESEARCH_NODES: ResearchNodeDefinition[] = [
   {
     id: "habitation-efficiency",
     title: "Habitation Efficiency",
-    description: "Streamline housing blueprints to support larger settler populations.",
+    description: "+1 settler per 2 seconds.",
     dependsOn: ["core-theory"],
+    requirements: {
+      clickCount: 150,
+      coinCost: 200,
+    }
   },
   {
     id: "agro-dynamics",

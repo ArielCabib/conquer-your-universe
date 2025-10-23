@@ -21,6 +21,7 @@ import {
   SettlerState,
 } from "./types";
 import { currentTimeMs } from "./app/helpers";
+import { applyCompletedResearchNodeEffects } from "./app/research/effects";
 
 interface RawSettlerPhaseAlive {
   Alive: Record<string, never>;
@@ -699,6 +700,8 @@ export function deserializeGameState(serialized: string): GameState | null {
       houseSpawnAmount: data.house_spawn_amount ?? 1,
       grainPileCapacity: data.grain_pile_capacity ?? data.grainPileCapacity ?? GRAIN_PILE_CAPACITY,
     };
+
+    applyCompletedResearchNodeEffects(state);
 
     const referenceTimestamp = data.time_reference_ms;
     const baseline = getLatestTimestamp(state, referenceTimestamp);

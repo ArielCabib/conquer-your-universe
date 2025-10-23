@@ -67,7 +67,7 @@ export function ResearchTree({
             const displayProgress =
               clickTarget > 0 ? Math.min(recordedProgress, clickTarget) : recordedProgress;
             const hasCoins = coinCount >= coinCost;
-            const buttonDisabled = isCompleted || !hasCoins;
+            const buttonDisabled = isCompleted;
             const buttonClass = `mt-3 w-full rounded-xl border border-orbit-03/35 px-4 py-2 font-trebuchet text-[0.95rem] tracking-[0.05em] transition-colors duration-150 ${
               buttonDisabled
                 ? "cursor-not-allowed bg-panel text-orbit-03/60"

@@ -21,6 +21,7 @@ import { useCanvasRenderer } from "./app/effects/render";
 import { usePeriodicSave } from "./app/effects/usePeriodicSave";
 import { useRestoreState } from "./app/effects/useRestoreState";
 import { getResearchNodeRequirements } from "./app/research/nodes";
+import { applyResearchNodeEffect } from "./app/research/effects";
 import { STORAGE_KEY } from "./constants";
 import { serializeGameState } from "./persistence";
 import { createInitialGameState, GameState } from "./types";
@@ -213,10 +214,8 @@ export function App() {
       const hasRequiredCoins = state.coins >= coinCost;
 
       if (meetsClickRequirement && hasRequiredCoins) {
-        const updatedCompleted = state.completedResearchNodeIds.includes(nodeId)
-          ? state.completedResearchNodeIds
-          : [...state.completedResearchNodeIds, nodeId];
-        state.completedResearchNodeIds = updatedCompleted;
+        state.completedResearchNodeIds = [...state.completedResearchNodeIds, nodeId];
+        applyResearchNodeEffect(state, nodeId);
 
         if (coinCost > 0) {
           state.coins = Math.max(0, state.coins - coinCost);
