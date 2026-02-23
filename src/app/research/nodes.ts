@@ -33,17 +33,15 @@ export const RESEARCH_NODES: ResearchNodeDefinition[] = [
     }
   },
   {
-    id: "agro-dynamics",
-    title: "Agro Dynamics",
-    description: "Optimize farm nutrient cycles to accelerate crop production.",
+    id: "coin-storage",
+    title: "Coin Storage",
+    description: "Increase the maximum coin capacity to 400.",
     dependsOn: ["core-theory"],
-  },
-  {
-    id: "quantum-trade",
-    title: "Quantum Trade",
-    description: "Stabilize markets with predictive commerce models for rapid coin generation.",
-    dependsOn: ["habitation-efficiency", "agro-dynamics"],
-  },
+    requirements: {
+      clickCount: 150,
+      coinCost: 200,
+    },
+  }
 ];
 
 export function getResearchNodeRequirements(nodeId: string): ResearchNodeRequirements | null {
